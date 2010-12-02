@@ -1,0 +1,10 @@
+/ipch
+Release/
+Debug/
+*.swp
+*.swo
+*~
+*.suo
+*.user
+*.filters
+*.sdf

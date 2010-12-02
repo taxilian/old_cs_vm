@@ -1,0 +1,1023 @@
+61:	JMP: 121, 87
+87:	SUB: 0, 0
+88:	SUB: 0, 0
+89:	ADI: 0, 2
+90:	SUB: 0, 0
+91:	LDR: 0, 0
+92:	MUL: 10, 2
+93:	MUL: 20, 2
+94:	LDA: 0, 4
+95:	MOV: 0, 0
+96:	CMP: 0, 40
+97:	BRZ: -1, 249
+99:	LDA: 4, 4
+100:	ADD: 4, 0
+101:	LDR2: 4, 4
+102:	ADD: 0, 10
+104:	MOV: 10, 10
+105:	DIV: 10, 2
+106:	MUL: 5, 2
+107:	SUB: 10, 10
+108:	BRZ: 0, 221
+JMP: 221, 116
+116:	MOV: 0, 10
+117:	LDA: 0, 64
+118:	TRP: 1, -
+Writing integer: 10
+119:	LDA: 0, 241
+120:	JMP: 97, 69
+69:	LDB2: 0, 64
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 64, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 65
+71:	BRZ: 105, 117
+72:	TRP: 3, -
+Writing char: "i"
+73:	ADI: 65, 1
+74:	JMP: 97, 69
+69:	LDB2: 105, 66
+71:	BRZ: 115, 117
+72:	TRP: 3, -
+Writing char: "s"
+73:	ADI: 66, 1
+74:	JMP: 97, 69
+69:	LDB2: 115, 67
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 67, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 68
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 68, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 69
+71:	BRZ: 118, 117
+72:	TRP: 3, -
+Writing char: "v"
+73:	ADI: 69, 1
+74:	JMP: 97, 69
+69:	LDB2: 118, 70
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 70, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 71
+71:	BRZ: 110, 117
+72:	TRP: 3, -
+Writing char: "n"
+73:	ADI: 71, 1
+74:	JMP: 97, 69
+69:	LDB2: 110, 72
+71:	BRZ: 13, 117
+72:	TRP: 3, -
+Writing char: ""
+73:	ADI: 72, 1
+74:	JMP: 97, 69
+69:	LDB2: 13, 73
+71:	BRZ: 10, 117
+72:	TRP: 3, -
+Writing char: "
+"
+73:	ADI: 73, 1
+74:	JMP: 97, 69
+69:	LDB2: 10, 74
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 241, -
+JMP: 241, 122
+122:	ADI: 0, 4
+123:	JMP: 153, 95
+95:	MOV: -1, 4
+96:	CMP: 4, 40
+97:	BRZ: -1, 249
+99:	LDA: 74, 4
+100:	ADD: 4, 4
+101:	LDR2: 8, 8
+102:	ADD: 10, 2
+104:	MOV: 2, 12
+105:	DIV: 12, 2
+106:	MUL: 6, 2
+107:	SUB: 12, 12
+108:	BRZ: 0, 221
+JMP: 221, 116
+116:	MOV: 10, 12
+117:	LDA: 0, 64
+118:	TRP: 1, -
+Writing integer: 12
+119:	LDA: 241, 241
+120:	JMP: 97, 69
+69:	LDB2: 0, 64
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 64, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 65
+71:	BRZ: 105, 117
+72:	TRP: 3, -
+Writing char: "i"
+73:	ADI: 65, 1
+74:	JMP: 97, 69
+69:	LDB2: 105, 66
+71:	BRZ: 115, 117
+72:	TRP: 3, -
+Writing char: "s"
+73:	ADI: 66, 1
+74:	JMP: 97, 69
+69:	LDB2: 115, 67
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 67, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 68
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 68, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 69
+71:	BRZ: 118, 117
+72:	TRP: 3, -
+Writing char: "v"
+73:	ADI: 69, 1
+74:	JMP: 97, 69
+69:	LDB2: 118, 70
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 70, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 71
+71:	BRZ: 110, 117
+72:	TRP: 3, -
+Writing char: "n"
+73:	ADI: 71, 1
+74:	JMP: 97, 69
+69:	LDB2: 110, 72
+71:	BRZ: 13, 117
+72:	TRP: 3, -
+Writing char: ""
+73:	ADI: 72, 1
+74:	JMP: 97, 69
+69:	LDB2: 13, 73
+71:	BRZ: 10, 117
+72:	TRP: 3, -
+Writing char: "
+"
+73:	ADI: 73, 1
+74:	JMP: 97, 69
+69:	LDB2: 10, 74
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 241, -
+JMP: 241, 122
+122:	ADI: 4, 4
+123:	JMP: 153, 95
+95:	MOV: -1, 8
+96:	CMP: 8, 40
+97:	BRZ: -1, 249
+99:	LDA: 74, 4
+100:	ADD: 4, 8
+101:	LDR2: 12, 12
+102:	ADD: 12, 3
+104:	MOV: 3, 15
+105:	DIV: 15, 2
+106:	MUL: 7, 2
+107:	SUB: 14, 15
+108:	BRZ: -1, 221
+110:	MOV: 12, 15
+111:	LDA: -1, 75
+112:	TRP: 1, -
+Writing integer: 15
+113:	LDA: 241, 241
+114:	JMP: 97, 69
+69:	LDB2: 0, 75
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 75, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 76
+71:	BRZ: 105, 117
+72:	TRP: 3, -
+Writing char: "i"
+73:	ADI: 76, 1
+74:	JMP: 97, 69
+69:	LDB2: 105, 77
+71:	BRZ: 115, 117
+72:	TRP: 3, -
+Writing char: "s"
+73:	ADI: 77, 1
+74:	JMP: 97, 69
+69:	LDB2: 115, 78
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 78, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 79
+71:	BRZ: 111, 117
+72:	TRP: 3, -
+Writing char: "o"
+73:	ADI: 79, 1
+74:	JMP: 97, 69
+69:	LDB2: 111, 80
+71:	BRZ: 100, 117
+72:	TRP: 3, -
+Writing char: "d"
+73:	ADI: 80, 1
+74:	JMP: 97, 69
+69:	LDB2: 100, 81
+71:	BRZ: 100, 117
+72:	TRP: 3, -
+Writing char: "d"
+73:	ADI: 81, 1
+74:	JMP: 97, 69
+69:	LDB2: 100, 82
+71:	BRZ: 13, 117
+72:	TRP: 3, -
+Writing char: ""
+73:	ADI: 82, 1
+74:	JMP: 97, 69
+69:	LDB2: 13, 83
+71:	BRZ: 10, 117
+72:	TRP: 3, -
+Writing char: "
+"
+73:	ADI: 83, 1
+74:	JMP: 97, 69
+69:	LDB2: 10, 84
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 241, -
+JMP: 241, 122
+122:	ADI: 8, 4
+123:	JMP: 153, 95
+95:	MOV: -1, 12
+96:	CMP: 12, 40
+97:	BRZ: -1, 249
+99:	LDA: 84, 4
+100:	ADD: 4, 12
+101:	LDR2: 16, 16
+102:	ADD: 15, 4
+104:	MOV: 4, 19
+105:	DIV: 19, 2
+106:	MUL: 9, 2
+107:	SUB: 18, 19
+108:	BRZ: -1, 221
+110:	MOV: 15, 19
+111:	LDA: -1, 75
+112:	TRP: 1, -
+Writing integer: 19
+113:	LDA: 241, 241
+114:	JMP: 97, 69
+69:	LDB2: 0, 75
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 75, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 76
+71:	BRZ: 105, 117
+72:	TRP: 3, -
+Writing char: "i"
+73:	ADI: 76, 1
+74:	JMP: 97, 69
+69:	LDB2: 105, 77
+71:	BRZ: 115, 117
+72:	TRP: 3, -
+Writing char: "s"
+73:	ADI: 77, 1
+74:	JMP: 97, 69
+69:	LDB2: 115, 78
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 78, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 79
+71:	BRZ: 111, 117
+72:	TRP: 3, -
+Writing char: "o"
+73:	ADI: 79, 1
+74:	JMP: 97, 69
+69:	LDB2: 111, 80
+71:	BRZ: 100, 117
+72:	TRP: 3, -
+Writing char: "d"
+73:	ADI: 80, 1
+74:	JMP: 97, 69
+69:	LDB2: 100, 81
+71:	BRZ: 100, 117
+72:	TRP: 3, -
+Writing char: "d"
+73:	ADI: 81, 1
+74:	JMP: 97, 69
+69:	LDB2: 100, 82
+71:	BRZ: 13, 117
+72:	TRP: 3, -
+Writing char: ""
+73:	ADI: 82, 1
+74:	JMP: 97, 69
+69:	LDB2: 13, 83
+71:	BRZ: 10, 117
+72:	TRP: 3, -
+Writing char: "
+"
+73:	ADI: 83, 1
+74:	JMP: 97, 69
+69:	LDB2: 10, 84
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 241, -
+JMP: 241, 122
+122:	ADI: 12, 4
+123:	JMP: 153, 95
+95:	MOV: -1, 16
+96:	CMP: 16, 40
+97:	BRZ: -1, 249
+99:	LDA: 84, 4
+100:	ADD: 4, 16
+101:	LDR2: 20, 20
+102:	ADD: 19, 15
+104:	MOV: 15, 34
+105:	DIV: 34, 2
+106:	MUL: 17, 2
+107:	SUB: 34, 34
+108:	BRZ: 0, 221
+JMP: 221, 116
+116:	MOV: 19, 34
+117:	LDA: 0, 64
+118:	TRP: 1, -
+Writing integer: 34
+119:	LDA: 241, 241
+120:	JMP: 97, 69
+69:	LDB2: 0, 64
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 64, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 65
+71:	BRZ: 105, 117
+72:	TRP: 3, -
+Writing char: "i"
+73:	ADI: 65, 1
+74:	JMP: 97, 69
+69:	LDB2: 105, 66
+71:	BRZ: 115, 117
+72:	TRP: 3, -
+Writing char: "s"
+73:	ADI: 66, 1
+74:	JMP: 97, 69
+69:	LDB2: 115, 67
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 67, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 68
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 68, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 69
+71:	BRZ: 118, 117
+72:	TRP: 3, -
+Writing char: "v"
+73:	ADI: 69, 1
+74:	JMP: 97, 69
+69:	LDB2: 118, 70
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 70, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 71
+71:	BRZ: 110, 117
+72:	TRP: 3, -
+Writing char: "n"
+73:	ADI: 71, 1
+74:	JMP: 97, 69
+69:	LDB2: 110, 72
+71:	BRZ: 13, 117
+72:	TRP: 3, -
+Writing char: ""
+73:	ADI: 72, 1
+74:	JMP: 97, 69
+69:	LDB2: 13, 73
+71:	BRZ: 10, 117
+72:	TRP: 3, -
+Writing char: "
+"
+73:	ADI: 73, 1
+74:	JMP: 97, 69
+69:	LDB2: 10, 74
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 241, -
+JMP: 241, 122
+122:	ADI: 16, 4
+123:	JMP: 153, 95
+95:	MOV: -1, 20
+96:	CMP: 20, 40
+97:	BRZ: -1, 249
+99:	LDA: 74, 4
+100:	ADD: 4, 20
+101:	LDR2: 24, 24
+102:	ADD: 34, -6
+104:	MOV: -6, 28
+105:	DIV: 28, 2
+106:	MUL: 14, 2
+107:	SUB: 28, 28
+108:	BRZ: 0, 221
+JMP: 221, 116
+116:	MOV: 34, 28
+117:	LDA: 0, 64
+118:	TRP: 1, -
+Writing integer: 28
+119:	LDA: 241, 241
+120:	JMP: 97, 69
+69:	LDB2: 0, 64
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 64, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 65
+71:	BRZ: 105, 117
+72:	TRP: 3, -
+Writing char: "i"
+73:	ADI: 65, 1
+74:	JMP: 97, 69
+69:	LDB2: 105, 66
+71:	BRZ: 115, 117
+72:	TRP: 3, -
+Writing char: "s"
+73:	ADI: 66, 1
+74:	JMP: 97, 69
+69:	LDB2: 115, 67
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 67, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 68
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 68, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 69
+71:	BRZ: 118, 117
+72:	TRP: 3, -
+Writing char: "v"
+73:	ADI: 69, 1
+74:	JMP: 97, 69
+69:	LDB2: 118, 70
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 70, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 71
+71:	BRZ: 110, 117
+72:	TRP: 3, -
+Writing char: "n"
+73:	ADI: 71, 1
+74:	JMP: 97, 69
+69:	LDB2: 110, 72
+71:	BRZ: 13, 117
+72:	TRP: 3, -
+Writing char: ""
+73:	ADI: 72, 1
+74:	JMP: 97, 69
+69:	LDB2: 13, 73
+71:	BRZ: 10, 117
+72:	TRP: 3, -
+Writing char: "
+"
+73:	ADI: 73, 1
+74:	JMP: 97, 69
+69:	LDB2: 10, 74
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 241, -
+JMP: 241, 122
+122:	ADI: 20, 4
+123:	JMP: 153, 95
+95:	MOV: -1, 24
+96:	CMP: 24, 40
+97:	BRZ: -1, 249
+99:	LDA: 74, 4
+100:	ADD: 4, 24
+101:	LDR2: 28, 28
+102:	ADD: 28, 7
+104:	MOV: 7, 35
+105:	DIV: 35, 2
+106:	MUL: 17, 2
+107:	SUB: 34, 35
+108:	BRZ: -1, 221
+110:	MOV: 28, 35
+111:	LDA: -1, 75
+112:	TRP: 1, -
+Writing integer: 35
+113:	LDA: 241, 241
+114:	JMP: 97, 69
+69:	LDB2: 0, 75
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 75, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 76
+71:	BRZ: 105, 117
+72:	TRP: 3, -
+Writing char: "i"
+73:	ADI: 76, 1
+74:	JMP: 97, 69
+69:	LDB2: 105, 77
+71:	BRZ: 115, 117
+72:	TRP: 3, -
+Writing char: "s"
+73:	ADI: 77, 1
+74:	JMP: 97, 69
+69:	LDB2: 115, 78
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 78, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 79
+71:	BRZ: 111, 117
+72:	TRP: 3, -
+Writing char: "o"
+73:	ADI: 79, 1
+74:	JMP: 97, 69
+69:	LDB2: 111, 80
+71:	BRZ: 100, 117
+72:	TRP: 3, -
+Writing char: "d"
+73:	ADI: 80, 1
+74:	JMP: 97, 69
+69:	LDB2: 100, 81
+71:	BRZ: 100, 117
+72:	TRP: 3, -
+Writing char: "d"
+73:	ADI: 81, 1
+74:	JMP: 97, 69
+69:	LDB2: 100, 82
+71:	BRZ: 13, 117
+72:	TRP: 3, -
+Writing char: ""
+73:	ADI: 82, 1
+74:	JMP: 97, 69
+69:	LDB2: 13, 83
+71:	BRZ: 10, 117
+72:	TRP: 3, -
+Writing char: "
+"
+73:	ADI: 83, 1
+74:	JMP: 97, 69
+69:	LDB2: 10, 84
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 241, -
+JMP: 241, 122
+122:	ADI: 24, 4
+123:	JMP: 153, 95
+95:	MOV: -1, 28
+96:	CMP: 28, 40
+97:	BRZ: -1, 249
+99:	LDA: 84, 4
+100:	ADD: 4, 28
+101:	LDR2: 32, 32
+102:	ADD: 35, 8
+104:	MOV: 8, 43
+105:	DIV: 43, 2
+106:	MUL: 21, 2
+107:	SUB: 42, 43
+108:	BRZ: -1, 221
+110:	MOV: 35, 43
+111:	LDA: -1, 75
+112:	TRP: 1, -
+Writing integer: 43
+113:	LDA: 241, 241
+114:	JMP: 97, 69
+69:	LDB2: 0, 75
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 75, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 76
+71:	BRZ: 105, 117
+72:	TRP: 3, -
+Writing char: "i"
+73:	ADI: 76, 1
+74:	JMP: 97, 69
+69:	LDB2: 105, 77
+71:	BRZ: 115, 117
+72:	TRP: 3, -
+Writing char: "s"
+73:	ADI: 77, 1
+74:	JMP: 97, 69
+69:	LDB2: 115, 78
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 78, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 79
+71:	BRZ: 111, 117
+72:	TRP: 3, -
+Writing char: "o"
+73:	ADI: 79, 1
+74:	JMP: 97, 69
+69:	LDB2: 111, 80
+71:	BRZ: 100, 117
+72:	TRP: 3, -
+Writing char: "d"
+73:	ADI: 80, 1
+74:	JMP: 97, 69
+69:	LDB2: 100, 81
+71:	BRZ: 100, 117
+72:	TRP: 3, -
+Writing char: "d"
+73:	ADI: 81, 1
+74:	JMP: 97, 69
+69:	LDB2: 100, 82
+71:	BRZ: 13, 117
+72:	TRP: 3, -
+Writing char: ""
+73:	ADI: 82, 1
+74:	JMP: 97, 69
+69:	LDB2: 13, 83
+71:	BRZ: 10, 117
+72:	TRP: 3, -
+Writing char: "
+"
+73:	ADI: 83, 1
+74:	JMP: 97, 69
+69:	LDB2: 10, 84
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 241, -
+JMP: 241, 122
+122:	ADI: 28, 4
+123:	JMP: 153, 95
+95:	MOV: -1, 32
+96:	CMP: 32, 40
+97:	BRZ: -1, 249
+99:	LDA: 84, 4
+100:	ADD: 4, 32
+101:	LDR2: 36, 36
+102:	ADD: 43, 9
+104:	MOV: 9, 52
+105:	DIV: 52, 2
+106:	MUL: 26, 2
+107:	SUB: 52, 52
+108:	BRZ: 0, 221
+JMP: 221, 116
+116:	MOV: 43, 52
+117:	LDA: 0, 64
+118:	TRP: 1, -
+Writing integer: 52
+119:	LDA: 241, 241
+120:	JMP: 97, 69
+69:	LDB2: 0, 64
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 64, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 65
+71:	BRZ: 105, 117
+72:	TRP: 3, -
+Writing char: "i"
+73:	ADI: 65, 1
+74:	JMP: 97, 69
+69:	LDB2: 105, 66
+71:	BRZ: 115, 117
+72:	TRP: 3, -
+Writing char: "s"
+73:	ADI: 66, 1
+74:	JMP: 97, 69
+69:	LDB2: 115, 67
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 67, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 68
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 68, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 69
+71:	BRZ: 118, 117
+72:	TRP: 3, -
+Writing char: "v"
+73:	ADI: 69, 1
+74:	JMP: 97, 69
+69:	LDB2: 118, 70
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 70, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 71
+71:	BRZ: 110, 117
+72:	TRP: 3, -
+Writing char: "n"
+73:	ADI: 71, 1
+74:	JMP: 97, 69
+69:	LDB2: 110, 72
+71:	BRZ: 13, 117
+72:	TRP: 3, -
+Writing char: ""
+73:	ADI: 72, 1
+74:	JMP: 97, 69
+69:	LDB2: 13, 73
+71:	BRZ: 10, 117
+72:	TRP: 3, -
+Writing char: "
+"
+73:	ADI: 73, 1
+74:	JMP: 97, 69
+69:	LDB2: 10, 74
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 241, -
+JMP: 241, 122
+122:	ADI: 32, 4
+123:	JMP: 153, 95
+95:	MOV: -1, 36
+96:	CMP: 36, 40
+97:	BRZ: -1, 249
+99:	LDA: 74, 4
+100:	ADD: 4, 36
+101:	LDR2: 40, 40
+102:	ADD: 52, 10
+104:	MOV: 10, 62
+105:	DIV: 62, 2
+106:	MUL: 31, 2
+107:	SUB: 62, 62
+108:	BRZ: 0, 221
+JMP: 221, 116
+116:	MOV: 52, 62
+117:	LDA: 0, 64
+118:	TRP: 1, -
+Writing integer: 62
+119:	LDA: 241, 241
+120:	JMP: 97, 69
+69:	LDB2: 0, 64
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 64, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 65
+71:	BRZ: 105, 117
+72:	TRP: 3, -
+Writing char: "i"
+73:	ADI: 65, 1
+74:	JMP: 97, 69
+69:	LDB2: 105, 66
+71:	BRZ: 115, 117
+72:	TRP: 3, -
+Writing char: "s"
+73:	ADI: 66, 1
+74:	JMP: 97, 69
+69:	LDB2: 115, 67
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 67, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 68
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 68, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 69
+71:	BRZ: 118, 117
+72:	TRP: 3, -
+Writing char: "v"
+73:	ADI: 69, 1
+74:	JMP: 97, 69
+69:	LDB2: 118, 70
+71:	BRZ: 101, 117
+72:	TRP: 3, -
+Writing char: "e"
+73:	ADI: 70, 1
+74:	JMP: 97, 69
+69:	LDB2: 101, 71
+71:	BRZ: 110, 117
+72:	TRP: 3, -
+Writing char: "n"
+73:	ADI: 71, 1
+74:	JMP: 97, 69
+69:	LDB2: 110, 72
+71:	BRZ: 13, 117
+72:	TRP: 3, -
+Writing char: ""
+73:	ADI: 72, 1
+74:	JMP: 97, 69
+69:	LDB2: 13, 73
+71:	BRZ: 10, 117
+72:	TRP: 3, -
+Writing char: "
+"
+73:	ADI: 73, 1
+74:	JMP: 97, 69
+69:	LDB2: 10, 74
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 241, -
+JMP: 241, 122
+122:	ADI: 36, 4
+123:	JMP: 153, 95
+95:	MOV: -1, 40
+96:	CMP: 40, 40
+97:	BRZ: 0, 249
+JMP: 249, 125
+125:	LDA: 74, 56
+126:	LDA: 241, 261
+127:	JMP: 97, 69
+69:	LDB2: 0, 56
+71:	BRZ: 83, 117
+72:	TRP: 3, -
+Writing char: "S"
+73:	ADI: 56, 1
+74:	JMP: 97, 69
+69:	LDB2: 83, 57
+71:	BRZ: 117, 117
+72:	TRP: 3, -
+Writing char: "u"
+73:	ADI: 57, 1
+74:	JMP: 97, 69
+69:	LDB2: 117, 58
+71:	BRZ: 109, 117
+72:	TRP: 3, -
+Writing char: "m"
+73:	ADI: 58, 1
+74:	JMP: 97, 69
+69:	LDB2: 109, 59
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 59, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 60
+71:	BRZ: 105, 117
+72:	TRP: 3, -
+Writing char: "i"
+73:	ADI: 60, 1
+74:	JMP: 97, 69
+69:	LDB2: 105, 61
+71:	BRZ: 115, 117
+72:	TRP: 3, -
+Writing char: "s"
+73:	ADI: 61, 1
+74:	JMP: 97, 69
+69:	LDB2: 115, 62
+71:	BRZ: 32, 117
+72:	TRP: 3, -
+Writing char: " "
+73:	ADI: 62, 1
+74:	JMP: 97, 69
+69:	LDB2: 32, 63
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 261, -
+JMP: 261, 128
+128:	MOV: 62, 62
+129:	TRP: 1, -
+Writing integer: 62
+130:	LDR: 0, 91
+131:	TRP: 3, -
+Writing char: ""
+132:	LDR: 68109, 92
+133:	TRP: 3, -
+Writing char: "
+"
+137:	LDA: 63, 85
+138:	LDA: 261, 297
+139:	JMP: 97, 69
+69:	LDB2: 2030043402, 85
+71:	BRZ: 67, 117
+72:	TRP: 3, -
+Writing char: "C"
+73:	ADI: 85, 1
+74:	JMP: 97, 69
+69:	LDB2: 67, 86
+71:	BRZ: 65, 117
+72:	TRP: 3, -
+Writing char: "A"
+73:	ADI: 86, 1
+74:	JMP: 97, 69
+69:	LDB2: 65, 87
+71:	BRZ: 84, 117
+72:	TRP: 3, -
+Writing char: "T"
+73:	ADI: 87, 1
+74:	JMP: 97, 69
+69:	LDB2: 84, 88
+71:	BRZ: 83, 117
+72:	TRP: 3, -
+Writing char: "S"
+73:	ADI: 88, 1
+74:	JMP: 97, 69
+69:	LDB2: 83, 89
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 297, -
+JMP: 297, 140
+140:	LDR: 62, 85
+141:	LDR: 0, 91
+142:	TRP: 3, -
+Writing char: ""
+143:	LDR: 68109, 92
+144:	TRP: 3, -
+Writing char: "
+"
+145:	TRP: 1, -
+Writing integer: 1398030659
+146:	MOV: 40, 1398030659
+148:	LDB: 0, 85
+149:	LDB: 0, 87
+150:	STB: 67, 87
+151:	STB: 84, 85
+153:	LDR: 2030043402, 91
+154:	TRP: 3, -
+Writing char: ""
+155:	LDR: 68109, 92
+156:	TRP: 3, -
+Writing char: "
+"
+158:	LDA: 89, 85
+159:	LDA: 297, 369
+160:	JMP: 97, 69
+69:	LDB2: 2030043402, 85
+71:	BRZ: 84, 117
+72:	TRP: 3, -
+Writing char: "T"
+73:	ADI: 85, 1
+74:	JMP: 97, 69
+69:	LDB2: 84, 86
+71:	BRZ: 65, 117
+72:	TRP: 3, -
+Writing char: "A"
+73:	ADI: 86, 1
+74:	JMP: 97, 69
+69:	LDB2: 65, 87
+71:	BRZ: 67, 117
+72:	TRP: 3, -
+Writing char: "C"
+73:	ADI: 87, 1
+74:	JMP: 97, 69
+69:	LDB2: 67, 88
+71:	BRZ: 83, 117
+72:	TRP: 3, -
+Writing char: "S"
+73:	ADI: 88, 1
+74:	JMP: 97, 69
+69:	LDB2: 83, 89
+71:	BRZ: 0, 117
+JMP: 117, 76
+76:	JMR: 369, -
+JMP: 369, 162
+162:	LDR: 1398030659, 85
+163:	LDR: 0, 91
+164:	TRP: 3, -
+Writing char: ""
+165:	LDR: 68109, 92
+166:	TRP: 3, -
+Writing char: "
+"
+167:	TRP: 1, -
+Writing integer: 1396916564
+168:	LDR: 2030043402, 91
+169:	TRP: 3, -
+Writing char: ""
+170:	LDR: 68109, 92
+171:	TRP: 3, -
+Writing char: "
+"
+172:	SUB: 1396916564, 1398030659
+173:	TRP: 1, -
+Writing integer: -1114095
+174:	TRP: 0, -
+Program halted
