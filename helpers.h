@@ -14,6 +14,24 @@ typedef int REGISTER;
 class VirtualMachine;
 
 template<class F>
+struct method_wrapper_RAW
+{
+    typedef void result_type;
+    F f;
+    method_wrapper_RAW(F f) : f(f) {}
+    void operator()(VirtualMachine* VM, const instructionBlock& in)
+    {
+        return (VM->*f)();
+    }
+};
+inline instructionDef
+make_method(VirtualMachine* instance, void (VirtualMachine::*function)())
+{
+    instructionDef def = { PT_RAW, boost::bind(method_wrapper_RAW<void (VirtualMachine::*)()>(function), instance, _1) };
+    return def;
+}
+
+template<class F>
 struct method_wrapper_ADDR
 {
     typedef void result_type;

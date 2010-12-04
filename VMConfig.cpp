@@ -39,6 +39,13 @@ VMConfig::VMConfig(void)
     registerInstruction("OR",  0x32);
     // Compare
     registerInstruction("CMP", 0x39);
+
+    // Threading
+    registerInstruction("RUN", 0x41);
+    registerInstruction("END", 0x41);
+    registerInstruction("BLK", 0x41);
+    registerInstruction("LCK", 0x41);
+    registerInstruction("ULK", 0x41);
 }
 
 

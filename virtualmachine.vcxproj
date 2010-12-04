@@ -93,6 +93,9 @@
     <ClCompile Include="VMConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="proj2.asm" />
+    <None Include="proj3.asm" />
+    <None Include="proj4.asm" />
     <None Include="project1.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -33,17 +33,18 @@ public:
     ~Assembler(void);
     unsigned short start();
     boost::shared_array<unsigned char> getBlock() { return m_block; }
+    unsigned short getBlockSize() { return m_size; }
 
     std::map<unsigned short, int> byteToLineMap;
     std::map<unsigned short, std::string> labelReverse;
 
 protected:
     char getRegister(std::string name);
-
 protected:
     VMConfigPtr m_config;
     Parser m_parser;
     boost::shared_array<unsigned char> m_block;
+    unsigned short m_size;
 };
 
 #endif

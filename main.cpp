@@ -17,7 +17,7 @@ int main(int argc, char *argv[] )
     VirtualMachine vm;
     try {
         vm.setDebugInfo(assembler.byteToLineMap, assembler.labelReverse);
-        vm.load(data);
+        vm.load(data, assembler.getBlockSize());
         vm.run(startAddr);
     } catch (std::exception &ex) {
         std::cout << "VM error: " << ex.what() << std::endl;

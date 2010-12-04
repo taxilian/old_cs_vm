@@ -66,13 +66,10 @@ void Parser::processFile()
         try {
             if (it == tokens.end()) {
                 continue;
-            } else if (tokens.size() == 1) {
-                throw ParserException("Only found 1 token");
             } else {
                 std::string label;
                 std::string instruct;
-                if (!m_config->isValidInstruction(*it)
-                    && (*it)[0] != '.') {
+                if ((*it)[0] != '.' && !m_config->isValidInstruction(*it)) {
                     label = *it;
                     nextToken(it, tokens.end());
                 }
@@ -111,7 +108,7 @@ void Parser::processFile()
                     }
                     // This is a data piece
                 } else {
-                    InstructionPtr ins(boost::make_shared<Instruction>());;
+                    InstructionPtr ins(boost::make_shared<Instruction>());
                     ins->label = label;
                     ins->name = instruct;
                     while (++it != tokens.end()) {

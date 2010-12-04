@@ -35,6 +35,7 @@ union instructionBlock {
 typedef boost::function<void (const instructionBlock&)> CallInstructionFunctor;
 
 enum ParamType {
+    PT_RAW,
     PT_ADDR,
     PT_IMMEDIATE,
     PT_REG,

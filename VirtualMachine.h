@@ -19,17 +19,24 @@ struct VMException : std::exception
     std::string m_error;
 };
 
+struct thread
+{
+    bool active;
+    ADDRESS MEMB;
+    ADDRESS SB;
+    ADDRESS SL;
+};
+
 typedef std::map<unsigned char, instructionDef> FunctionMap;
 
 class VirtualMachine
 {
 public:
-public:
     VirtualMachine(void);
     virtual ~VirtualMachine(void);
 
     void reset();
-    void load(boost::shared_array<unsigned char> block);
+    void load(boost::shared_array<unsigned char> block, unsigned short size);
     void run(unsigned short start);
     void setDebugInfo(std::map<unsigned short, int>& linemap, std::map<unsigned short, std::string> &revLabelMap);
 
@@ -38,9 +45,20 @@ protected:
     boost::shared_array<unsigned char> m_block;
     bool m_running;
     FunctionMap m_functionMap;
+    thread threadList[20];
+    int m_curThread;
+    int threadCount;
+
+    unsigned short BOUND_CODE;
 
 public:
-    int reg[20];
+    static const int THREAD_NUM = 20;
+
+    static const int FP = 16;
+    static const int SL = 17;
+    static const int SP = 18;
+    static const int SB = 19;
+    int reg[THREAD_NUM];
     int pc;
 
 protected:
@@ -53,6 +71,15 @@ protected:
     void set_byte(unsigned short addr, char value);
     int get_int(unsigned short addr);
     void set_int(unsigned short addr, int value);
+    std::string getLabelForAddress(ADDRESS addr);
+    
+    void initThread( int threadId, ADDRESS newPC );
+    void endThread( int threadId );
+    void changeContext( int newThreadId );
+    void writeThreadRegisters(int threadId);
+    void loadThreadRegisters( int newThreadId );
+    void switchToNextThread();
+    int getNextAvailableThread();
 
 protected:
     void JMP(ADDRESS addr);
@@ -84,6 +111,12 @@ protected:
     void AND(REGISTER &rd, REGISTER &rs);
     void OR(REGISTER &rd, REGISTER &rs);
     void CMP(REGISTER &rd, REGISTER &rs);
+    
+    void RUN(REGISTER &rd, ADDRESS addr);
+    void END();
+    void BLK();
+    void LCK(ADDRESS addr);
+    void ULK(ADDRESS addr);
 };
 
 #endif

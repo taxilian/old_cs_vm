@@ -26,7 +26,8 @@ char Assembler::getRegister(std::string name)
     }
 }
 
-Assembler::Assembler(std::string filename) : m_config(boost::make_shared<VMConfig>()), m_parser(filename, m_config), m_block(new unsigned char[1024])
+Assembler::Assembler(std::string filename) : m_config(boost::make_shared<VMConfig>()),
+    m_parser(filename, m_config), m_block(new unsigned char[1024]), m_size(0)
 {
 }
 
@@ -62,13 +63,16 @@ unsigned short Assembler::start()
         }
     }
 #ifdef DEBUG
-    std::cout << "Processed: " << m_parser.getLineNumber() << " lines. " << labelAddr.size() << " labels, "
+    std::cout << "Processed: " << _m_parser.getLineNumber() << " lines. " << labelAddr.size() << " labels, "
         << lines.size() * 4 << " bytes used." << std::endl;
     std::cout << "Building binary block..." << std::endl;
 #endif
 
+    m_size = curAddr;
+    m_block = boost::shared_array<unsigned char>(new unsigned char[m_size+1]);
     curAddr = 0;
     while (lines.size()) {
+        int lineNo = byteToLineMap[curAddr];
         Parser::LinePtr line(lines.front());
         lines.pop_front();
         Parser::IntPtr intData(boost::dynamic_pointer_cast<Parser::Int>(line));
@@ -128,7 +132,7 @@ unsigned short Assembler::start()
                     }
                 }
             }
-            if (instruction->args.size() > 2) {
+            if (instruction->args.size() > 2 && !instruction->args[2].empty()) {
                 throw AssemblerException("Too many arguments on command " + instruction->name + " on line " + boost::lexical_cast<std::string>(byteToLineMap[curAddr]));
             }
             block.instruction = m_config->strToBinary(instruction->name, type);
@@ -141,8 +145,6 @@ unsigned short Assembler::start()
 
     return start;
 }
-
-
 
 Assembler::~Assembler(void)
 {
