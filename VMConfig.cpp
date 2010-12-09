@@ -42,10 +42,10 @@ VMConfig::VMConfig(void)
 
     // Threading
     registerInstruction("RUN", 0x41);
-    registerInstruction("END", 0x41);
-    registerInstruction("BLK", 0x41);
-    registerInstruction("LCK", 0x41);
-    registerInstruction("ULK", 0x41);
+    registerInstruction("END", 0x42);
+    registerInstruction("BLK", 0x43);
+    registerInstruction("LCK", 0x44);
+    registerInstruction("ULK", 0x45);
 }
 
 

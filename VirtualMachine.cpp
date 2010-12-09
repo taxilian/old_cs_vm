@@ -1,6 +1,7 @@
 #include "VirtualMachine.h"
 #include <iostream>
 #include <boost/make_shared.hpp>
+#include <boost/lexical_cast.hpp>
 #include <conio.h>
 
 #ifdef _DEBUG
@@ -17,7 +18,7 @@
 
 #define MEMORY_SIZE 16384
 
-VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), m_curThread(-1), threadCount(0)
+VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), m_curThread(-1), threadCount(0), m_blocked(false)
 {
     reset();
 
@@ -103,6 +104,7 @@ void VirtualMachine::reset()
     }
     memset(threadList, 0, sizeof(thread) * THREAD_NUM);
     m_running = false;
+    m_blocked = false;
 
     reg[SB] = MEMORY_SIZE - 1;  // Stack Base
     reg[FP] = reg[SB];          // Frame Pointer (Bottom of current frame)
@@ -132,7 +134,7 @@ void VirtualMachine::initThread( int threadId, ADDRESS newPC )
 void VirtualMachine::endThread( int threadId )
 {
     threadList[threadId].active = false;
-    threadCount++;
+    threadCount--;
     LOG("Ending thread " << threadId);
 }
 
@@ -224,14 +226,16 @@ void VirtualMachine::run(unsigned short start)
     pc = start;
     m_running = true;
 
+
 #ifdef TRACEON
     std::cerr << "Beginning to run program." << std::endl;
 #endif
     int i = 0;
     while (m_running) {
-        if (++i % 3 == 0) {
+        if (++i % 15 == 0 || m_blocked) {
             i = 0;
             switchToNextThread();
+            m_blocked = false;
         }
         int line = this->byteToLineMap[pc];
         int addr = pc;
@@ -440,7 +444,7 @@ void VirtualMachine::RUN( REGISTER &rd, ADDRESS addr )
 
 void VirtualMachine::END()
 {
-    DOC("BLK", "-", "-");
+    DOC("END", "Thread ", boost::lexical_cast<std::string>(m_curThread));
     if (m_curThread == 0) {
         throw VMException("Attempt to call END from main thread");
     }
@@ -450,28 +454,30 @@ void VirtualMachine::END()
 
 void VirtualMachine::BLK()
 {
-    DOC("BLK", "-", "-");
     if (m_curThread != 0)
         throw VMException("Attempt to call BLK from thread other than main");
     else if (threadCount > 1) {
         pc -= 4;
+        m_blocked = true;
+        DOC("BLK", "-", "(Blocking)");
     }
 }
 
 void VirtualMachine::LCK( ADDRESS addr )
 {
     if (get_byte(addr) == -1) {
-        DOC("LCK", addr, "-");
+        DOC("LCK", getLabelForAddress(addr), "-");
         set_byte(addr, m_curThread);
     } else if (get_byte(addr) != m_curThread) {
-        DOC("LCK", addr, "(MUTEX IN USE, BLOCKING)");
+        DOC("LCK", this->getLabelForAddress(addr), "(MUTEX IN USE, BLOCKING)");
         pc -= 4;
+    m_blocked = true;
     }
 }
 
 void VirtualMachine::ULK( ADDRESS addr )
 {
-    DOC("ULK", addr, "-");
+    DOC("ULK", getLabelForAddress(addr), "-");
     if (get_byte(addr) == m_curThread) {
         set_byte(addr, -1);
     } else {

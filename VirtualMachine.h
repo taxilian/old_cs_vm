@@ -48,6 +48,7 @@ protected:
     thread threadList[20];
     int m_curThread;
     int threadCount;
+    bool m_blocked;
 
     unsigned short BOUND_CODE;
 
