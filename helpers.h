@@ -1,5 +1,3 @@
-
-
 #pragma once
 #ifndef H_VM_HELPERS_RB_
 #define H_VM_HELPERS_RB_
