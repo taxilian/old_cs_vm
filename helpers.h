@@ -4,9 +4,9 @@
 
 #include "VMConfig.h"
 //typedef char REGISTER;
-typedef unsigned short ADDRESS;
-typedef int IMMEDIATE;
-typedef int REGISTER;
+typedef boost::uint32_t ADDRESS;
+typedef boost::int32_t IMMEDIATE;
+typedef boost::uint64_t REGISTER;
 
 
 class VirtualMachine;
@@ -37,7 +37,7 @@ struct method_wrapper_ADDR
     method_wrapper_ADDR(F f) : f(f) {}
     void operator()(VirtualMachine* VM, const instructionBlock& in)
     {
-        return (VM->*f)(in.uint16_param2);
+        return (VM->*f)(in.uint32_param2);
     }
 };
 inline instructionDef
@@ -55,7 +55,7 @@ struct method_wrapper_REG_ADDR
     method_wrapper_REG_ADDR(F f) : f(f) {}
     void operator()(VirtualMachine* VM, const instructionBlock& in)
     {
-        return (VM->*f)(VM->reg[in.uint8_param], in.uint16_param2);
+        return (VM->*f)(VM->reg[in.uint16_param], in.uint32_param2);
     }
 };
 inline instructionDef
@@ -73,7 +73,7 @@ struct method_wrapper_REG
     method_wrapper_REG(F f) : f(f) {}
     void operator()(VirtualMachine* VM, const instructionBlock& in)
     {
-        return (VM->*f)(VM->reg[in.uint8_param]);
+        return (VM->*f)(VM->reg[in.uint16_param]);
     }
 };
 inline instructionDef
@@ -91,7 +91,7 @@ struct method_wrapper_REG_IMM
     method_wrapper_REG_IMM(F f) : f(f) {}
     void operator()(VirtualMachine* VM, const instructionBlock& in)
     {
-        return (VM->*f)(VM->reg[in.uint8_param], static_cast<short>(in.uint16_param2));
+        return (VM->*f)(VM->reg[in.uint16_param], static_cast<short>(in.uint32_param2));
     }
 };
 inline instructionDef
@@ -109,7 +109,7 @@ struct method_wrapper_IMM
     method_wrapper_IMM(F f) : f(f) {}
     void operator()(VirtualMachine* VM, const instructionBlock& in)
     {
-        return (VM->*f)((int)in.uint16_param2);
+        return (VM->*f)((int)in.uint32_param2);
     }
 };
 inline instructionDef
@@ -128,7 +128,7 @@ struct method_wrapper_REG_REG
     void operator()(VirtualMachine* VM, const instructionBlock& in)
     {
 #define REG_OR_PC(param) (param == 0x7F ? VM->pc : VM->reg[param])
-        return (VM->*f)(REG_OR_PC(in.uint8_param), REG_OR_PC(in.uint8_param2));
+        return (VM->*f)(REG_OR_PC(in.uint16_param), REG_OR_PC(in.uint16_param2));
 #undef REG_OR_PC
     }
 };

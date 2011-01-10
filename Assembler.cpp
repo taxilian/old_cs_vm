@@ -2,8 +2,12 @@
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/cast.hpp>
+#include <boost/shared_ptr.hpp>
 #include <iostream>
 #include "VMConfig.h"
+
+typedef boost::uint64_t INSTRUCTION;
 
 char Assembler::getRegister(std::string name)
 {
@@ -31,13 +35,13 @@ Assembler::Assembler(std::string filename) : m_config(boost::make_shared<VMConfi
 {
 }
 
-unsigned short Assembler::start()
+boost::uint32_t Assembler::start()
 {
-    unsigned short start = 0;
+    boost::uint32_t start = 0;
     Parser::LinePtr curLine;
-    std::map<std::string, unsigned short> labelAddr;
+    std::map<std::string, boost::uint32_t> labelAddr;
     std::deque<Parser::LinePtr> lines;
-    unsigned short curAddr(0);
+    boost::uint32_t curAddr(0);
 #ifdef DEBUG
     std::cout << "Analyzing code..." << std::endl;
 #endif
@@ -56,10 +60,10 @@ unsigned short Assembler::start()
         }
         lines.push_back(curLine);
         byteToLineMap[curAddr] = (int)m_parser.getLineNumber();
-        if (boost::dynamic_pointer_cast<Parser::Byte>(curLine)) {
-            curAddr++;
+        if (Parser::BytePtr ptr = boost::shared_dynamic_cast<Parser::Byte>(curLine)) {
+            curAddr+=sizeof(ptr->value);
         } else {
-            curAddr+=4;
+            curAddr+=sizeof(INSTRUCTION);
         }
     }
 #ifdef DEBUG
@@ -82,9 +86,9 @@ unsigned short Assembler::start()
         if (byteData) {
             // This is byte data
             m_block[curAddr] = byteData->value;
-            curAddr++;
+            curAddr += sizeof(byteData->value);
         } else if (intData) {
-            *((int*)&m_block[curAddr]) = intData->value;
+            *((boost::uint64_t*)&m_block[curAddr]) = intData->value;
             curAddr += sizeof(intData->value);
         } else if (instruction) {
             // This is an actual "machine" instruction
@@ -97,14 +101,14 @@ unsigned short Assembler::start()
             if (instruction->args.size() >= 1) {
                 char reg(getRegister(instruction->args[0]));
                 if (reg >= 0) {
-                    block.uint8_param = (unsigned char)reg;
+                    block.uint16_param = (unsigned char)reg;
                     type = PT_REG;
                 } else if (labelAddr.find(instruction->args[0]) != labelAddr.end()) {
-                    block.uint16_param2 = labelAddr[instruction->args[0]];
+                    block.uint32_param2 = labelAddr[instruction->args[0]];
                     type = PT_ADDR;
                 } else {
                     try {
-                        block.uint16_param2 = boost::lexical_cast<unsigned short>(instruction->args[0]);
+                        block.uint32_param2 = boost::lexical_cast<boost::uint32_t>(instruction->args[0]);
                         type = PT_IMMEDIATE;
                     } catch (...) { // boost::bad_lexical_cast
                         std::string msg = "Invalid command; unrecognized argument 1 on command " + instruction->name;
@@ -113,17 +117,17 @@ unsigned short Assembler::start()
                     }
                 }
             }
-            if (instruction->args.size() >= 2 && !block.uint16_param2) {
+            if (instruction->args.size() >= 2 && !block.uint32_param2) {
                 char reg(getRegister(instruction->args[1]));
                 if (reg >= 0) {
-                    block.uint8_param2 = (unsigned char)reg;
+                    block.uint16_param2 = (unsigned char)reg;
                     type = PT_REGREG;
                 } else if (labelAddr.find(instruction->args[1]) != labelAddr.end()) {
-                    block.uint16_param2 = labelAddr[instruction->args[1]];
+                    block.uint32_param2 = labelAddr[instruction->args[1]];
                     type = PT_REGADDR;
                 } else {
                     try {
-                        block.uint16_param2 = boost::lexical_cast<unsigned short>(instruction->args[1]);
+                        block.uint32_param2 = boost::lexical_cast<boost::uint32_t>(instruction->args[1]);
                         type = PT_REGIMMEDIATE;
                     } catch (...) { // boost::bad_lexical_cast
                         std::string msg = "Invalid command; unrecognized argument 2 on command " + instruction->name;
@@ -136,7 +140,7 @@ unsigned short Assembler::start()
                 throw AssemblerException("Too many arguments on command " + instruction->name + " on line " + boost::lexical_cast<std::string>(byteToLineMap[curAddr]));
             }
             block.instruction = m_config->strToBinary(instruction->name, type);
-            *((int*)&m_block[curAddr]) = block.value;
+            *((INSTRUCTION*)&m_block[curAddr]) = block.value;
             curAddr += sizeof(block.value);
         } else {
             throw AssemblerException("Invalid LinePtr found at " + curAddr);

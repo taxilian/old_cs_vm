@@ -16,7 +16,7 @@
 #define LOG(MSG)
 #endif
 
-#define MEMORY_SIZE 16384
+#define MEMORY_SIZE (1024 * 1024 * 1024) // 1 MB of memory
 
 VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), m_curThread(-1), threadCount(0), m_blocked(false)
 {
@@ -57,12 +57,6 @@ VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()),
     registerHandler("BLK", make_method(this, &VirtualMachine::BLK));
     registerHandler("LCK", make_method(this, &VirtualMachine::LCK));
     registerHandler("ULK", make_method(this, &VirtualMachine::ULK));
-    
-    void RUN(REGISTER &rd, ADDRESS addr);
-    void END();
-    void BLK();
-    void LCK(ADDRESS addr);
-    void ULK(ADDRESS addr);
 }
 
 // Used to register a handler for the given instruction
@@ -73,19 +67,18 @@ void VirtualMachine::registerHandler(std::string name, instructionDef func)
 }
 
 // This function analyzes the instruction and calls the correct handler for it
-void VirtualMachine::callHandler(unsigned int instruction)
+void VirtualMachine::callHandler(boost::uint64_t instruction)
 {
     instructionBlock blk;
     blk.value = instruction;
     FunctionMap::iterator fnd = m_functionMap.find(blk.instruction);
     if (fnd != m_functionMap.end()) {
-        fnd->second.func(blk);
+        fnd->second.func(blk);      // Execute the instruction
     } else {
-        std::string str("Invalid instruction @ ");
-        str += (pc - 4);
-        str += " (line " + byteToLineMap[pc-4];
-        str += "!";
-        throw std::exception(str.c_str());
+        std::stringstream ss;
+        ss << "Invalid instruction @ " << (pc - sizeof(boost::uint64_t)) << " (line ";
+        ss << byteToLineMap[static_cast<unsigned int>(pc-4)] << "!";
+        throw std::exception(ss.str().c_str());
     }
 }
 
@@ -189,7 +182,7 @@ void VirtualMachine::loadThreadRegisters( int threadId )
 
 
 // Loads the program block into memory
-void VirtualMachine::load(boost::shared_array<unsigned char> block, unsigned short size)
+void VirtualMachine::load(boost::shared_array<unsigned char> block, boost::uint32_t size)
 {
     memcpy(m_block.get(), block.get(), size);
     BOUND_CODE = size;
@@ -206,7 +199,7 @@ void VirtualMachine::load(boost::shared_array<unsigned char> block, unsigned sho
 }
 
 std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
-    std::map<unsigned short, std::string>::iterator fnd = labelReverse.find(addr);
+    std::map<boost::uint32_t, std::string>::iterator fnd = labelReverse.find(addr);
     std::string out;
     if (fnd != labelReverse.end()) {
         out += "\t(";
@@ -219,7 +212,7 @@ std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
 }
 
 // This is the main system loop
-void VirtualMachine::run(unsigned short start)
+void VirtualMachine::run(boost::uint32_t start)
 {
     initThread(0, start);
     changeContext(0);
@@ -237,43 +230,43 @@ void VirtualMachine::run(unsigned short start)
             switchToNextThread();
             m_blocked = false;
         }
-        int line = this->byteToLineMap[pc];
-        int addr = pc;
+        int line = this->byteToLineMap[static_cast<unsigned int>(pc)];
+        boost::uint64_t addr = pc;
 #ifdef TRACEON
         std::cerr << "Thread " << m_curThread << ": " << line << " @ " << addr << ":\t";
 #endif
-        int rl = get_int(pc);
-        pc += 4;
+        boost::uint64_t rl = get_int(pc);
+        pc += sizeof(pc);
         callHandler(rl);
 #ifdef TRACEON
-        std::cerr << this->getLabelForAddress(addr) << std::endl;
+        std::cerr << this->getLabelForAddress(static_cast<ADDRESS>(addr)) << std::endl;
 #endif
     };
 }
 
 // Returns a string with the line number of the instruction at the given address
-std::string VirtualMachine::getDebugFor(unsigned short addr)
+std::string VirtualMachine::getDebugFor(boost::uint32_t addr)
 {
     int line = byteToLineMap[addr];
     return std::string("Error occurred on line " + byteToLineMap[addr]);
 }
 
-int VirtualMachine::get_int(unsigned short addr)
+boost::uint64_t VirtualMachine::get_int(boost::uint32_t addr)
 {
-    return *((int*)(&m_block[addr]));
+    return *((boost::uint64_t*)(&m_block[addr]));
 }
 
-void VirtualMachine::set_int(unsigned short addr, int value)
+void VirtualMachine::set_int(boost::uint32_t addr, boost::uint64_t value)
 {
-    *((int*)(&m_block[addr])) = value;
+    *((boost::uint64_t*)(&m_block[addr])) = value;
 }
 
-char VirtualMachine::get_byte(unsigned short addr)
+char VirtualMachine::get_byte(boost::uint32_t addr)
 {
     return *((char*)(&m_block[addr]));
 }
 
-void VirtualMachine::set_byte(unsigned short addr, char value)
+void VirtualMachine::set_byte(boost::uint32_t addr, char value)
 {
     *((char*)(&m_block[addr])) = value;
 }
@@ -427,7 +420,7 @@ void VirtualMachine::TRP(IMMEDIATE i)
     }
 }
 
-void VirtualMachine::setDebugInfo( std::map<unsigned short, int>& linemap, std::map<unsigned short, std::string> &revLabelMap )
+void VirtualMachine::setDebugInfo( std::map<boost::uint32_t, int>& linemap, std::map<boost::uint32_t, std::string> &revLabelMap )
 {
     byteToLineMap = linemap;
     labelReverse = revLabelMap;

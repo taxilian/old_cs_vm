@@ -63,13 +63,13 @@ CommaSpace  .BYT ", "
 
 CODE_START  MOV R2, SP      ; R2 = Stack top
             MOV R3, SP      ; R3 = Stack top
-            ADI R2, -4      ; R2 = PFP location
+            ADI R2, -8      ; R2 = PFP location
             STR FP, R2      ; Set PFP
-            ADI R2, -4      ; New top of stack
+            ADI R2, -8      ; New top of stack
             MOV SP, R2      ; Stack PTR = R2
             MOV FP, R3      ; Frame PTR = old Stack PTR
             MOV R1, PC      ; Get addr of next instruction
-            ADI R1, 12      ; Add 3 instructions from this one
+            ADI R1, 24      ; Add 3 instructions from this one
             STR R1, FP      ; Set return address
             JMP Main        ; Call function Main
 
@@ -104,15 +104,15 @@ Factorial   MOV R5, FP
             ADI R1, -1
             MOV R2, SP
             MOV R3, SP
-            ADI R2, -4
+            ADI R2, -8
             STR FP, R2      ; Set PFP
-            ADI R2, -4
+            ADI R2, -8
             STR R1, R2      ; Set first parameter
-            ADI R2, -4
+            ADI R2, -8
             MOV SP, R2      ; Stack PTR = R2
             MOV FP, R3      ; Frame PTR = old Stack PTR
             MOV R1, PC
-            ADI R1, 12
+            ADI R1, 24
             STR R1, FP      ; Set return value
             JMP Factorial   ; Call function
             
@@ -126,7 +126,7 @@ Factorial   MOV R5, FP
 Fact_done   LDR R0, FP
             STR R1, FP
             MOV R5, FP
-            ADI R5, -4
+            ADI R5, -8
             MOV SP, FP
             LDR FP, R5
             JMR R0          ; Jump to return address
@@ -137,7 +137,7 @@ Fact_done   LDR R0, FP
 printFact   LDA R9, NULL
 
             SUB R5, R5
-            ADI R5, 4
+            ADI R5, 8
 
             LDA R13, INTARR
             LDR R14, COUNT  ; R14 == end of array
@@ -152,7 +152,7 @@ print_start MOV R5, R13
 
             MOV R2, R9              ; Print the ", " except on first time
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP PSTR
             LDA R9, CommaSpace
 
@@ -161,14 +161,14 @@ print_start MOV R5, R13
 
             MOV R2, R9              ; Print the ", "
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP PSTR
 
             LDR R0, R14             ; print Array[CNT-1-i]
             TRP 1
 
-            ADI R13, 4              ; move the pointers
-            ADI R14, -4
+            ADI R13, 8              ; move the pointers
+            ADI R14, -8
             JMP print_start
 
 printfact_e LDR R8, LF              ; print EOL
@@ -176,7 +176,7 @@ printfact_e LDR R8, LF              ; print EOL
 
             LDR R0, FP      ; Get return address
             MOV R5, FP      
-            ADI R5, -4
+            ADI R5, -8
             MOV SP, FP      ; SP = FP
             LDR FP, R5      ; FP = PFP
             JMR R0          ; Jump to return address
@@ -190,7 +190,7 @@ Main        SUB R0, R0
 
 FactLoop    LDA R2, FactPrompt
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP PSTR
             
             TRP 2           ; Get the factorial value into R0
@@ -200,31 +200,31 @@ FactLoop    LDA R2, FactPrompt
             BRZ R5, FactLoop_e
 
             STR R0, SP      ; Store a temporary variable on the stack
-            ADI SP, -4      ; Move the stack pointer
+            ADI SP, -8      ; Move the stack pointer
 
             MOV R2, SP      ; R2 = Stack top
             MOV R3, SP      ; R3 = Stack top
-            ADI R2, -4      ; R2 = PFP location
+            ADI R2, -8      ; R2 = PFP location
             STR FP, R2      ; Set PFP
-            ADI R2, -4      ; Move to param 1 location
+            ADI R2, -8      ; Move to param 1 location
             STR R0, R2      ; Set param 1
-            ADI R2, -4      ; New top of stack
+            ADI R2, -8      ; New top of stack
             MOV SP, R2      ; Stack PTR = R2
             MOV FP, R3      ; Frame PTR = old Stack PTR
             MOV R1, PC      ; Get addr of next instruction
-            ADI R1, 12      ; Add 3 instructions from this one
+            ADI R1, 24      ; Add 3 instructions from this one
             STR R1, FP      ; Set return value
             JMP Factorial   ; Call function Factorial
 
             LDR R5, SP      ; Get return value into R5
             
             MOV R3, SP
-            ADI R3, 4       ; Get the last (only) temporary variable
+            ADI R3, 8       ; Get the last (only) temporary variable
             LDR R0, R3      ; Read from memory
             TRP 1           ; Print input
             LDA R2, FactResult
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP PSTR        ; Print "! is "
             MOV R0, R5
             TRP 1           ; Print output
@@ -238,10 +238,10 @@ FactLoop    LDA R2, FactPrompt
             MUL R2, R4       ; (4 bytes per item)
             ADD R1, R2      ; R1 = &INTARR[count]
             MOV R3, SP
-            ADI R3, 4       ; Get the last (only) temporary variable
+            ADI R3, 8       ; Get the last (only) temporary variable
             LDR R3, R3      ; Read from memory
             STR R3, R1      ; INTARR[count] = input
-            ADI R1, 4
+            ADI R1, 8
             STR R0, R1      ; INTARR[count+1] = result
             LDR R2, COUNT
             ADI R2, 2       ; count += 2
@@ -250,32 +250,32 @@ FactLoop    LDA R2, FactPrompt
 
 FactLoop_e  MOV R2, SP      ; R2 = Stack top
             MOV R3, SP      ; R3 = Stack top
-            ADI R2, -4      ; R2 = PFP location
+            ADI R2, -8      ; R2 = PFP location
             STR FP, R2      ; Set PFP
-            ADI R2, -4      ; New top of stack
+            ADI R2, -8      ; New top of stack
             MOV SP, R2      ; Stack PTR = R2
             MOV FP, R3      ; Frame PTR = old Stack PTR
             MOV R1, PC      ; Get addr of next instruction
-            ADI R1, 12      ; Add 3 instructions from this one
+            ADI R1, 24      ; Add 3 instructions from this one
             STR R1, FP      ; Set return address
             JMP printFact   ; Call function printFact
 
             ; Call the thread test function
             MOV R2, SP      ; R2 = Stack top
             MOV R3, SP      ; R3 = Stack top
-            ADI R2, -4      ; R2 = PFP location
+            ADI R2, -8      ; R2 = PFP location
             STR FP, R2      ; Set PFP
-            ADI R2, -4      ; New top of stack
+            ADI R2, -8      ; New top of stack
             MOV SP, R2      ; Stack PTR = R2
             MOV FP, R3      ; Frame PTR = old Stack PTR
             MOV R1, PC      ; Get addr of next instruction
-            ADI R1, 12      ; Add 3 instructions from this one
+            ADI R1, 24      ; Add 3 instructions from this one
             STR R1, FP      ; Set return address
             JMP ThreadTest  ; Call function ThreadTest
 
 Main_end    LDR R0, FP      ; Get return address
             MOV R5, FP      
-            ADI R5, -4
+            ADI R5, -8
             MOV SP, FP      ; SP = FP
             LDR FP, R5      ; FP = PFP
             JMR R0          ; Jump to return address
@@ -312,7 +312,7 @@ ThreadTest  SUB R1, R1
 
             LDA R2, TXT_expl1
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP PSTR
 
             RUN R6, tf_nolock
@@ -331,7 +331,7 @@ ThreadTest  SUB R1, R1
 
             LDA R2, TXT_expl2
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP PSTR
 
             RUN R6, tf_lock
@@ -349,7 +349,7 @@ ThreadTest  SUB R1, R1
 
             LDR R0, FP      ; Get return address
             MOV R5, FP      
-            ADI R5, -4
+            ADI R5, -8
             MOV SP, FP      ; SP = FP
             LDR FP, R5      ; FP = PFP
             JMR R0          ; Jump to return address
@@ -361,7 +361,7 @@ tf_nolock   SUB R9, R9
             LDA R2, TXT_start
             
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP PSTR
 
             MOV R0, R6      ; Print the starting thread message
@@ -397,7 +397,7 @@ tf_lock     SUB R9, R9
             LCK LCK_OUTPUT  ; Start Mutex
             
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP PSTR
 
             MOV R0, R6      ; Print the starting thread message

@@ -93,10 +93,10 @@
     <ClCompile Include="VMConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="proj2.asm" />
-    <None Include="proj3.asm" />
-    <None Include="proj4.asm" />
-    <None Include="project1.asm" />
+    <None Include="4490\proj2.asm" />
+    <None Include="4490\proj3.asm" />
+    <None Include="4490\proj4.asm" />
+    <None Include="4490\project1.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

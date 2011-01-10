@@ -5,7 +5,7 @@
 int main(int argc, char *argv[] )
 {
     Assembler assembler(argv[1]);
-    unsigned short startAddr(0);
+    boost::uint32_t startAddr(0);
     try {
         startAddr = assembler.start();
     } catch (std::exception &ex) {

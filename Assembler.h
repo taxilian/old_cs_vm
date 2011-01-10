@@ -31,12 +31,12 @@ class Assembler
 public:
     Assembler(std::string filename);
     ~Assembler(void);
-    unsigned short start();
+    boost::uint32_t start();
     boost::shared_array<unsigned char> getBlock() { return m_block; }
-    unsigned short getBlockSize() { return m_size; }
+    boost::uint32_t getBlockSize() { return m_size; }
 
-    std::map<unsigned short, int> byteToLineMap;
-    std::map<unsigned short, std::string> labelReverse;
+    std::map<boost::uint32_t, int> byteToLineMap;
+    std::map<boost::uint32_t, std::string> labelReverse;
 
 protected:
     char getRegister(std::string name);
@@ -44,7 +44,7 @@ protected:
     VMConfigPtr m_config;
     Parser m_parser;
     boost::shared_array<unsigned char> m_block;
-    unsigned short m_size;
+    boost::uint32_t m_size;
 };
 
 #endif

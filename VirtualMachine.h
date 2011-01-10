@@ -27,7 +27,7 @@ struct thread
     ADDRESS SL;
 };
 
-typedef std::map<unsigned char, instructionDef> FunctionMap;
+typedef std::map<boost::uint16_t, instructionDef> FunctionMap;
 
 class VirtualMachine
 {
@@ -36,9 +36,9 @@ public:
     virtual ~VirtualMachine(void);
 
     void reset();
-    void load(boost::shared_array<unsigned char> block, unsigned short size);
-    void run(unsigned short start);
-    void setDebugInfo(std::map<unsigned short, int>& linemap, std::map<unsigned short, std::string> &revLabelMap);
+    void load(boost::shared_array<unsigned char> block, boost::uint32_t size);
+    void run(boost::uint32_t start);
+    void setDebugInfo(std::map<boost::uint32_t, int>& linemap, std::map<boost::uint32_t, std::string> &revLabelMap);
 
 protected:
     VMConfigPtr m_config;
@@ -50,7 +50,7 @@ protected:
     int threadCount;
     bool m_blocked;
 
-    unsigned short BOUND_CODE;
+    boost::uint32_t BOUND_CODE;
 
 public:
     static const int THREAD_NUM = 20;
@@ -59,21 +59,21 @@ public:
     static const int SL = 17;
     static const int SP = 18;
     static const int SB = 19;
-    int reg[THREAD_NUM];
-    int pc;
+    boost::uint64_t reg[THREAD_NUM];
+    boost::uint64_t pc;
 
 protected:
-    std::map<unsigned short, std::string> labelReverse;
-    std::map<unsigned short, int> byteToLineMap;
-    std::string getDebugFor(unsigned short addr);
+    std::map<boost::uint32_t, std::string> labelReverse;
+    std::map<boost::uint32_t, int> byteToLineMap;
+    std::string getDebugFor(boost::uint32_t addr);
     void registerHandler(std::string name, instructionDef func);
-    void callHandler(unsigned int instruction);
-    char get_byte(unsigned short addr);
-    void set_byte(unsigned short addr, char value);
-    int get_int(unsigned short addr);
-    void set_int(unsigned short addr, int value);
+    void callHandler(boost::uint64_t instruction);
+    char get_byte(boost::uint32_t addr);
+    void set_byte(boost::uint32_t addr, char value);
+    boost::uint64_t get_int(boost::uint32_t addr);
+    void set_int(boost::uint32_t addr, boost::uint64_t value);
     std::string getLabelForAddress(ADDRESS addr);
-    
+
     void initThread( int threadId, ADDRESS newPC );
     void endThread( int threadId );
     void changeContext( int newThreadId );
@@ -112,7 +112,7 @@ protected:
     void AND(REGISTER &rd, REGISTER &rs);
     void OR(REGISTER &rd, REGISTER &rs);
     void CMP(REGISTER &rd, REGISTER &rs);
-    
+
     void RUN(REGISTER &rd, ADDRESS addr);
     void END();
     void BLK();

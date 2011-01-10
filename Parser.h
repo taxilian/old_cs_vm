@@ -41,10 +41,10 @@ public:
     };
 
     struct Byte : public Line {
-        unsigned char value;
+        boost::uint8_t value;
     };
     struct Int : public Line {
-        int value;
+        boost::uint64_t value;
     };
 
     struct Instruction : public Line {

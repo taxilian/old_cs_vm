@@ -8,3 +8,5 @@ Debug/
 *.user
 *.filters
 *.sdf
+*.opensdf
+*.log

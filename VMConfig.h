@@ -15,17 +15,18 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/cstdint.hpp>
 
 union instructionBlock {
-    unsigned int value;
+    boost::int64_t value;
     struct {
-        unsigned char instruction;
-        unsigned char uint8_param;
+        boost::int16_t instruction;
+        boost::int16_t uint16_param;
         union {
-            unsigned short uint16_param2;
+            boost::uint32_t uint32_param2;
             struct {
-                unsigned char uint8_param2;
-                unsigned char uint8_param3;
+                boost::int16_t uint16_param2;
+                boost::int16_t uint16_param3;
             };
         };
         
