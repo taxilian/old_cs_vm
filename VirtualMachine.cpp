@@ -16,7 +16,7 @@
 #define LOG(MSG)
 #endif
 
-#define MEMORY_SIZE (1024 * 1024 * 1024) // 1 MB of memory
+#define MEMORY_SIZE (1024 * 1024) // 1 MB of memory
 
 VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), m_curThread(-1), threadCount(0), m_blocked(false)
 {
@@ -92,9 +92,7 @@ void VirtualMachine::reset()
     this->m_block = boost::shared_array<unsigned char>(new unsigned char[MEMORY_SIZE+3]);
 
     ADDRESS bottom = MEMORY_SIZE - 1;
-    for (int i = 0; i < 20; i++) {
-        reg[i] = 0;
-    }
+    memset(reg, 0, sizeof(reg[0])*20);
     memset(threadList, 0, sizeof(thread) * THREAD_NUM);
     m_running = false;
     m_blocked = false;
@@ -235,7 +233,7 @@ void VirtualMachine::run(boost::uint32_t start)
 #ifdef TRACEON
         std::cerr << "Thread " << m_curThread << ": " << line << " @ " << addr << ":\t";
 #endif
-        boost::uint64_t rl = get_int(pc);
+        boost::uint64_t rl = get_int(static_cast<boost::uint32_t>(pc));
         pc += sizeof(pc);
         callHandler(rl);
 #ifdef TRACEON
@@ -299,23 +297,23 @@ void VirtualMachine::LDA(REGISTER &rd, ADDRESS addr)
 }
 void VirtualMachine::LDR(REGISTER &rd, ADDRESS addr)
 {
-    DOC("LDR", "R" << static_cast<int>(&rd - this->reg), addr << " -> " << get_int(addr));
-    rd = get_int(addr);
+    DOC("LDR", "R" << static_cast<int>(&rd - this->reg), addr << " -> " << get_int((boost::uint32_t)addr));
+    rd = get_int((boost::uint32_t)addr);
 }
 void VirtualMachine::LDR2(REGISTER &rd, REGISTER &rs)
 {
-    DOC("LDR2", "R" << static_cast<int>(&rd - this->reg), rs << " -> " << get_int(rs));
-    rd = get_int(rs);
+    DOC("LDR2", "R" << static_cast<int>(&rd - this->reg), rs << " -> " << get_int((boost::uint32_t)rs));
+    rd = get_int((boost::uint32_t)rs);
 }
 void VirtualMachine::LDB(REGISTER &rd, ADDRESS addr)
 {
-    DOC("LDB", "R" << static_cast<int>(&rd - this->reg), addr << " -> " << (int)get_byte(addr) << "(" << get_byte(addr) << ")");
-    rd = get_byte(addr);
+    DOC("LDB", "R" << static_cast<int>(&rd - this->reg), addr << " -> " << (int)get_byte((boost::uint32_t)addr) << "(" << get_byte((boost::uint32_t)addr) << ")");
+    rd = get_byte((boost::uint32_t)addr);
 }
 void VirtualMachine::LDB2(REGISTER &rd, REGISTER &rs)
 {
-    DOC("LDB2", "R" << static_cast<int>(&rd - this->reg), rs << " -> " << (int)get_byte(rs) << "(" << get_byte(rs) << ")");
-    rd = get_byte(rs);
+    DOC("LDB2", "R" << static_cast<int>(&rd - this->reg), rs << " -> " << (int)get_byte((boost::uint32_t)rs) << "(" << get_byte((boost::uint32_t)rs) << ")");
+    rd = get_byte((boost::uint32_t)rs);
 }
 void VirtualMachine::STB(REGISTER &rs, ADDRESS addr)
 {
@@ -323,7 +321,7 @@ void VirtualMachine::STB(REGISTER &rs, ADDRESS addr)
 }
 void VirtualMachine::STB2(REGISTER &rs, REGISTER &rd)
 {
-    DOC("STB2", rs, rd); set_byte(rd, (char)rs);
+    DOC("STB2", rs, rd); set_byte((boost::uint32_t)rd, (char)rs);
 }
 void VirtualMachine::STR(REGISTER &rs, ADDRESS addr)
 {
@@ -331,7 +329,7 @@ void VirtualMachine::STR(REGISTER &rs, ADDRESS addr)
 }
 void VirtualMachine::STR2(REGISTER &rs, REGISTER &rd)
 {
-    DOC("STR2", rs, rd); set_int(rd, rs);
+    DOC("STR2", rs, rd); set_int((boost::uint32_t)rd, rs);
 }
 void VirtualMachine::MOV(REGISTER &rd, REGISTER &rs)
 {
@@ -351,7 +349,7 @@ void VirtualMachine::JMP(ADDRESS addr)
 }
 void VirtualMachine::JMR(REGISTER &r)
 {
-    DOC("JMR", r, "-"); JMP(r); 
+    DOC("JMR", r, "-"); JMP(static_cast<ADDRESS>(r)); 
 }
 void VirtualMachine::BRZ(REGISTER &r, ADDRESS addr)
 {
@@ -432,7 +430,7 @@ void VirtualMachine::RUN( REGISTER &rd, ADDRESS addr )
     rd = this->getNextAvailableThread();
     if (rd < 0)
         throw VMException("Out of threads");
-    this->initThread(rd, addr);
+    this->initThread(static_cast<int>(rd), addr);
 }
 
 void VirtualMachine::END()

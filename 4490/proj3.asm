@@ -186,7 +186,7 @@ opd_else    ADI R9, 1
             MOV R11, R2
             LDA R2, IsNaN
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP PSTR            ; print " is not a number\n"
             MOV R1, R10
             MOV R2, R11
@@ -291,11 +291,11 @@ getdata     LDR R9, cnt
 getdata_tb  LDA R2, TooBig
             MOV R10, R1     ; Save previous R1
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP PSTR
 ;       flush();
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP flush       ; flush()
             MOV R1, R10     ; Load previous R1
 ;   }
@@ -315,11 +315,11 @@ START       MOV
             SUB R4, R4
             SUB R5, R5
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP reset       ; call function
 ;   getdata();
 reset_rt    MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP getdata     ; call function
 
 ;   while (c[0] != '@') {
@@ -338,7 +338,7 @@ WHILENOAT   LDB R9, C_ARR
             JMP nosign
 ;           getdata();
 signexist   MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP getdata
             JMP WHILEDATA
 ;       } else { // default sign is '+'
@@ -389,7 +389,7 @@ WHILENOFLAG LDR R9, cnt
             ADD R4, R9              ; addr + cnt = c[cnt]
             LDB R4, R4              ; load j = c[cnt]
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP opd
 ;                   cnt--;
             LDR R9, cnt
@@ -409,7 +409,7 @@ ENDWHNOFLAG LDR R9, flag
 ;                   printf("Operand is %d\n", opdv);
             LDA R2, OperandIs
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP PSTR
             LDR R0, opdv
             TRP 1
@@ -419,7 +419,7 @@ ENDWHNOFLAG LDR R9, flag
 ;           } else {
 ;               getdata();
 MN_nolf     MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP getdata
 ;           }
 WHDATA_LOOP JMP WHILEDATA
@@ -430,11 +430,11 @@ ENDWHDATA   SUB R2, R2      ; set the parameters
             SUB R4, R4
             SUB R5, R5
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP reset       ; call function
 ;   getdata();
             MOV R1, PC
-            ADI R1, 8
+            ADI R1, 16
             JMP getdata     ; call function
 ;   }
 ;   reset(1, 0, 0, 0); // reset globals

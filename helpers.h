@@ -6,7 +6,7 @@
 //typedef char REGISTER;
 typedef boost::uint32_t ADDRESS;
 typedef boost::int32_t IMMEDIATE;
-typedef boost::uint64_t REGISTER;
+typedef boost::int64_t REGISTER;
 
 
 class VirtualMachine;

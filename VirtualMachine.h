@@ -59,8 +59,8 @@ public:
     static const int SL = 17;
     static const int SP = 18;
     static const int SB = 19;
-    boost::uint64_t reg[THREAD_NUM];
-    boost::uint64_t pc;
+    boost::int64_t reg[THREAD_NUM];
+    boost::int64_t pc;
 
 protected:
     std::map<boost::uint32_t, std::string> labelReverse;

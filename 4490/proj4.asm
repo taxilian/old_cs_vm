@@ -93,7 +93,7 @@ PSTR_E      JMR R1              ; Branch back to the calling point
 
 ; int Factorial(i)
 Factorial   MOV R5, FP
-            ADI R5, -8
+            ADI R5, -16
             LDR R1, R5      ; Param 1
 
             SUB R2, R2      ; R2 = 0
@@ -118,7 +118,7 @@ Factorial   MOV R5, FP
             
             LDR R1, SP      ; R1 = Get return value
             MOV R5, FP
-            ADI R5, -8
+            ADI R5, -16
             LDR R2, R5      ; R2 = get Param 1
             MUL R1, R2
             JMP Fact_done
