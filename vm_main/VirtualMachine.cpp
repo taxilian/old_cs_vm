@@ -3,6 +3,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
 #include <conio.h>
+#include <boost/mpl/assert.hpp>
 
 #ifdef _DEBUG
 #define TRACEON
@@ -16,9 +17,9 @@
 #define LOG(MSG)
 #endif
 
-#define MEMORY_SIZE (1024 * 1024) // 1 MB of memory
+using namespace VM;
 
-VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), m_curThread(-1), threadCount(0), m_blocked(false)
+VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), offset(0)
 {
     reset();
 
@@ -51,12 +52,6 @@ VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()),
     registerHandler("CMP", make_method(this, &VirtualMachine::CMP));
 
     registerHandler("TRP", make_method(this, &VirtualMachine::TRP));
-
-    registerHandler("RUN", make_method(this, &VirtualMachine::RUN));
-    registerHandler("END", make_method(this, &VirtualMachine::END));
-    registerHandler("BLK", make_method(this, &VirtualMachine::BLK));
-    registerHandler("LCK", make_method(this, &VirtualMachine::LCK));
-    registerHandler("ULK", make_method(this, &VirtualMachine::ULK));
 }
 
 // Used to register a handler for the given instruction
@@ -89,111 +84,56 @@ VirtualMachine::~VirtualMachine(void)
 // Resets the machine to its initial state
 void VirtualMachine::reset()
 {
-    this->m_block = boost::shared_array<unsigned char>(new unsigned char[MEMORY_SIZE+3]);
+    this->m_block = MemoryBlock(new unsigned char[MEMORY_SIZE+3]);
 
     ADDRESS bottom = MEMORY_SIZE - 1;
     memset(reg, 0, sizeof(reg[0])*20);
-    memset(threadList, 0, sizeof(thread) * THREAD_NUM);
     m_running = false;
-    m_blocked = false;
 
     reg[SB] = MEMORY_SIZE - 1;  // Stack Base
     reg[FP] = reg[SB];          // Frame Pointer (Bottom of current frame)
     reg[SP] = reg[SB];          // Stack Pointer (Top of stack)
     reg[SL] = 0;                // Stack Limit (Top of available stack memory)
-    m_curThread = -1;
 }
 
-void VirtualMachine::initThread( int threadId, ADDRESS newPC )
+VM::RegisterList VM::VirtualMachine::getRegisterState()
 {
-    LOG("Starting thread " << threadId);
-    threadCount++;
-    int oldThread = m_curThread;
-    changeContext(-1);
-    pc = newPC;
-    thread* ct(&this->threadList[threadId]);
-    if (ct->active)
-        throw VMException("Thread already active!");
-    reg[SB] = reg[FP] = reg[SP] = ct->SB;
-    reg[SL] = ct->SL;
-    writeThreadRegisters(threadId);
-    set_int(ct->MEMB, newPC);
-    ct->active = true;
-    changeContext(oldThread);
-}
-
-void VirtualMachine::endThread( int threadId )
-{
-    threadList[threadId].active = false;
-    threadCount--;
-    LOG("Ending thread " << threadId);
-}
-
-void VirtualMachine::changeContext( int newThreadId )
-{
-    if (m_curThread > -1)
-        writeThreadRegisters(m_curThread);
-    if (newThreadId > -1)
-        loadThreadRegisters(newThreadId);
-    m_curThread = newThreadId;
-}
-
-int VirtualMachine::getNextAvailableThread()
-{
-    for(int i = 0; i < THREAD_NUM; i++) {
-        if (!threadList[i].active)
-            return i;
+    VM::RegisterList list;
+    list.push_back(pc);
+    for (int i = 0; i < REGISTER_COUNT; ++i) {
+        list.push_back(reg[i]);
     }
-    return -1;
+    return list;
 }
 
-void VirtualMachine::switchToNextThread()
+void VM::VirtualMachine::setRegisterState( const RegisterList& list )
 {
-    if (m_curThread < 0) m_curThread = 0;
-    int i = m_curThread;
-    while (true) {
-        if (++i == THREAD_NUM) i = 0;
-        if (threadList[i].active) {
-            changeContext(i);
-            return;
-        }
-    }
+    assert(list.size() == REGISTER_COUNT + 1);
+    RegisterList::const_iterator it = list.begin();
+    pc = *it;
+    int i = 0;
+    while (++it != list.end())
+        reg[i++] = *it;
 }
 
-void VirtualMachine::writeThreadRegisters(int threadId)
+void VM::VirtualMachine::loadProgram( const MemoryBlock& memory, const size_t size, const uint32_t offset /*= 0*/, const size_t stack_size_in /*= 0*/ )
 {
-    thread* ct(&this->threadList[threadId]);
-    this->set_int(ct->MEMB, pc);
-    for (int i = 0; i < 20; i++) {
-        this->set_int(ct->MEMB - (1 + i) * sizeof(REGISTER), reg[i]);
-    }
+    size_t stackSize = stack_size_in ? stack_size_in : 4096; // Default to 4K of stack if not specified
+    assert((offset + size + stackSize) < MEMORY_SIZE);
+
+    // Copy the memory in
+    memcpy(m_block.get() + offset, memory.get(), size);
+
+    // Allocate stack
+    reg[SL] = offset + size;
+    reg[SB] = reg[SP] = reg[FP] = reg[SL] + stackSize;
+
+    // Program loaded, stack initialized!
 }
 
-void VirtualMachine::loadThreadRegisters( int threadId )
+void VM::VirtualMachine::setMemoryOffset( const uint32_t offset )
 {
-    thread* ct(&this->threadList[threadId]);
-    pc = this->get_int(ct->MEMB);
-    for (int i = 0; i < 20; i++) {
-        reg[i] = this->get_int(ct->MEMB - (1 + i) * sizeof(REGISTER));
-    }
-}
-
-
-// Loads the program block into memory
-void VirtualMachine::load(boost::shared_array<unsigned char> block, boost::uint32_t size)
-{
-    memcpy(m_block.get(), block.get(), size);
-    BOUND_CODE = size;
-    int regCount = 20 + 1; // 20 registers plus PC
-    int regBlockSize = sizeof(REGISTER) * regCount;
-    int stacksize = (MEMORY_SIZE - BOUND_CODE - 1) / 2;
-    int threadStackSize = stacksize / this->THREAD_NUM;
-    for (int i = 0; i < 20; i++) {
-        threadList[i].MEMB = (MEMORY_SIZE - 1) - (threadStackSize * i);
-        threadList[i].SB = this->threadList[i].MEMB - regBlockSize;
-        threadList[i].SL = MEMORY_SIZE - (threadStackSize * (i+1));
-    }
-    m_running = false;
+    this->offset = offset;
 }
 
 std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
@@ -212,35 +152,32 @@ std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
 // This is the main system loop
 void VirtualMachine::run(boost::uint32_t start)
 {
-    initThread(0, start);
-    changeContext(0);
     pc = start;
     m_running = true;
 
-
-#ifdef TRACEON
-    std::cerr << "Beginning to run program." << std::endl;
-#endif
     int i = 0;
     while (m_running) {
-        if (++i % 15 == 0 || m_blocked) {
-            i = 0;
-            switchToNextThread();
-            m_blocked = false;
-        }
-        int line = this->byteToLineMap[static_cast<unsigned int>(pc)];
-        boost::uint64_t addr = pc;
-#ifdef TRACEON
-        std::cerr << "Thread " << m_curThread << ": " << line << " @ " << addr << ":\t";
-#endif
-        boost::uint64_t rl = get_int(static_cast<boost::uint32_t>(pc));
-        pc += sizeof(pc);
-        callHandler(rl);
-#ifdef TRACEON
-        std::cerr << this->getLabelForAddress(static_cast<ADDRESS>(addr)) << std::endl;
-#endif
+        //int line = this->byteToLineMap[static_cast<unsigned int>(pc)];
+        tick();
     };
 }
+
+Status VirtualMachine::tick()
+{
+    uint64_t addr = pc;
+    uint64_t rl = get_int(static_cast<uint32_t>(pc));
+
+    pc += sizeof(pc);
+    
+    callHandler(rl);
+
+    if (m_running) {
+        return Status_Running;
+    } else {
+        return Status_Stopped;
+    }
+}
+
 
 // Returns a string with the line number of the instruction at the given address
 std::string VirtualMachine::getDebugFor(boost::uint32_t addr)
@@ -422,59 +359,4 @@ void VirtualMachine::setDebugInfo( std::map<boost::uint32_t, int>& linemap, std:
 {
     byteToLineMap = linemap;
     labelReverse = revLabelMap;
-}
-
-void VirtualMachine::RUN( REGISTER &rd, ADDRESS addr )
-{
-    DOC("RUN", rd, addr << this->getLabelForAddress(addr));
-    rd = this->getNextAvailableThread();
-    if (rd < 0)
-        throw VMException("Out of threads");
-    this->initThread(static_cast<int>(rd), addr);
-}
-
-void VirtualMachine::END()
-{
-    DOC("END", "Thread ", boost::lexical_cast<std::string>(m_curThread));
-    if (m_curThread == 0) {
-        throw VMException("Attempt to call END from main thread");
-    }
-    this->endThread(m_curThread);
-    this->changeContext(0);
-}
-
-void VirtualMachine::BLK()
-{
-    if (m_curThread != 0)
-        throw VMException("Attempt to call BLK from thread other than main");
-    else if (threadCount > 1) {
-        pc -= 4;
-        m_blocked = true;
-        DOC("BLK", "-", "(Blocking)");
-    }
-}
-
-void VirtualMachine::LCK( ADDRESS addr )
-{
-    if (get_byte(addr) == -1) {
-        DOC("LCK", getLabelForAddress(addr), "-");
-        set_byte(addr, m_curThread);
-    } else if (get_byte(addr) != m_curThread) {
-        DOC("LCK", this->getLabelForAddress(addr), "(MUTEX IN USE, BLOCKING)");
-        pc -= 4;
-    m_blocked = true;
-    }
-}
-
-void VirtualMachine::ULK( ADDRESS addr )
-{
-    DOC("ULK", getLabelForAddress(addr), "-");
-    if (get_byte(addr) == m_curThread) {
-        set_byte(addr, -1);
-    } else {
-        std::string ex("Attempt by thread ");
-        ex += m_curThread;
-        ex += " to unlock mutex owned by thread " + get_byte(addr);
-        throw VMException(ex);
-    }
 }
