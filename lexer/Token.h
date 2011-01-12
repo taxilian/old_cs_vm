@@ -7,7 +7,7 @@ struct Token
 {
     enum TokenType {
         TT_ENDOFFILE,
-        TT_ENDOFLINE,
+        TT_SEMICOLON,
         TT_GROUPOPEN,
         TT_GROUPCLOSE,
         TT_NUMBER,

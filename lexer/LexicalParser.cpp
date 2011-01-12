@@ -25,7 +25,7 @@ Token LexicalParser::nextToken()
         case STATE_EMPTY:
             // Nothing accumulated
             if (c == ';') {
-                return Token(Token::TT_ENDOFLINE, ";");
+                return Token(Token::TT_SEMICOLON, ";");
             } else if (isGroupOpen(c)) {
                 return Token(Token::TT_GROUPOPEN, std::string(&c, 1));
             } else if (isGroupClose(c)) {

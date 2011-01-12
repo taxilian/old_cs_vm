@@ -8,8 +8,8 @@ std::string Token::toString()
     case TT_ENDOFFILE:
         ss << "End of File.";
         return ss.str();
-    case TT_ENDOFLINE:
-        ss << "End of line.";
+    case TT_SEMICOLON:
+        ss << "<Semicolon>";
         return ss.str();
     case TT_GROUPOPEN:
         ss << "Grp Open: ";
