@@ -12,11 +12,14 @@ int main()
 	{
 		cout << "#";
 		getline(cin, line);
-		if(line == "help")
+		if(line == "exit")
 		{
-			help();
+			runShell = false;
 		}
-
+		else
+		{
+			Shell::validate(line);
+		}
 	}
 	system("PAUSE");
 }
