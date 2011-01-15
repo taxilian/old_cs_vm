@@ -18,7 +18,6 @@ int main()
 		}
 		else
 		{
-			
 			Shell::validate(line);
 		}
 	}
