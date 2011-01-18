@@ -6,6 +6,6 @@ using namespace std;
 int main()
 {
 	using namespace OS;
-	startShell();
-	system("PAUSE");
+	OS::Shell shell;
+    shell.start();
 }

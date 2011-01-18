@@ -6,6 +6,7 @@
 
 Parser::Parser(std::string filename, VMConfigPtr config) : m_file(filename.c_str()), end(false), m_config(config), m_lineNumber(0)
 {
+    if (!m_file) throw ParserException("Could not open " + filename);
 }
 
 Parser::~Parser(void)
