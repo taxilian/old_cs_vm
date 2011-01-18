@@ -136,6 +136,12 @@ void VM::VirtualMachine::setMemoryOffset( const uint32_t offset )
     this->offset = offset;
 }
 
+uint32_t VM::VirtualMachine::getMemorySize()
+{
+    return MEMORY_SIZE;
+}
+
+
 std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
     std::map<boost::uint32_t, std::string>::iterator fnd = labelReverse.find(addr);
     std::string out;

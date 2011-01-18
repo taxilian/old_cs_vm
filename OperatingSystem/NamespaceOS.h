@@ -16,7 +16,7 @@ namespace OS{
     class Shell
     {
     public:
-        Shell() : cwd(fs::initial_path<fs::path>() ) {}
+        Shell(OpSystem* os) : sys(os), cwd(fs::initial_path<fs::path>() ) {}
         ~Shell() {}
 
         void validate(string command)
@@ -50,7 +50,7 @@ namespace OS{
                 {
                     fs::path hf = cwd/hexFile;
                     
-                    sys.load(hf.string());
+                    sys->load(hf.string());
                 }
             }
             else
@@ -111,7 +111,7 @@ namespace OS{
             }
         }
     private:
-        OpSystem sys;
+        OpSystem *sys;
         // cwd is a standard acronymn for "Current Working Directory"
         // it seemed easier to understand to me
         fs::path cwd;

@@ -10,10 +10,13 @@ namespace OS {
     class OpSystem
     {
     public:
-        OpSystem(void);
+        OpSystem(VM::VMCore* vm);
         ~OpSystem(void);
 
         void load(const std::string& fileName);
+
+	private:
+        VM::VMCore* m_vm;
     };
 }
 #endif // OpSystem_h__

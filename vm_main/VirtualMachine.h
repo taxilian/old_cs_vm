@@ -22,7 +22,7 @@ namespace VM {
 
     typedef std::map<boost::uint16_t, instructionDef> FunctionMap;
 
-    class VirtualMachine
+    class VirtualMachine : public VMCore
     {
     public:
         VirtualMachine(void);
@@ -46,6 +46,7 @@ namespace VM {
         // where v(0) is the PC and v(1...n) are the registers
         RegisterList getRegisterState();
         void setRegisterState(const RegisterList& );
+        virtual uint32_t getMemorySize();
         // End VMCore methods
 
     protected:

@@ -5,7 +5,7 @@
 
 using namespace OS;
 
-OpSystem::OpSystem(void)
+OpSystem::OpSystem(VM::VMCore* vm) : m_vm(vm)
 {
 }
 
