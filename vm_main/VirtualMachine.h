@@ -30,7 +30,7 @@ namespace VM {
 
         void reset();
         void load(const MemoryBlock& block, boost::uint32_t size);
-        void run(boost::uint32_t start);
+        Status run();
         void setDebugInfo(std::map<boost::uint32_t, int>& linemap, std::map<boost::uint32_t, std::string> &revLabelMap);
 
     public:
@@ -39,13 +39,12 @@ namespace VM {
         void setMemoryOffset(const uint32_t offset);
         void loadProgram(const MemoryBlock& memory,
                          const size_t size,
-                         const uint32_t offset = 0,
-                         const size_t stackSize = 0);
+                         const uint32_t offset = 0);
 
         // RegisterState is represented by a list of n values,
         // where v(0) is the PC and v(1...n) are the registers
-        RegisterList getRegisterState();
-        void setRegisterState(const RegisterList& );
+        VMState getRegisterState();
+        void setRegisterState(const VMState& );
         virtual uint32_t getMemorySize();
         // End VMCore methods
 
@@ -62,13 +61,9 @@ namespace VM {
         static const int REGISTER_COUNT = 20;
         static const int MEMORY_SIZE = 1024*1024; // 1MB of memory
 
-        static const int FP = 16;
-        static const int SL = 17;
-        static const int SP = 18;
-        static const int SB = 19;
         boost::int64_t reg[REGISTER_COUNT];
         boost::int64_t pc;
-        boost::int64_t offset;
+        boost::int32_t offset;
 
     protected:
         std::map<boost::uint32_t, std::string> labelReverse;

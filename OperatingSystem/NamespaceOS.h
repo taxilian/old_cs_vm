@@ -28,6 +28,10 @@ namespace OS{
             {
                 help();
             }
+            else if(temp == "dir")
+            {
+                ls();
+            }
             else if(temp == "ls")
             {
                 ls();
@@ -52,6 +56,16 @@ namespace OS{
                     
                     sys->load(hf.string());
                 }
+            }
+            else if (temp == "run")
+            {
+                int pid;
+                s >> pid;
+                sys->run(pid);
+            }
+            else if (temp == "ps")
+            {
+                sys->ps();
             }
             else
                 cout <<"command not defined" << endl;
@@ -106,7 +120,11 @@ namespace OS{
                 }
                 else
                 {
-                    Shell::validate(line);
+                    try {
+                        Shell::validate(line);
+                    } catch (const std::exception &ex) {
+                        cout << "Error executing command: " << ex.what() << endl;
+                    }
                 }
             }
         }

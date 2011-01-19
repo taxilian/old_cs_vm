@@ -96,37 +96,32 @@ void VirtualMachine::reset()
     reg[SL] = 0;                // Stack Limit (Top of available stack memory)
 }
 
-VM::RegisterList VM::VirtualMachine::getRegisterState()
+VM::VMState VM::VirtualMachine::getRegisterState()
 {
-    VM::RegisterList list;
-    list.push_back(pc);
-    for (int i = 0; i < REGISTER_COUNT; ++i) {
-        list.push_back(reg[i]);
-    }
-    return list;
+    VM::VMState state;
+    state.pc = pc;
+    state.offset = offset;
+    std::copy(reg, &reg[20], state.reg);
+    return state;
 }
 
-void VM::VirtualMachine::setRegisterState( const RegisterList& list )
+void VM::VirtualMachine::setRegisterState( const VMState& state )
 {
-    assert(list.size() == REGISTER_COUNT + 1);
-    RegisterList::const_iterator it = list.begin();
-    pc = *it;
-    int i = 0;
-    while (++it != list.end())
-        reg[i++] = *it;
+    offset = state.offset;
+    pc = state.pc;
+    std::copy(state.reg, &state.reg[20], reg);
 }
 
-void VM::VirtualMachine::loadProgram( const MemoryBlock& memory, const size_t size, const uint32_t offset /*= 0*/, const size_t stack_size_in /*= 0*/ )
+void VM::VirtualMachine::loadProgram( const MemoryBlock& memory, const size_t size, const uint32_t offset /*= 0*/ )
 {
-    size_t stackSize = stack_size_in ? stack_size_in : 4096; // Default to 4K of stack if not specified
-    assert((offset + size + stackSize) < MEMORY_SIZE);
+    assert((offset + size) < MEMORY_SIZE);
 
     // Copy the memory in
-    memcpy(m_block.get() + offset, memory.get(), size);
+    std::copy(memory.get(), memory.get() + size, m_block.get() + offset);
 
     // Allocate stack
-    reg[SL] = offset + size;
-    reg[SB] = reg[SP] = reg[FP] = reg[SL] + stackSize;
+    //reg[SL] = offset + size;
+    //reg[SB] = reg[SP] = reg[FP] = reg[SL] + stackSize;
 
     // Program loaded, stack initialized!
 }
@@ -156,16 +151,17 @@ std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
 }
 
 // This is the main system loop
-void VirtualMachine::run(boost::uint32_t start)
+Status VirtualMachine::run()
 {
-    pc = start;
     m_running = true;
 
     int i = 0;
+    Status stat;
     while (m_running) {
         //int line = this->byteToLineMap[static_cast<unsigned int>(pc)];
-        tick();
+        stat = tick();
     };
+    return stat;
 }
 
 Status VirtualMachine::tick()

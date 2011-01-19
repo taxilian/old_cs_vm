@@ -33,19 +33,29 @@ namespace VM {
         Status_Running
     };
 
+    struct VMState {
+        uint64_t pc;
+        int32_t offset;
+        int64_t reg[20];
+    };
+
     class VMCore : boost::noncopyable
     {
     public:
-        virtual Status tick() = 0;
+        static const int FP = 16;
+        static const int SL = 17;
+        static const int SP = 18;
+        static const int SB = 19;
+    public:
+        virtual Status run() = 0;
 
         virtual void setMemoryOffset(const uint32_t offset) = 0;
         virtual void loadProgram(const MemoryBlock& memory,
                                  const size_t size,
-                                 const uint32_t offset = 0,
-                                 const size_t stackSize = 0) = 0;
+                                 const uint32_t offset = 0) = 0;
 
-        virtual RegisterList getRegisterState() = 0;
-        virtual void setRegisterState(const RegisterList& ) = 0;
+        virtual VMState getRegisterState() = 0;
+        virtual void setRegisterState(const VMState& ) = 0;
 
         virtual uint32_t getMemorySize() = 0;
     };
