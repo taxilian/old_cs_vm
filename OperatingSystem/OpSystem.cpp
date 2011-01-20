@@ -62,7 +62,7 @@ void OS::OpSystem::load( const std::string& fileName )
     newProgram->vm_state.reg[VMCore::SL] = offset + memorySize;
 
     newProgram->procstate = ProcessState_Waiting;
-    std::cout << "Loaded " << fileName << std::endl;
+    std::cout << "Loaded " << fileName << " in pid " << newProgram->pid << std::endl;
 }
 
 ProcessControlBlockPtr OS::OpSystem::getProcess(int pid)

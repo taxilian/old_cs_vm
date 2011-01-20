@@ -27,7 +27,8 @@ LISTC   .INT 500
         .INT 0
 
 LNAME   .BYT "Bateman, "    ; Lastname, Firstname
-FNAME   .BYT "Richard"
+FNAME   .BYT "Richard\n"
+PARTN   .BYT "Vargas, Noel"
 NULL    .BYT 0
 SPACE   .BYT " "            ; used for printing a space
 CR      .BYT "\r"           ; used for printing a blank line
@@ -102,7 +103,7 @@ STEP2       LDR R1, R2           ; Load the current item into R1
             TRP 1               ; Print out the current entry
             TRP 3
             TRP 3               ; Print out two spaces
-            ADI R2, 4           ; Move to the next int item in the list
+            ADI R2, 8           ; Move to the next int item in the list
             JMP STEP2           ; Loop to STEP2
 
 STEP2_END   LDR R8, CR
@@ -123,14 +124,14 @@ STEP2_END   LDR R8, CR
             LDA R2, LISTA       ; Load the address of LISTA into R2
             LDR R8, SPACE       ; Get a space ready to print
             SUB R0, R0          ; Zero out R0
-            ADI R0, 4           ; Add 1 to R0; this will contain our product
+            ADI R0, 8           ; Add 1 to R0; this will contain our product
 STEP5       LDR R1, R2           ; Load the current item into R1
             BRZ R1, STEP5_END   ; When the current item is 0, we're done
             MUL R0, R1          ; Multiply the new entry to our existing product
             TRP 1               ; Print out the current entry
             TRP 3
             TRP 3               ; Print out two spaces
-            ADI R2, 4           ; Move to the next int item in the list
+            ADI R2, 8           ; Move to the next int item in the list
             JMP STEP5           ; Loop to STEP5
 
 STEP5_END   LDR R8, CR
@@ -154,7 +155,7 @@ STEP7       MOV R0, R5          ; Load the result from part 3 into R0
             TRP 1
             TRP 3
             TRP 3
-            ADI R2, 4
+            ADI R2, 8
             JMP STEP7
 
 STEP7_END   LDR R8, CR
@@ -180,7 +181,7 @@ STEP9       MOV R0, R6
             TRP 1
             TRP 3
             TRP 3
-            ADI R2, 4
+            ADI R2, 8
             JMP STEP9
 
 STEP9_END   LDR R8, CR

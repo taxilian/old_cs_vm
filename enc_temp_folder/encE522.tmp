@@ -284,7 +284,7 @@ void VirtualMachine::JMP(ADDRESS addr)
         throw VMException(getDebugFor(pc));
     }
 #endif
-    pc = addr;
+    pc = addroffset;
 }
 void VirtualMachine::JMR(REGISTER &r)
 {
