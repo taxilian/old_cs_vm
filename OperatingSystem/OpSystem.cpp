@@ -61,18 +61,20 @@ void OS::OpSystem::load( const std::string& fileName )
             offset + memorySize + stackSize;
     newProgram->vm_state.reg[VMCore::SL] = offset + memorySize;
 
-    newProgram->procstate = ProcessState_Waiting;
+    newProgram->procstate = ProcessState_Ready;
     std::cout << "Loaded " << fileName << " in pid " << newProgram->pid << std::endl;
 }
 
 ProcessControlBlockPtr OS::OpSystem::getProcess(int pid)
 {
-    for (std::list<ProcessControlBlockPtr>::const_iterator it = m_processList.begin();
-        it != m_processList.end(); ++it) {
-        if ((*it)->pid == pid)
-            return *it;
-    }
-    return ProcessControlBlockPtr();
+    using namespace boost::lambda;
+    std::list<ProcessControlBlockPtr>::iterator it =
+        std::find_if(m_processList.begin(), m_processList.end(),
+            bind(&ProcessControlBlock::pid, bind(&ProcessControlBlockPtr::operator*, _1)) == var(pid));
+    if (it == m_processList.end())
+        return ProcessControlBlockPtr();
+    else
+        return *it;
 }
 
 void OS::OpSystem::run(int pid)
@@ -86,6 +88,6 @@ void OS::OpSystem::run(int pid)
     } else {
         std::stringstream ss;
         ss << "Could not load process with pid: " << pid;
-        throw new std::runtime_error(ss.str());
+        throw std::runtime_error(ss.str());
     }
 }

@@ -112,7 +112,7 @@ namespace OS{
             string line;
             while(runShell)
             {
-                cout <<"\n" << cwd.string() + " #";
+                cout <<"\n" << cwd.string() + " # ";
                 getline(cin, line);
                 if(line == "exit")
                 {
