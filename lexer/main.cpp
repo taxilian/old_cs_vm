@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include "LexicalParser.h"
+#include "SyntaxParser.h"
 
 int main(int argc, char *argv[] )
 {
@@ -8,23 +9,13 @@ int main(int argc, char *argv[] )
         std::cout << "usage: " << argv[0] << " <filename>" << std::endl;
         return 1;
     }
-    LexicalParser parser(argv[1]);
-    
-    Token cur;
-    bool lastWasWhitespace = false;
+    LexicalParser lexer(argv[1]);
+    SyntaxParser syntax(lexer);
+
+    lexer.nextToken();
     do {
-        cur = parser.nextToken();
-        if (cur.type == Token::TT_WHITESPACE) {
-            // Ignore whitespace for now
-            //if (!lastWasWhitespace) {
-            //    std::cout << cur.toString() << std::endl;
-            //    lastWasWhitespace = true;
-            //}
-        } else {
-            lastWasWhitespace = false;
-            std::cout << cur.toString() << std::endl;
-        }
-    } while (cur.type != Token::TT_ENDOFFILE);
+        syntax.compilation_unit();   
+    } while (lexer.current().type != TT_ENDOFFILE);
 
     return 0;
 }

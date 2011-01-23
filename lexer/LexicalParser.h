@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <deque>
 #include "Token.h"
 
 struct LexicalParserException : std::exception
@@ -23,7 +24,13 @@ public:
     LexicalParser(const std::string& filename);
     ~LexicalParser(void);
 
+    Token& current();
     Token nextToken();
+    Token peekToken(size_t n = 0);
+    bool backTrack(int n = 1);
+
+private:
+    Token _nextToken();
 
 protected:
     enum StateEnum {
@@ -43,13 +50,15 @@ protected:
     static bool isGroupOpen(const char c);
     static bool isGroupClose(const char c);
     bool isOperator( const char c );
-    Token endToken( const Token::TokenType type, const bool back_up = false);
+    Token endToken( const TokenType type, const bool back_up = false);
     bool isValidIdentifier( const char c, const bool isFirstChar = false );
 private:
     std::string m_filename;
     std::ifstream m_file;
     StateEnum m_state;
     unsigned int m_lineNo;
+    std::deque<Token> fwd_q;
+    std::deque<Token> back_q;
 
     std::stringstream ss;
 };

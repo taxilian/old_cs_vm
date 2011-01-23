@@ -75,11 +75,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="LexicalParser.h" />
+    <ClInclude Include="SyntaxParser.h" />
     <ClInclude Include="Token.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LexicalParser.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SyntaxParser.cpp" />
     <ClCompile Include="Token.cpp" />
   </ItemGroup>
   <ItemGroup>

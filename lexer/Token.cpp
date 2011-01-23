@@ -1,7 +1,7 @@
 #include "Token.h"
 #include <sstream>
 
-std::string Token::toString()
+std::string Token::toString() const
 {
     std::stringstream ss;
     switch(type) {

@@ -1,15 +1,15 @@
-include <iostream>
-include "LexicalParser.h"
 
-int main(int argc, char *argv[] )
+
+
+void main( )
 {
     LexicalParser parser("lexer\\test.kxi");
     
     Token cur;
-    do {
+    while (cur.type != TT_ENDOFFILE) {
         cur = parser.nextToken();
         std::cout << cur.toString() << std::endl;
-    } while (cur.type != Token::TT_ENDOFFILE);
+    }
 
     int a = 28534;
     a += 37812;

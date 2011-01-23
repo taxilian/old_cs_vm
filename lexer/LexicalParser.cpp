@@ -7,7 +7,7 @@
 LexicalParser::LexicalParser(const std::string& filename)
     : m_filename(filename), m_file(filename), m_lineNo(0), m_state(STATE_EMPTY)
 {
-    if (m_file.bad())
+    if (!m_file)
         throw std::exception(("Could not load " + m_filename).c_str());
 }
 
@@ -17,6 +17,45 @@ LexicalParser::~LexicalParser(void)
 
 Token LexicalParser::nextToken()
 {
+    Token t;
+    if (fwd_q.size() > 0) {
+        t = fwd_q.front();
+        fwd_q.pop_front();
+    } else {
+        t = _nextToken();
+    }
+    back_q.push_back(t);
+    return t;
+}
+
+Token& LexicalParser::current()
+{
+    return back_q.back();
+}
+
+Token LexicalParser::peekToken( size_t n /*= 0*/ )
+{
+    while (fwd_q.size() < n + 1) {
+        fwd_q.push_back(_nextToken());
+    }
+    return fwd_q.at(n);
+}
+
+bool LexicalParser::backTrack( int n /*= 1*/ )
+{
+    if (back_q.size() >= static_cast<size_t>(n)) {
+        for (int i = 0; i < n; i++) {
+            fwd_q.push_front(back_q.back());
+            back_q.pop_back();
+        }
+        return true;
+    } else {
+        return false;
+    }
+}
+
+Token LexicalParser::_nextToken()
+{
     char c(0);
     while (m_file.get(c)) {
         if (c == '\n')
@@ -25,13 +64,14 @@ Token LexicalParser::nextToken()
         case STATE_EMPTY:
             // Nothing accumulated
             if (c == ';') {
-                return Token(Token::TT_SEMICOLON, ";");
+                return Token(TT_SEMICOLON, ";");
             } else if (isGroupOpen(c)) {
-                return Token(Token::TT_GROUPOPEN, std::string(&c, 1));
+                return Token(TT_GROUPOPEN, std::string(&c, 1));
             } else if (isGroupClose(c)) {
-                return Token(Token::TT_GROUPCLOSE, std::string(&c, 1));
+                return Token(TT_GROUPCLOSE, std::string(&c, 1));
             } else if (isWhitespace(c)) {
-                return Token(Token::TT_WHITESPACE, std::string(&c, 1));
+                continue;
+                //return Token(TT_WHITESPACE, std::string(&c, 1));
             } else if (isNumeric(c)) {
                 setState(STATE_NUMBER);
                 ss << c;
@@ -46,14 +86,14 @@ Token LexicalParser::nextToken()
                 setState(STATE_IDENTIFIER);
                 ss << c;
             } else {
-                return Token(Token::TT_UNKNOWN, std::string(&c, 1));
+                return Token(TT_UNKNOWN, std::string(&c, 1));
             }
             break;
         case STATE_IDENTIFIER:
             if (isValidIdentifier(c)) {
                 ss << c;
             } else {
-                return endToken(Token::TT_KEYWORD, true);
+                return endToken(TT_KEYWORD, true);
             }
             break;
         case STATE_NUMBER:
@@ -61,7 +101,7 @@ Token LexicalParser::nextToken()
                 ss << c;
             } else {
                 // If not numeric, end of token
-                return endToken(Token::TT_NUMBER, true);
+                return endToken(TT_NUMBER, true);
             }
             break;
         case STATE_OPERATOR:
@@ -69,7 +109,7 @@ Token LexicalParser::nextToken()
                 ss << c;
             } else {
                 // If not an operator, end of token
-                return endToken(Token::TT_OPERATOR, true);
+                return endToken(TT_OPERATOR, true);
             }
             if (ss.str() == "//") {
                 setState(STATE_COMMENT);
@@ -93,7 +133,7 @@ Token LexicalParser::nextToken()
                 else if (c == 't')
                     ss << '\t';
             } else if (c == '\'') {
-                return endToken(Token::TT_CHAR);
+                return endToken(TT_CHAR);
             } else {
                 ss << c;
             }
@@ -110,20 +150,20 @@ Token LexicalParser::nextToken()
                 else if (c == 't')
                     ss << '\t';
             } else if (c == '"') {
-                return endToken(Token::TT_STRING);
+                return endToken(TT_STRING);
             } else if (c == '\n') {
                 std::cerr << "Unmatched \" in string on line " << (m_lineNo - 1);
-                return endToken(Token::TT_STRING);
+                return endToken(TT_STRING);
             } else {
                 ss << c;
             }
             break;
         }
     }
-    return Token(Token::TT_ENDOFFILE, "");
+    return Token(TT_ENDOFFILE, "");
 }
 
-Token LexicalParser::endToken(const Token::TokenType type, const bool back_up)
+Token LexicalParser::endToken(const TokenType type, const bool back_up)
 {
     setState(STATE_EMPTY);
 
