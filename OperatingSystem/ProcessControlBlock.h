@@ -5,6 +5,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include "VMCore.h"
+#include "HeapMgr.h"
 
 namespace OS {
     enum ProcessState {
@@ -18,7 +19,7 @@ namespace OS {
     struct ProcessControlBlock;
     typedef boost::shared_ptr<ProcessControlBlock> ProcessControlBlockPtr;
     struct ProcessControlBlock {
-        static ProcessControlBlockPtr create(int pid, const std::string& name, size_t size, uint32_t offset, uint32_t startAddr) {
+        static ProcessControlBlockPtr create(int pid, const std::string& name, size_t size, uint32_t offset, uint32_t startAddr, uint32_t heapSize) {
             ProcessControlBlockPtr ptr(boost::make_shared<ProcessControlBlock>());
             ptr->pid = pid;
             ptr->name = name;
@@ -26,6 +27,7 @@ namespace OS {
             ptr->size = size;
             ptr->vm_state.pc = startAddr;
             ptr->procstate = ProcessState_Loading;
+			ptr->procMemMgr.setMem(heapSize, offset+size);
             return ptr;
         }
         int pid;
@@ -33,6 +35,7 @@ namespace OS {
         std::string name;
         VM::VMState vm_state;
         ProcessState procstate;
+		HeapMgr procMemMgr;
     };
 };
 

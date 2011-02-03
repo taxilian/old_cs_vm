@@ -11,7 +11,7 @@
 using namespace OS;
 using VM::VMCore;
 
-OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1),sysMemMgr(m_vm->getMemorySize())
+OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1),sysMemMgr(m_vm->getMemorySize(), 0)
 {
 }
 
@@ -40,18 +40,18 @@ void OS::OpSystem::ps() const
         boost::lambda::bind(&printPCB, boost::lambda::_1));
 }
 
-void OS::OpSystem::load( const std::string& fileName )
+void OS::OpSystem::load( const std::string& pathfileName,const std::string& name)
 {
-    VM::MemoryBlock memory;
+	VM::MemoryBlock memory;
     size_t memorySize;
     uint32_t startAddress;
     uint32_t offset;
-    VM::ReadFromHex(fileName, memory, memorySize, startAddress, offset);
+    VM::ReadFromHex(pathfileName, memory, memorySize, startAddress, offset);
    // offset = m_lastLoadAddr;
     //m_lastLoadAddr += memorySize + stackSize;
-	offset = sysMemMgr.allocate(memorySize + stackSize);
+	offset = sysMemMgr.allocate(memorySize + stackSize + heapSize);
     m_vm->loadProgram(memory, memorySize, offset);
-    ProcessControlBlockPtr newProgram(ProcessControlBlock::create(getNextPid(), fileName, memorySize, offset, startAddress));
+    ProcessControlBlockPtr newProgram(ProcessControlBlock::create(getNextPid(), name, memorySize, offset, startAddress, heapSize));
     m_processList.push_back(newProgram);
 
     // Set up the stack
@@ -59,10 +59,11 @@ void OS::OpSystem::load( const std::string& fileName )
         newProgram->vm_state.reg[VMCore::SP] = 
         newProgram->vm_state.reg[VMCore::FP] = 
             offset + memorySize + stackSize;
-    newProgram->vm_state.reg[VMCore::SL] = offset + memorySize;
-
+	newProgram->vm_state.pid = newProgram->pid;
+    //newProgram->vm_state.reg[VMCore::SL] = offset + memorySize;
+	newProgram->vm_state.reg[VMCore::SL] = offset + memorySize + heapSize;
     newProgram->procstate = ProcessState_Ready;
-    std::cout << "Loaded " << fileName << " in pid " << newProgram->pid << std::endl;
+    std::cout << "Loaded " << name << " in pid " << newProgram->pid << std::endl;
 }
 
 ProcessControlBlockPtr OS::OpSystem::getProcess(int pid)
@@ -85,7 +86,14 @@ void OS::OpSystem::run(int pid)
         ptr->procstate = ProcessState_Ready;
         m_vm->run();
         ptr->procstate = ProcessState_Terminating;
-    } else {
+		sysMemMgr.de_allocate(ptr->vm_state.offset);
+		using namespace boost::lambda;
+		std::list<ProcessControlBlockPtr>::iterator it =
+        std::find_if(m_processList.begin(), m_processList.end(),
+            bind(&ProcessControlBlock::pid, bind(&ProcessControlBlockPtr::operator*, _1)) == var(pid));
+		m_processList.erase(it);
+	} 
+	else {
         std::stringstream ss;
         ss << "Could not load process with pid: " << pid;
         throw std::runtime_error(ss.str());
@@ -95,7 +103,23 @@ void OpSystem::mem()
 {
 	sysMemMgr.display();
 }
+void OpSystem::mem(int pid)
+{
+	ProcessControlBlockPtr ptr(getProcess(pid));
+	ptr->procMemMgr.display();
+}
 void OpSystem::free()
 {
 	std::cout << "System free memory: " << sysMemMgr.freeMemAmount() << " bytes\n";
+}
+void OpSystem::free(int pid)
+{
+	ProcessControlBlockPtr ptr(getProcess(pid));
+	std::cout <<"Process free memory: " << ptr->procMemMgr.freeMemAmount() << " bytes\n";
+}
+int OS::OpSystem::sysNew(int size)
+{
+	VM::VMState temp = m_vm->getRegisterState();
+	ProcessControlBlockPtr ptr(getProcess(temp.pid));
+	return ptr->procMemMgr.allocate(size); 
 }

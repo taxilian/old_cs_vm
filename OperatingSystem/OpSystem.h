@@ -8,26 +8,30 @@
 #include "ProcessControlBlock.h"
 #include "VMCore.h"
 #include "HeapMgr.h"
+#include "Interrupts.h"
 
 namespace OS {
-    class OpSystem
+    class OpSystem : public VM::Interrupts 
     {
     public:
         OpSystem(VM::VMCore* vm);
         ~OpSystem(void);
 
-        void load(const std::string& fileName);
+        void load(const std::string& pathfileName,const std::string& name);
         int getNextPid() { return m_lastPid++; }
         void ps() const;
         void run(int pid);
 		void mem();
+		void mem(int pid);
 		void free();
-
+		void free(int pid);
+		int sysNew(int size);
     protected:
         ProcessControlBlockPtr getProcess(int pid);
 
     private:
         static const int stackSize = 4096;
+		static const int heapSize = 1024;
         uint32_t m_lastLoadAddr;
         VM::VMCore* m_vm;
         std::list<ProcessControlBlockPtr> m_processList;

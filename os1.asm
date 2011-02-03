@@ -61,5 +61,7 @@ START       LDA R2, text1
 text1Done   LDA R2, text2
             LDA R1, FINAL
             JMP PSTR
-
+			ADI R4, 400
+			MOV R0, R4
+			TRP 5
 FINAL       TRP 0

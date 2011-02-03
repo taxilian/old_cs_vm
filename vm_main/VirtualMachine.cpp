@@ -80,6 +80,11 @@ void VirtualMachine::callHandler(boost::uint64_t instruction)
 VirtualMachine::~VirtualMachine(void)
 {
 }
+//Interrupt stuff
+void VirtualMachine::setInterrupts(VM::Interrupts* OSInterrupts)
+{
+	osInterrupts = OSInterrupts;
+}
 
 // Resets the machine to its initial state
 void VirtualMachine::reset()
@@ -323,6 +328,8 @@ void VirtualMachine::CMP(REGISTER &rd, REGISTER &rs)
 void VirtualMachine::TRP(IMMEDIATE i)
 {
     DOC("TRP", i, "-"); 
+	int size;
+	int temp;
     switch(i) {
     case 0:
         pc = 0;
@@ -352,11 +359,14 @@ void VirtualMachine::TRP(IMMEDIATE i)
         std::cout << reg[8];
         LOG(" Received character " << reg[8] << "('" << (char)reg[8] << "')");
         break;
+	case 5://interrupt allocate memory to heap
+		size = reg[0];
+		temp = osInterrupts->sysNew(size);
     default:
         throw std::exception("Invalid TRP statement!");
     }
 }
-
+ 
 void VirtualMachine::setDebugInfo( std::map<boost::uint32_t, int>& linemap, std::map<boost::uint32_t, std::string> &revLabelMap )
 {
     byteToLineMap = linemap;

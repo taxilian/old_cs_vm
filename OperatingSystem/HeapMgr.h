@@ -1,5 +1,5 @@
 #ifndef HEAPMGR_H
-#define HEAPMGR_H
+#define HEAPMGR_H 
 #include <list>
 #include <iostream>
 namespace OS{
@@ -7,10 +7,13 @@ namespace OS{
 	class HeapMgr
 	{
 	public:
-		HeapMgr(int _totalMem);
+		HeapMgr();
+		HeapMgr(int _totalMem, int baseAddrs);
+		void setMem(int _totalMem, int baseAddrs);
 		void display();
 		int freeMemAmount();
 		int allocate(int size);
+		void de_allocate(int addr);
 	private:
 		int totalMem;
 		int freeMem;

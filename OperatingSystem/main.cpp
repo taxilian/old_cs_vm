@@ -10,5 +10,6 @@ int main()
 	VM::VirtualMachine vm;
 	OpSystem system(&vm);
 	Shell shell(&system);
+	vm.setInterrupts(&system); 
     shell.start();
 }

@@ -37,6 +37,8 @@ namespace VM {
         uint64_t pc;
         int32_t offset;
         int64_t reg[20];
+		//process currently running
+		int32_t pid; 
     };
 
     class VMCore : boost::noncopyable

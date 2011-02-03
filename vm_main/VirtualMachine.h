@@ -2,10 +2,10 @@
 #pragma once
 #ifndef H_VIRTUALMACHINE_RB_
 #define H_VIRTUALMACHINE_RB_
-
 #include "VMCore.h"
 #include "VMConfig.h"
 #include "helpers.h"
+#include "Interrupts.h"
 
 namespace VM {
     struct VMException : std::exception
@@ -25,14 +25,15 @@ namespace VM {
     class VirtualMachine : public VMCore
     {
     public:
-        VirtualMachine(void);
+        VirtualMachine(void); 
         virtual ~VirtualMachine(void);
 
         void reset();
         void load(const MemoryBlock& block, boost::uint32_t size);
         Status run();
         void setDebugInfo(std::map<boost::uint32_t, int>& linemap, std::map<boost::uint32_t, std::string> &revLabelMap);
-
+		//Iterrupts method
+		void setInterrupts(VM::Interrupts* OSInterrupts);
     public:
         // VMCore methods
         Status tick();
@@ -53,7 +54,8 @@ namespace VM {
         MemoryBlock m_block;
         bool m_running;
         FunctionMap m_functionMap;
-
+		//For interrupts
+		VM::Interrupts* osInterrupts; 
         boost::uint32_t BOUND_CODE;
 
     public:
