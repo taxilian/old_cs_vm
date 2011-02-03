@@ -11,7 +11,7 @@
 using namespace OS;
 using VM::VMCore;
 
-OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1)
+OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1),sysMemMgr(m_vm->getMemorySize())
 {
 }
 
@@ -47,9 +47,9 @@ void OS::OpSystem::load( const std::string& fileName )
     uint32_t startAddress;
     uint32_t offset;
     VM::ReadFromHex(fileName, memory, memorySize, startAddress, offset);
-    offset = m_lastLoadAddr;
-    m_lastLoadAddr += memorySize + stackSize;
-
+   // offset = m_lastLoadAddr;
+    //m_lastLoadAddr += memorySize + stackSize;
+	offset = sysMemMgr.allocate(memorySize + stackSize);
     m_vm->loadProgram(memory, memorySize, offset);
     ProcessControlBlockPtr newProgram(ProcessControlBlock::create(getNextPid(), fileName, memorySize, offset, startAddress));
     m_processList.push_back(newProgram);
@@ -90,4 +90,12 @@ void OS::OpSystem::run(int pid)
         ss << "Could not load process with pid: " << pid;
         throw std::runtime_error(ss.str());
     }
+}
+void OpSystem::mem()
+{
+	sysMemMgr.display();
+}
+void OpSystem::free()
+{
+	std::cout << "System free memory: " << sysMemMgr.freeMemAmount() << " bytes\n";
 }

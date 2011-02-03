@@ -7,6 +7,7 @@
 
 #include "ProcessControlBlock.h"
 #include "VMCore.h"
+#include "HeapMgr.h"
 
 namespace OS {
     class OpSystem
@@ -19,6 +20,8 @@ namespace OS {
         int getNextPid() { return m_lastPid++; }
         void ps() const;
         void run(int pid);
+		void mem();
+		void free();
 
     protected:
         ProcessControlBlockPtr getProcess(int pid);
@@ -29,6 +32,7 @@ namespace OS {
         VM::VMCore* m_vm;
         std::list<ProcessControlBlockPtr> m_processList;
         int m_lastPid;
+		HeapMgr sysMemMgr;
     };
 }
 #endif // OpSystem_h__

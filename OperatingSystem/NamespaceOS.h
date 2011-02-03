@@ -67,6 +67,24 @@ namespace OS{
             {
                 sys->ps();
             }
+			else if(temp == "mem")
+			{
+				int pid = 0;
+				s >> pid;
+				if(pid==0)
+				{
+					sys->mem();
+				}
+			}
+			else if(temp == "free")
+			{
+				int pid = 0;
+				s >> pid;
+				if(pid==0)
+				{
+					sys->free();
+				}
+			}
             else
                 cout <<"command not defined" << endl;
         }
@@ -76,6 +94,9 @@ namespace OS{
             cout <<"exit: exit the shell.\n";
             cout <<"ls: list the contents of a directory.\n";
             cout <<"cd: change working directory. cd (path)\n";
+			cout <<"load: load a process into memory. load (process)\n";
+			cout <<"run: run a process. run (process#)\n";
+			cout <<"ps: shows the processes in memory\n";
         }
 
         void ls(){
