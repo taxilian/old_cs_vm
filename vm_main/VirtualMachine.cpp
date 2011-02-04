@@ -106,6 +106,7 @@ VM::VMState VM::VirtualMachine::getRegisterState()
     VM::VMState state;
     state.pc = pc;
     state.offset = offset;
+	state.pid = pid;
     std::copy(reg, &reg[20], state.reg);
     return state;
 }
@@ -114,6 +115,7 @@ void VM::VirtualMachine::setRegisterState( const VMState& state )
 {
     offset = state.offset;
     pc = state.pc;
+	pid = state.pid;
     std::copy(state.reg, &state.reg[20], reg);
 }
 
@@ -361,7 +363,15 @@ void VirtualMachine::TRP(IMMEDIATE i)
         break;
 	case 5://interrupt allocate memory to heap
 		size = reg[0];
-		temp = osInterrupts->sysNew(size);
+		reg[1] = osInterrupts->sysNew(size);
+		break;
+	case 6://interrupt de-allocate memory from heap
+		osInterrupts->sysDelete(reg[0]);
+		break;
+	case 7:
+		osInterrupts->yield();
+		m_running = false;
+        break;
     default:
         throw std::exception("Invalid TRP statement!");
     }

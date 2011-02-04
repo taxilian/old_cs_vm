@@ -25,7 +25,10 @@ namespace OS {
 		void mem(int pid);
 		void free();
 		void free(int pid);
+		//interrupts
 		int sysNew(int size);
+		void sysDelete(int addr);
+		void yield();
     protected:
         ProcessControlBlockPtr getProcess(int pid);
 

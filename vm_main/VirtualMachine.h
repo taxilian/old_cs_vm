@@ -66,6 +66,7 @@ namespace VM {
         boost::int64_t reg[REGISTER_COUNT];
         boost::int64_t pc;
         boost::int32_t offset;
+		boost::int64_t pid;
 
     protected:
         std::map<boost::uint32_t, std::string> labelReverse;
