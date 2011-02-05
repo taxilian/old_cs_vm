@@ -5,7 +5,6 @@
 #include "VMCore.h"
 #include "VMConfig.h"
 #include "helpers.h"
-#include "Interrupts.h"
 
 namespace VM {
     struct VMException : std::exception
@@ -48,6 +47,7 @@ namespace VM {
         virtual uint32_t getMemorySize();
 
         virtual void registerInterrupt(int trap, const VM::InterruptHandler& handler);
+        virtual void configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt);
         // End VMCore methods
 
     protected:
@@ -59,6 +59,11 @@ namespace VM {
 		//VM::Interrupts* osInterrupts;
         VM::InterruptTable osInterrupts;
         boost::uint32_t BOUND_CODE;
+
+        int sched_calcTarget();
+        int sched_baseTicks;
+        double sched_variance;
+        InterruptHandler sched_interrupt;
 
     public:
         // Registers

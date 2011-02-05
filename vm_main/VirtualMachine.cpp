@@ -2,8 +2,11 @@
 #include <iostream>
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/cast.hpp>
 #include <conio.h>
 #include <boost/mpl/assert.hpp>
+
+#include <boost/random/linear_congruential.hpp>
 
 #ifdef __DEBUG
 #define TRACEON
@@ -19,7 +22,8 @@
 
 using namespace VM;
 
-VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), offset(0)
+VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), offset(0),
+    sched_baseTicks(30), sched_variance(0.2)
 {
     reset();
 
@@ -148,6 +152,12 @@ void VM::VirtualMachine::setRunning( bool isRunning )
     m_running = isRunning;
 }
 
+void VM::VirtualMachine::configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt )
+{
+    sched_baseTicks = baseTicks;
+    sched_variance = variance;
+    sched_interrupt = interrupt;
+}
 
 std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
     std::map<boost::uint32_t, std::string>::iterator fnd = labelReverse.find(addr);
@@ -162,6 +172,14 @@ std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
     }
 }
 
+int VirtualMachine::sched_calcTarget()
+{
+    double rndBase(rand() / double(RAND_MAX));
+    double percentToAdd = rndBase * sched_variance;
+    int posOrNeg = (rand() / double(RAND_MAX)) >= 0.5 ? 1 : -1;
+    return boost::numeric_cast<int>(sched_baseTicks + (percentToAdd * sched_baseTicks * posOrNeg));
+}
+
 // This is the main system loop
 Status VirtualMachine::run()
 {
@@ -169,9 +187,20 @@ Status VirtualMachine::run()
 
     int i = 0;
     Status stat;
+    int clock(0);
+    int schedTarget(sched_calcTarget());
     while (m_running) {
         //int line = this->byteToLineMap[static_cast<unsigned int>(pc)];
         stat = tick();
+        if (++clock > schedTarget) {
+            // We've hit the target clock cycle to let the scheduler do its thing
+            // Reset the clock and call the scheduler
+            clock = 0;
+            schedTarget = sched_calcTarget();
+            // If a scheduler interrupt handler is registered, call the scheduler
+            if (sched_interrupt)
+                sched_interrupt(this);
+        }
     };
     return stat;
 }

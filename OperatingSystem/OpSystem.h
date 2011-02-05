@@ -29,6 +29,8 @@ namespace OS {
 		void processNew(VM::VMCore* vm);
 		void processFree(VM::VMCore* vm);
 		void processYield(VM::VMCore* vm);
+
+        void runScheduler(VM::VMCore* vm);
     protected:
         ProcessControlBlockPtr getProcess(int pid);
 
