@@ -2,9 +2,10 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <boost/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
-
+#include <boost/cast.hpp>
 
 #include "OpSystem.h"
 
@@ -13,6 +14,10 @@ using VM::VMCore;
 
 OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1),sysMemMgr(m_vm->getMemorySize(), 0)
 {
+    // Register any special traps here
+    vm->registerInterrupt(5, boost::bind(&OpSystem::processNew, this, _1));
+    vm->registerInterrupt(6, boost::bind(&OpSystem::processFree, this, _1));
+    vm->registerInterrupt(7, boost::bind(&OpSystem::processYield, this, _1));
 }
 
 
@@ -79,7 +84,7 @@ ProcessControlBlockPtr OS::OpSystem::getProcess(int pid)
     using namespace boost::lambda;
     std::list<ProcessControlBlockPtr>::iterator it =
         std::find_if(m_processList.begin(), m_processList.end(),
-            bind(&ProcessControlBlock::pid, bind(&ProcessControlBlockPtr::operator*, _1)) == var(pid));
+            boost::lambda::bind(&ProcessControlBlock::pid, boost::lambda::bind(&ProcessControlBlockPtr::operator*, boost::lambda::_1)) == boost::lambda::var(pid));
     if (it == m_processList.end())
         return ProcessControlBlockPtr();
     else
@@ -104,7 +109,7 @@ void OS::OpSystem::run(int pid)
 			using namespace boost::lambda;
 			std::list<ProcessControlBlockPtr>::iterator it =
 			std::find_if(m_processList.begin(), m_processList.end(),
-				bind(&ProcessControlBlock::pid, bind(&ProcessControlBlockPtr::operator*, _1)) == var(pid));
+				boost::lambda::bind(&ProcessControlBlock::pid, boost::lambda::bind(&ProcessControlBlockPtr::operator*, boost::lambda::_1)) == var(pid));
 			m_processList.erase(it);
 		}
 	} 
@@ -132,21 +137,30 @@ void OpSystem::free(int pid)
 	ProcessControlBlockPtr ptr(getProcess(pid));
 	std::cout <<"Process free memory: " << ptr->procMemMgr.freeMemAmount() << " bytes\n";
 }
-int OS::OpSystem::sysNew(int size)
+
+void OS::OpSystem::processNew(VM::VMCore* vm)
 {//interrupt 5
-	VM::VMState temp = m_vm->getRegisterState();
+	VM::VMState temp = vm->getRegisterState();
+    size_t size = boost::numeric_cast<size_t>(temp.reg[0]);
+    
 	ProcessControlBlockPtr ptr(getProcess(temp.pid));
-	return ptr->procMemMgr.allocate(size); 
+	VM::ADDRESS addr = ptr->procMemMgr.allocate(size);
+    temp.reg[1] = addr;
+    vm->setRegisterState(temp);
 }
-void OS::OpSystem::sysDelete(int addr)
+
+void OS::OpSystem::processFree(VM::VMCore* vm)
 {//interrupt 6
-	VM::VMState temp = m_vm->getRegisterState();
+	VM::VMState temp = vm->getRegisterState();
 	ProcessControlBlockPtr ptr(getProcess(temp.pid));
-	return ptr->procMemMgr.de_allocate(addr);
+    VM::ADDRESS addr = boost::numeric_cast<VM::ADDRESS>(temp.reg[0]);
+	ptr->procMemMgr.de_allocate(addr);
 }
-void OS::OpSystem::yield()
+
+void OS::OpSystem::processYield(VM::VMCore* vm)
 {//interrupt 7
-	VM::VMState temp = m_vm->getRegisterState();
+	VM::VMState temp = vm->getRegisterState();
 	ProcessControlBlockPtr ptr(getProcess(temp.pid));
 	ptr->procstate = ProcessState_Suspended;
+    vm->setRunning(false);
 }

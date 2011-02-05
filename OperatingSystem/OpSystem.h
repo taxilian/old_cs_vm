@@ -4,14 +4,14 @@
 
 #include <string>
 #include <list>
+#include <boost/noncopyable.hpp>
 
 #include "ProcessControlBlock.h"
 #include "VMCore.h"
 #include "HeapMgr.h"
-#include "Interrupts.h"
 
 namespace OS {
-    class OpSystem : public VM::Interrupts 
+    class OpSystem : boost::noncopyable 
     {
     public:
         OpSystem(VM::VMCore* vm);
@@ -26,9 +26,9 @@ namespace OS {
 		void free();
 		void free(int pid);
 		//interrupts
-		int sysNew(int size);
-		void sysDelete(int addr);
-		void yield();
+		void processNew(VM::VMCore* vm);
+		void processFree(VM::VMCore* vm);
+		void processYield(VM::VMCore* vm);
     protected:
         ProcessControlBlockPtr getProcess(int pid);
 

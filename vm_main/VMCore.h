@@ -8,7 +8,9 @@
 #include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/function.hpp>
 #include <list>
+#include <map>
 
 using boost::uint64_t;
 using boost::int64_t;
@@ -20,9 +22,13 @@ using boost::uint8_t;
 using boost::int8_t;
 
 namespace VM {
+    class VMCore;
     typedef boost::uint32_t ADDRESS;
     typedef boost::int32_t IMMEDIATE;
     typedef boost::int64_t REGISTER;
+
+    typedef boost::function<void (VMCore*)> InterruptHandler;
+    typedef std::map<int, InterruptHandler> InterruptTable;
 
     typedef boost::shared_array<uint8_t> MemoryBlock;
     typedef std::list<REGISTER> RegisterList;
@@ -60,6 +66,10 @@ namespace VM {
         virtual void setRegisterState(const VMState& ) = 0;
 
         virtual uint32_t getMemorySize() = 0;
+
+        virtual void registerInterrupt(int trap, const InterruptHandler& handler) = 0;
+
+        virtual void setRunning( bool isRunning ) = 0;
     };
 
 };

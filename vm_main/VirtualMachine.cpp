@@ -80,11 +80,6 @@ void VirtualMachine::callHandler(boost::uint64_t instruction)
 VirtualMachine::~VirtualMachine(void)
 {
 }
-//Interrupt stuff
-void VirtualMachine::setInterrupts(VM::Interrupts* OSInterrupts)
-{
-	osInterrupts = OSInterrupts;
-}
 
 // Resets the machine to its initial state
 void VirtualMachine::reset()
@@ -141,6 +136,16 @@ void VM::VirtualMachine::setMemoryOffset( const uint32_t offset )
 uint32_t VM::VirtualMachine::getMemorySize()
 {
     return MEMORY_SIZE;
+}
+
+void VM::VirtualMachine::registerInterrupt( int trap, const VM::InterruptHandler& handler )
+{
+    osInterrupts[trap] = handler;
+}
+
+void VM::VirtualMachine::setRunning( bool isRunning )
+{
+    m_running = isRunning;
 }
 
 
@@ -330,8 +335,6 @@ void VirtualMachine::CMP(REGISTER &rd, REGISTER &rs)
 void VirtualMachine::TRP(IMMEDIATE i)
 {
     DOC("TRP", i, "-"); 
-	int size;
-	int temp;
     switch(i) {
     case 0:
         pc = 0;
@@ -361,19 +364,15 @@ void VirtualMachine::TRP(IMMEDIATE i)
         std::cout << reg[8];
         LOG(" Received character " << reg[8] << "('" << (char)reg[8] << "')");
         break;
-	case 5://interrupt allocate memory to heap
-		size = reg[0];
-		reg[1] = osInterrupts->sysNew(size);
-		break;
-	case 6://interrupt de-allocate memory from heap
-		osInterrupts->sysDelete(reg[0]);
-		break;
-	case 7:
-		osInterrupts->yield();
-		m_running = false;
-        break;
     default:
-        throw std::exception("Invalid TRP statement!");
+        VM::InterruptTable::const_iterator fnd = osInterrupts.find(i);
+        if (fnd != osInterrupts.end()) {
+            // look it up in the table; if it exists, call it with a pointer to the VMCore* interface
+            fnd->second(this);
+        } else {
+            throw std::exception("Invalid TRP statement!");
+        }
+        break;
     }
 }
  

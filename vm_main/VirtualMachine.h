@@ -32,8 +32,6 @@ namespace VM {
         void load(const MemoryBlock& block, boost::uint32_t size);
         Status run();
         void setDebugInfo(std::map<boost::uint32_t, int>& linemap, std::map<boost::uint32_t, std::string> &revLabelMap);
-		//Iterrupts method
-		void setInterrupts(VM::Interrupts* OSInterrupts);
     public:
         // VMCore methods
         Status tick();
@@ -41,12 +39,15 @@ namespace VM {
         void loadProgram(const MemoryBlock& memory,
                          const size_t size,
                          const uint32_t offset = 0);
+        void setRunning( bool isRunning );
 
         // RegisterState is represented by a list of n values,
         // where v(0) is the PC and v(1...n) are the registers
         VMState getRegisterState();
         void setRegisterState(const VMState& );
         virtual uint32_t getMemorySize();
+
+        virtual void registerInterrupt(int trap, const VM::InterruptHandler& handler);
         // End VMCore methods
 
     protected:
@@ -55,7 +56,8 @@ namespace VM {
         bool m_running;
         FunctionMap m_functionMap;
 		//For interrupts
-		VM::Interrupts* osInterrupts; 
+		//VM::Interrupts* osInterrupts;
+        VM::InterruptTable osInterrupts;
         boost::uint32_t BOUND_CODE;
 
     public:
@@ -66,7 +68,7 @@ namespace VM {
         boost::int64_t reg[REGISTER_COUNT];
         boost::int64_t pc;
         boost::int32_t offset;
-		boost::int64_t pid;
+		boost::int32_t pid;
 
     protected:
         std::map<boost::uint32_t, std::string> labelReverse;
