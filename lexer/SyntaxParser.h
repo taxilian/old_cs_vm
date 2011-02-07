@@ -2,6 +2,9 @@
 #include "LexicalParser.h"
 #include <set>
 #include <string>
+#include <deque>
+#include <map>
+#include "SymbolEntry.h"
 
 struct SyntaxParserException : std::exception
 {
@@ -62,6 +65,8 @@ public:
     void new_declaration();
 
 protected:
+    const std::string getScopeString();
+
     void raiseError(const std::string& type, const Token& found);
 
     bool is_in_set( const std::string& needle, const std::set<std::string>& haystack );
@@ -69,11 +74,27 @@ protected:
     void assert_type(const TokenType type);
     void assert_type_value(const TokenType type, const std::string& value);
     void assert_is( bool param1 );
+    std::string makeSymbolId( const std::string& prefix );
+    void registerSymbol( const SymbolEntryPtr& symbol );
 private:
     LexicalParser& lexer;
     std::set<std::string> validKeywords;
     std::set<std::string> validTypes;
     std::set<std::string> validModifiers;
     std::set<std::string> validOperators;
+
+    std::deque<std::string> current_scope;
+    std::deque<std::string> scope_type;
+    std::map<std::string, SymbolEntryPtr> symbol_id_map;
+    std::map<std::string, SymbolEntryPtr> symbol_name_map;
+
+    long nextId;
+
+    std::string lastSeenName;
+    std::string lastSeenModifier;
+    std::string lastSeenType;
+    std::string lastSeenFieldType;
+
+    std::list<ParameterDefPtr> foundParams;
 };
 

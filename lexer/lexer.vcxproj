@@ -75,6 +75,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="LexicalParser.h" />
+    <ClInclude Include="SymbolEntry.h" />
     <ClInclude Include="SyntaxParser.h" />
     <ClInclude Include="Token.h" />
   </ItemGroup>
