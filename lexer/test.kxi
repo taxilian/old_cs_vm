@@ -1,20 +1,29 @@
-
-
-
 void main( )
 {
-    LexicalParser parser("lexer\\test.kxi");
-    
+    LexicalParser parser;
+    int a = 28534;
+    char c;
     Token cur;
     while (cur.type != TT_ENDOFFILE) {
         cur = parser.nextToken();
-        std::cout << cur.toString() << std::endl;
+        cout << cur.toString();
+        cout << '\n';
     }
 
-    int a = 28534;
-    a += 37812;
+    a = a + 37812;
 
-    char c = '\n';
+    c = '\n';
 
     return 0;
+}
+
+class testClass {
+    int a;
+    int b;
+    int c;
+
+    bool doSomethingCool(int a, int b, int c)
+    {
+        return 3+6*17-(3-5);
+    }
 }

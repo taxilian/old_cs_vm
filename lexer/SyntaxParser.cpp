@@ -94,15 +94,20 @@ void SyntaxParser::assert_type_value( const TokenType type, const std::string& v
 
 void SyntaxParser::compilation_unit()
 {
-    if (lexer.current().type == TT_KEYWORD
-        && lexer.current().text == "class") {
-        class_declaration();
-    } else {
-        assert_type_value(TT_KEYWORD, "void"); lexer.nextToken();
-        assert_type_value(TT_KEYWORD, "main"); lexer.nextToken();
-        assert_type_value(TT_GROUPOPEN, "("); lexer.nextToken();
-        assert_type_value(TT_GROUPCLOSE, ")"); lexer.nextToken();
-        method_body();
+    while (true) {
+        if (lexer.current().type == TT_KEYWORD
+            && lexer.current().text == "class") {
+            class_declaration();
+        } else if (lexer.current().type == TT_KEYWORD
+            && lexer.current().text == "void") {
+            assert_type_value(TT_KEYWORD, "void"); lexer.nextToken();
+            assert_type_value(TT_KEYWORD, "main"); lexer.nextToken();
+            assert_type_value(TT_GROUPOPEN, "("); lexer.nextToken();
+            assert_type_value(TT_GROUPCLOSE, ")"); lexer.nextToken();
+            method_body();
+        } else {
+            return;
+        }
     }
 }
 
@@ -111,8 +116,9 @@ void SyntaxParser::modifier()
     if (lexer.current().type == TT_KEYWORD
         && is_in_set(lexer.current().text, validModifiers)) {
         lexer.nextToken();
+    } else {
+        raiseError("modifier", lexer.current());
     }
-    raiseError("modifier", lexer.current());
 }
 
 void SyntaxParser::class_name()
@@ -120,8 +126,9 @@ void SyntaxParser::class_name()
     if (lexer.current().type == TT_KEYWORD
         && !is_reserved(lexer.current().text)) {
         lexer.nextToken();
+    } else {
+        raiseError("class_name", lexer.current());
     }
-    raiseError("class_name", lexer.current());
 }
 
 void SyntaxParser::type()
@@ -139,8 +146,9 @@ void SyntaxParser::character_literal()
 {
     if (lexer.current().type == TT_CHAR) {
         lexer.nextToken();
+    } else {
+        raiseError("character_literal", lexer.current());
     }
-    raiseError("character_literal", lexer.current());
 }
 
 void SyntaxParser::numeric_literal()
@@ -160,8 +168,9 @@ void SyntaxParser::number()
 {
     if (lexer.current().type == TT_NUMBER) {
         lexer.nextToken();
+    } else {
+        raiseError("number", lexer.current());
     }
-    raiseError("number", lexer.current());
 }
 
 void SyntaxParser::method_body()
@@ -171,7 +180,9 @@ void SyntaxParser::method_body()
 
     variable_declaration();
 
-    statement();
+    while (lexer.current().text != "}") {
+        statement();
+    }
 
     assert_type_value(TT_GROUPCLOSE, "}");
     lexer.nextToken();
@@ -179,28 +190,36 @@ void SyntaxParser::method_body()
 
 void SyntaxParser::variable_declaration()
 {
-    type();
-    identifier();
-    if (lexer.current().type == TT_GROUPOPEN) {
-        assert_type_value(TT_GROUPOPEN, "[");
-        lexer.nextToken();
-        assert_type_value(TT_GROUPCLOSE, "]");
+    while (lexer.current().type == TT_KEYWORD
+        && (is_in_set(lexer.current().text, validTypes)
+            || !is_reserved(lexer.current().text))
+        && lexer.peekToken(0).type == TT_KEYWORD
+        && !is_reserved(lexer.peekToken(0).text)) {
+        type();
+        identifier();
+        if (lexer.current().type == TT_GROUPOPEN) {
+            assert_type_value(TT_GROUPOPEN, "[");
+            lexer.nextToken();
+            assert_type_value(TT_GROUPCLOSE, "]");
+            lexer.nextToken();
+        }
+        if (lexer.current().type == TT_OPERATOR
+            && lexer.current().text == "=") {
+            lexer.nextToken();
+            assignment_expression();
+        }
+        assert_type(TT_SEMICOLON);
         lexer.nextToken();
     }
-    if (lexer.current().type == TT_OPERATOR
-        && lexer.current().text == "=") {
-        lexer.nextToken();
-        assignment_expression();
-    }
-    assert_type(TT_SEMICOLON);
 }
 
 void SyntaxParser::identifier()
 {
     if (lexer.current().type == TT_KEYWORD && !is_reserved(lexer.current().text)) {
         lexer.nextToken();
+    } else {
+        raiseError("identifier", lexer.current());
     }
-    raiseError("identifier", lexer.current());
 }
 
 void SyntaxParser::assert_is( bool param1 )
@@ -224,21 +243,21 @@ void SyntaxParser::class_declaration()
 
 void SyntaxParser::class_member_declaration()
 {
-    assert_type(TT_KEYWORD);
-    if (is_in_set(lexer.current().text, validModifiers)) {
-        modifier();
-        lexer.nextToken();
+    while (lexer.current().text != "}") {
         assert_type(TT_KEYWORD);
+        if (is_in_set(lexer.current().text, validModifiers)) {
+            modifier();
+            lexer.nextToken();
+            assert_type(TT_KEYWORD);
+        }
+        if (lexer.peekToken(0).type == TT_KEYWORD) {
+            type();
+            identifier();
+            field_declaration();
+        } else {
+            constructor_declaration();
+        }
     }
-    if (lexer.peekToken(0).type == TT_KEYWORD) {
-        type();
-        identifier();
-        field_declaration();
-    } else {
-        constructor_declaration();
-    }
-    assert_type(TT_SEMICOLON);
-    lexer.nextToken();
 }
 
 void SyntaxParser::constructor_declaration()
@@ -254,7 +273,7 @@ void SyntaxParser::constructor_declaration()
 
 void SyntaxParser::field_declaration()
 {
-    if (lexer.current().type == TT_GROUPOPEN) {
+    if (lexer.current().type == TT_GROUPOPEN && lexer.current().text == "[") {
         assert_type_value(TT_GROUPOPEN, "[");
         lexer.nextToken();
         assert_type_value(TT_GROUPCLOSE, "]");
@@ -280,11 +299,11 @@ void SyntaxParser::field_declaration()
 
 void SyntaxParser::parameter_list()
 {
-    parameter();
-    if (lexer.current().type == TT_OPERATOR
-        && lexer.current().text == ",") {
-        lexer.nextToken();
+    while (lexer.current().text != ")") {
         parameter();
+        if (lexer.current().text == ",") {
+            lexer.nextToken();
+        }
     }
 }
 
@@ -304,9 +323,11 @@ void SyntaxParser::statement()
 {
     std::string& curTxt(lexer.current().text);
     if (lexer.current().type == TT_GROUPOPEN
-        && curTxt == "}") {
+        && curTxt == "{") {
         lexer.nextToken();
-        statement();
+        while (lexer.current().text != "}") { 
+            statement();
+        }
         assert_type_value(TT_GROUPCLOSE, "}");
         lexer.nextToken();
         return;
@@ -325,6 +346,10 @@ void SyntaxParser::statement()
     } else if (curTxt == "cin") {
         lexer.nextToken();
         cmd_cin();
+    } else {
+        expression();
+        assert_type(TT_SEMICOLON);
+        lexer.nextToken();
     }
 }
 
@@ -363,6 +388,7 @@ void SyntaxParser::cmd_return()
 void SyntaxParser::cmd_cout()
 {
     assert_type_value(TT_OPERATOR, "<<");
+    lexer.nextToken();
     expression();
     assert_type(TT_SEMICOLON);
     lexer.nextToken();
@@ -429,28 +455,40 @@ void SyntaxParser::expressionz()
         lexer.nextToken();
         assignment_expression();
     } else if (curTxt == "&&") {
+        lexer.nextToken();
         expression();
     } else if (curTxt == "||") {
+        lexer.nextToken();
         expression();
     } else if (curTxt == "==") {
+        lexer.nextToken();
         expression();
     } else if (curTxt == "!=") {
+        lexer.nextToken();
         expression();
     } else if (curTxt == "<=") {
+        lexer.nextToken();
         expression();
     } else if (curTxt == ">=") {
+        lexer.nextToken();
         expression();
     } else if (curTxt == "<") {
+        lexer.nextToken();
         expression();
     } else if (curTxt == ">") {
+        lexer.nextToken();
         expression();
     } else if (curTxt == "+") {
+        lexer.nextToken();
         expression();
     } else if (curTxt == "-") {
+        lexer.nextToken();
         expression();
     } else if (curTxt == "*") {
+        lexer.nextToken();
         expression();
     } else if (curTxt == "/") {
+        lexer.nextToken();
         expression();
     } else {
         raiseError("right-hand expression", lexer.current());
@@ -517,23 +555,25 @@ void SyntaxParser::fn_arr_member()
 {
     if (lexer.current().type == TT_GROUPOPEN
         && lexer.current().text == "(") {
-        lexer.nextToken();
         argument_list();
-        assert_type_value(TT_GROUPCLOSE, ")");
     } else if (lexer.current().type == TT_GROUPOPEN
         && lexer.current().text == "[") {
         lexer.nextToken();
         expression();
         assert_type_value(TT_GROUPCLOSE, "]");
+        lexer.nextToken();
     }
 }
 
 void SyntaxParser::argument_list()
 {
-    expression();
-    if (lexer.current().type == TT_OPERATOR
-        && lexer.current().text == ",") {
-        lexer.nextToken();
-        argument_list();
+    assert_type_value(TT_GROUPOPEN, "(");
+    lexer.nextToken();
+    while (lexer.current().text != ")") {
+        expression();
+        if (lexer.current().text == ",") {
+            lexer.nextToken();
+        }
     }
+    lexer.nextToken();
 }
