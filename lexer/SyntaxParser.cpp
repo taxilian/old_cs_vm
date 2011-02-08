@@ -8,11 +8,6 @@ SyntaxParser::SyntaxParser(LexicalParser& lexer) : lexer(lexer), nextId(1000)
 {
     current_scope.push_back("g");
 
-    std::set<std::string> validKeywords;
-    std::set<std::string> validTypes;
-    std::set<std::string> validModifiers;
-    std::set<std::string> validOperators;
-
     validKeywords.insert("atoi");
     validKeywords.insert("class");
     validKeywords.insert("cin");
@@ -109,7 +104,22 @@ void SyntaxParser::compilation_unit()
             assert_type_value(TT_KEYWORD, "main"); lexer.nextToken();
             assert_type_value(TT_GROUPOPEN, "("); lexer.nextToken();
             assert_type_value(TT_GROUPCLOSE, ")"); lexer.nextToken();
+            {
+                // Create symbol entry for the main function
+                SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
+                symb->id = makeSymbolId("M");
+                symb->value = "main";
+                symb->kind = "main";
+                symb->scope = getScopeString();
+                MethodDataPtr methoddata = boost::make_shared<MethodData>();
+                methoddata->accessMod = "public";
+                methoddata->returnType = "void";
+                symb->data = methoddata;
+                registerSymbol(symb);
+            }
+            current_scope.push_back("main");
             method_body();
+            current_scope.pop_back();
         } else {
             return;
         }
@@ -216,6 +226,18 @@ void SyntaxParser::variable_declaration()
             lexer.nextToken();
             assignment_expression();
         }
+        {
+            SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
+            symb->id = makeSymbolId("L");
+            symb->kind = "variable";
+            symb->scope = getScopeString();
+            symb->value = lastSeenName;
+            TypeDataPtr tdata = boost::make_shared<TypeData>();
+            tdata->accessMod = "private";
+            tdata->type = lastSeenType;
+            symb->data = tdata;
+            registerSymbol(symb);
+        }
         assert_type(TT_SEMICOLON);
         lexer.nextToken();
     }
@@ -269,7 +291,6 @@ void SyntaxParser::class_member_declaration()
         assert_type(TT_KEYWORD);
         if (is_in_set(lexer.current().text, validModifiers)) {
             modifier();
-            lexer.nextToken();
             assert_type(TT_KEYWORD);
         } else {
             // Default modifier is private
@@ -279,10 +300,6 @@ void SyntaxParser::class_member_declaration()
             type();
             identifier();
             field_declaration();
-            {
-                SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
-                //symb->id = 
-            }
         } else {
             constructor_declaration();
         }
@@ -294,10 +311,29 @@ void SyntaxParser::constructor_declaration()
     class_name();
     assert_type_value(TT_GROUPOPEN, "(");
     lexer.nextToken();
+    current_scope.push_back(lastSeenName); 
+    lastSeenFunction = lastSeenName;
     parameter_list();
+    current_scope.pop_back();
+    {
+        // Create symbol entry for the function
+        SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
+        symb->id = makeSymbolId("S");
+        symb->value = lastSeenFunction;
+        symb->kind = "constructor";
+        symb->scope = getScopeString();
+        MethodDataPtr methoddata = boost::make_shared<MethodData>();
+        methoddata->accessMod = lastSeenModifier;
+        methoddata->returnType = lastSeenType;
+        methoddata->Parameters = foundParams;
+        symb->data = methoddata;
+        registerSymbol(symb);
+    }
     assert_type_value(TT_GROUPCLOSE, ")");
     lexer.nextToken();
+    current_scope.push_back(lastSeenFunction);
     method_body();
+    current_scope.pop_back();
 }
 
 void SyntaxParser::field_declaration()
@@ -308,6 +344,7 @@ void SyntaxParser::field_declaration()
         lexer.nextToken();
         assert_type_value(TT_GROUPCLOSE, "]");
         lexer.nextToken();
+        lastSeenType += "[]";
         lastSeenFieldType = "array";
     }
     if (lexer.current().type == TT_OPERATOR
@@ -319,18 +356,48 @@ void SyntaxParser::field_declaration()
     if (lexer.current().type == TT_SEMICOLON) {
         // it's a member variable
         lexer.nextToken();
+        {
+            // Create symbol entry for the function
+            SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
+            symb->id = makeSymbolId("V");
+            symb->value = lastSeenName;
+            symb->kind = "variable";
+            symb->scope = getScopeString();
+            TypeDataPtr typedata = boost::make_shared<TypeData>();
+            typedata->accessMod = lastSeenModifier;
+            typedata->type = lastSeenType;
+            symb->data = typedata;
+            registerSymbol(symb);
+        }
         return; // If it's a variable we stop here
     }
     lastSeenFieldType = "function";
+    lastSeenFunction = lastSeenName;
     assert_type_value(TT_GROUPOPEN, "(");
     lexer.nextToken();
     // Add the function name to the scope
     current_scope.push_back(lastSeenName); 
     parameter_list();
     current_scope.pop_back();
+    {
+        // Create symbol entry for the function
+        SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
+        symb->id = makeSymbolId("M");
+        symb->value = lastSeenFunction;
+        symb->kind = "method";
+        symb->scope = getScopeString();
+        MethodDataPtr methoddata = boost::make_shared<MethodData>();
+        methoddata->accessMod = lastSeenModifier;
+        methoddata->returnType = lastSeenType;
+        methoddata->Parameters = foundParams;
+        symb->data = methoddata;
+        registerSymbol(symb);
+    }
     assert_type_value(TT_GROUPCLOSE, ")");
     lexer.nextToken();
+    current_scope.push_back(lastSeenFunction);
     method_body();
+    current_scope.pop_back();
 }
 
 void SyntaxParser::parameter_list()

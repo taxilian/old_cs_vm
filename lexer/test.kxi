@@ -22,8 +22,17 @@ class testClass {
     int b;
     int c;
 
+    public testClass(bool a, double d, testClass c) {
+        int z;
+        int y;
+        int x = 47;
+
+        return x+y*x/2;
+    }
+
     bool doSomethingCool(int a, int b, int c)
     {
+        bool d = false;
         return 3+6*17-(3-5);
     }
 }

@@ -91,6 +91,7 @@ private:
     long nextId;
 
     std::string lastSeenName;
+    std::string lastSeenFunction;
     std::string lastSeenModifier;
     std::string lastSeenType;
     std::string lastSeenFieldType;
