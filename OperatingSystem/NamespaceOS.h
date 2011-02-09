@@ -54,7 +54,7 @@ namespace OS{
                 {
                     fs::path hf = cwd/hexFile;
                     
-                    sys->load(hf.string());
+                    sys->load(hf.string(), hexFile);
                 }
             }
             else if (temp == "run")
@@ -67,6 +67,28 @@ namespace OS{
             {
                 sys->ps();
             }
+			else if(temp == "mem")
+			{
+				int pid = 0;
+				s >> pid;
+				if(pid==0)
+				{
+					sys->mem();
+				}
+				else
+					sys->mem(pid);
+			}
+			else if(temp == "free")
+			{
+				int pid = 0;
+				s >> pid;
+				if(pid==0)
+				{
+					sys->free();
+				}
+				else
+					sys->free(pid); 
+			}
             else
                 cout <<"command not defined" << endl;
         }
@@ -76,6 +98,11 @@ namespace OS{
             cout <<"exit: exit the shell.\n";
             cout <<"ls: list the contents of a directory.\n";
             cout <<"cd: change working directory. cd (path)\n";
+			cout <<"load: load a process into memory. load (process)\n";
+			cout <<"run: run a process. run (process#)\n";
+			cout <<"ps: shows the processes in memory\n";
+			cout <<"mem: displays system memory list. mem (process#) displays process memory list\n";
+			cout <<"free: displays the amount of system free memory. free (process#) displays free memory for process.\n";
         }
 
         void ls(){

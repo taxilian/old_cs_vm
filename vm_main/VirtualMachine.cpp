@@ -2,8 +2,11 @@
 #include <iostream>
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/cast.hpp>
 #include <conio.h>
 #include <boost/mpl/assert.hpp>
+
+#include <boost/random/linear_congruential.hpp>
 
 #ifdef __DEBUG
 #define TRACEON
@@ -19,7 +22,8 @@
 
 using namespace VM;
 
-VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), offset(0)
+VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), offset(0),
+    sched_baseTicks(30), sched_variance(0.2)
 {
     reset();
 
@@ -101,6 +105,7 @@ VM::VMState VM::VirtualMachine::getRegisterState()
     VM::VMState state;
     state.pc = pc;
     state.offset = offset;
+	state.pid = pid;
     std::copy(reg, &reg[20], state.reg);
     return state;
 }
@@ -109,6 +114,7 @@ void VM::VirtualMachine::setRegisterState( const VMState& state )
 {
     offset = state.offset;
     pc = state.pc;
+	pid = state.pid;
     std::copy(state.reg, &state.reg[20], reg);
 }
 
@@ -136,6 +142,22 @@ uint32_t VM::VirtualMachine::getMemorySize()
     return MEMORY_SIZE;
 }
 
+void VM::VirtualMachine::registerInterrupt( int trap, const VM::InterruptHandler& handler )
+{
+    osInterrupts[trap] = handler;
+}
+
+void VM::VirtualMachine::setRunning( bool isRunning )
+{
+    m_running = isRunning;
+}
+
+void VM::VirtualMachine::configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt )
+{
+    sched_baseTicks = baseTicks;
+    sched_variance = variance;
+    sched_interrupt = interrupt;
+}
 
 std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
     std::map<boost::uint32_t, std::string>::iterator fnd = labelReverse.find(addr);
@@ -150,6 +172,14 @@ std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
     }
 }
 
+int VirtualMachine::sched_calcTarget()
+{
+    double rndBase(rand() / double(RAND_MAX));
+    double percentToAdd = rndBase * sched_variance;
+    int posOrNeg = (rand() / double(RAND_MAX)) >= 0.5 ? 1 : -1;
+    return boost::numeric_cast<int>(sched_baseTicks + (percentToAdd * sched_baseTicks * posOrNeg));
+}
+
 // This is the main system loop
 Status VirtualMachine::run()
 {
@@ -157,9 +187,20 @@ Status VirtualMachine::run()
 
     int i = 0;
     Status stat;
+    int clock(0);
+    int schedTarget(sched_calcTarget());
     while (m_running) {
         //int line = this->byteToLineMap[static_cast<unsigned int>(pc)];
         stat = tick();
+        if (++clock > schedTarget) {
+            // We've hit the target clock cycle to let the scheduler do its thing
+            // Reset the clock and call the scheduler
+            clock = 0;
+            schedTarget = sched_calcTarget();
+            // If a scheduler interrupt handler is registered, call the scheduler
+            if (sched_interrupt)
+                sched_interrupt(this);
+        }
     };
     return stat;
 }
@@ -353,10 +394,17 @@ void VirtualMachine::TRP(IMMEDIATE i)
         LOG(" Received character " << reg[8] << "('" << (char)reg[8] << "')");
         break;
     default:
-        throw std::exception("Invalid TRP statement!");
+        VM::InterruptTable::const_iterator fnd = osInterrupts.find(i);
+        if (fnd != osInterrupts.end()) {
+            // look it up in the table; if it exists, call it with a pointer to the VMCore* interface
+            fnd->second(this);
+        } else {
+            throw std::exception("Invalid TRP statement!");
+        }
+        break;
     }
 }
-
+ 
 void VirtualMachine::setDebugInfo( std::map<boost::uint32_t, int>& linemap, std::map<boost::uint32_t, std::string> &revLabelMap )
 {
     byteToLineMap = linemap;

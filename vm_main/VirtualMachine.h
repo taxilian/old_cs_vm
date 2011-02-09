@@ -2,7 +2,6 @@
 #pragma once
 #ifndef H_VIRTUALMACHINE_RB_
 #define H_VIRTUALMACHINE_RB_
-
 #include "VMCore.h"
 #include "VMConfig.h"
 #include "helpers.h"
@@ -25,14 +24,13 @@ namespace VM {
     class VirtualMachine : public VMCore
     {
     public:
-        VirtualMachine(void);
+        VirtualMachine(void); 
         virtual ~VirtualMachine(void);
 
         void reset();
         void load(const MemoryBlock& block, boost::uint32_t size);
         Status run();
         void setDebugInfo(std::map<boost::uint32_t, int>& linemap, std::map<boost::uint32_t, std::string> &revLabelMap);
-
     public:
         // VMCore methods
         Status tick();
@@ -40,12 +38,16 @@ namespace VM {
         void loadProgram(const MemoryBlock& memory,
                          const size_t size,
                          const uint32_t offset = 0);
+        void setRunning( bool isRunning );
 
         // RegisterState is represented by a list of n values,
         // where v(0) is the PC and v(1...n) are the registers
         VMState getRegisterState();
         void setRegisterState(const VMState& );
         virtual uint32_t getMemorySize();
+
+        virtual void registerInterrupt(int trap, const VM::InterruptHandler& handler);
+        virtual void configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt);
         // End VMCore methods
 
     protected:
@@ -53,8 +55,15 @@ namespace VM {
         MemoryBlock m_block;
         bool m_running;
         FunctionMap m_functionMap;
-
+		//For interrupts
+		//VM::Interrupts* osInterrupts;
+        VM::InterruptTable osInterrupts;
         boost::uint32_t BOUND_CODE;
+
+        int sched_calcTarget();
+        int sched_baseTicks;
+        double sched_variance;
+        InterruptHandler sched_interrupt;
 
     public:
         // Registers
@@ -64,6 +73,7 @@ namespace VM {
         boost::int64_t reg[REGISTER_COUNT];
         boost::int64_t pc;
         boost::int32_t offset;
+		boost::int32_t pid;
 
     protected:
         std::map<boost::uint32_t, std::string> labelReverse;
