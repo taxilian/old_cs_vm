@@ -5,6 +5,7 @@
 #include <string>
 #include <list>
 #include <boost/noncopyable.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include "ProcessControlBlock.h"
 #include "VMCore.h"
@@ -22,16 +23,25 @@ namespace OS {
         int getNextPid() { return m_lastPid++; }
         void ps() const;
         void run(int pid);
+        void runall();
 		void mem();
 		void mem(int pid);
 		void free();
 		void free(int pid);
 		//interrupts
+
 		void processNew(VM::VMCore* vm);
 		void processFree(VM::VMCore* vm);
 		void processYield(VM::VMCore* vm);
+        void processEnd(VM::VMCore* vm);
 
         void runScheduler(VM::VMCore* vm);
+
+    protected:
+        // General utilites, used mainly by the scheduler
+        void saveContext();
+        void freeProcess(const ProcessControlBlockPtr& proc);
+
     protected:
         ProcessControlBlockPtr getProcess(int pid);
         template <class CONT>
@@ -41,7 +51,6 @@ namespace OS {
                 container.push_back(*it);
             }
         }
-
     private:
         static const int stackSize = 4096;
 		static const int heapSize = 1024;
@@ -49,8 +58,9 @@ namespace OS {
         VM::VMCore* m_vm;
         std::list<ProcessControlBlockPtr> m_processList;
         int m_lastPid;
-        friend class ProcScheduler;
 		HeapMgr sysMemMgr;
+        boost::scoped_ptr<ProcScheduler> m_scheduler;
+        friend class ProcScheduler;
     };
 }
 #endif // OpSystem_h__

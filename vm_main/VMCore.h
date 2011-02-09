@@ -69,6 +69,7 @@ namespace VM {
 
         virtual void registerInterrupt(int trap, const InterruptHandler& handler) = 0;
 
+        virtual bool isRunning() = 0;
         virtual void setRunning( bool isRunning ) = 0;
         virtual void configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt) = 0;
     };

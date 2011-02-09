@@ -38,6 +38,7 @@ namespace VM {
         void loadProgram(const MemoryBlock& memory,
                          const size_t size,
                          const uint32_t offset = 0);
+        bool isRunning();
         void setRunning( bool isRunning );
 
         // RegisterState is represented by a list of n values,

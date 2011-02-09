@@ -7,12 +7,14 @@
 #include <boost/lambda/bind.hpp>
 #include <boost/cast.hpp>
 
+#include "ProcScheduler.h"
 #include "OpSystem.h"
 
 using namespace OS;
 using VM::VMCore;
 
-OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1),sysMemMgr(m_vm->getMemorySize(), 0)
+OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1),sysMemMgr(m_vm->getMemorySize(), 0),
+    m_scheduler(new ProcScheduler(this, vm))
 {
     // Register any special traps here
     vm->registerInterrupt(5, boost::bind(&OpSystem::processNew, this, _1));
@@ -77,6 +79,7 @@ void OS::OpSystem::load( const std::string& pathfileName,const std::string& name
 	newProgram->vm_state.reg[VMCore::SL] = offset + memorySize + heapSize;
     newProgram->procstate = ProcessState_Ready;
     std::cout << "Loaded " << name << " in pid " << newProgram->pid << std::endl;
+    m_scheduler->addJob(newProgram);
 }
 
 ProcessControlBlockPtr OS::OpSystem::getProcess(int pid)
@@ -106,11 +109,7 @@ void OS::OpSystem::run(int pid)
 		{
 			ptr->procstate = ProcessState_Terminating;
 			sysMemMgr.de_allocate(ptr->vm_state.offset);
-			using namespace boost::lambda;
-			std::list<ProcessControlBlockPtr>::iterator it =
-			std::find_if(m_processList.begin(), m_processList.end(),
-				boost::lambda::bind(&ProcessControlBlock::pid, boost::lambda::bind(&ProcessControlBlockPtr::operator*, boost::lambda::_1)) == var(pid));
-			m_processList.erase(it);
+            m_processList.remove(ptr);
 		}
 	} 
 	else {
@@ -119,6 +118,14 @@ void OS::OpSystem::run(int pid)
         throw std::runtime_error(ss.str());
     }
 }
+
+void OS::OpSystem::runall()
+{
+    do {
+        m_scheduler->schedule();
+    } while (m_vm->isRunning());
+}
+
 void OpSystem::mem()
 {
 	sysMemMgr.display();
@@ -162,5 +169,29 @@ void OS::OpSystem::processYield(VM::VMCore* vm)
 	VM::VMState temp = vm->getRegisterState();
 	ProcessControlBlockPtr ptr(getProcess(temp.pid));
 	ptr->procstate = ProcessState_Suspended;
+    ptr->vm_state = temp;
     vm->setRunning(false);
+}
+
+void OS::OpSystem::processEnd( VM::VMCore* vm )
+{// interrupt 0 / TRP 0
+	VM::VMState temp = vm->getRegisterState();
+	ProcessControlBlockPtr ptr(getProcess(temp.pid));
+	ptr->procstate = ProcessState_Terminating;
+    ptr->vm_state = temp;
+    vm->setRunning(false);
+}
+
+void OS::OpSystem::saveContext()
+{
+    VM::VMState temp = m_vm->getRegisterState();
+    ProcessControlBlockPtr ptr(getProcess(temp.pid));
+    ptr->vm_state = temp;
+}
+
+void OS::OpSystem::freeProcess( const ProcessControlBlockPtr& proc )
+{
+    proc->procstate = ProcessState_Terminating;
+    sysMemMgr.de_allocate(proc->vm_state.offset);
+    m_processList.remove(proc);
 }

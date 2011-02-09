@@ -22,6 +22,10 @@ namespace OS {
 
         void setScheduler(const ProcSchedulerType sched) { selectedScheduler = sched; }
 
+        void addJob(const ProcessControlBlockPtr& job);
+        void findJobs();
+        void schedule();
+
     protected:
         void scheduleRoundRobin();
         void scheduleFirstCome();

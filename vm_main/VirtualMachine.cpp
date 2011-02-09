@@ -151,6 +151,10 @@ void VM::VirtualMachine::setRunning( bool isRunning )
 {
     m_running = isRunning;
 }
+bool VM::VirtualMachine::isRunning()
+{
+    return m_running;
+}
 
 void VM::VirtualMachine::configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt )
 {
