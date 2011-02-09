@@ -9,6 +9,7 @@
 #include "VMCore.h"
 
 namespace OS {
+    class ProcScheduler;
     class OpSystem
     {
     public:
@@ -22,6 +23,13 @@ namespace OS {
 
     protected:
         ProcessControlBlockPtr getProcess(int pid);
+        template <class CONT>
+        void getPCBList(CONT& container) {
+            for (std::list<ProcessControlBlockPtr>::const_iterator it = m_processList.begin();
+                it != m_processList.end(); ++it) {
+                container.push_back(*it);
+            }
+        }
 
     private:
         static const int stackSize = 4096;
@@ -29,6 +37,8 @@ namespace OS {
         VM::VMCore* m_vm;
         std::list<ProcessControlBlockPtr> m_processList;
         int m_lastPid;
+
+        friend class ProcScheduler;
     };
 }
 #endif // OpSystem_h__

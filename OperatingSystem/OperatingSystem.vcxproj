@@ -81,11 +81,13 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OpSystem.cpp" />
+    <ClCompile Include="ProcScheduler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NamespaceOS.h" />
     <ClInclude Include="OpSystem.h" />
     <ClInclude Include="ProcessControlBlock.h" />
+    <ClInclude Include="ProcScheduler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
