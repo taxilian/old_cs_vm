@@ -67,6 +67,16 @@ namespace OS{
             {
                 sys->runall();
             }
+            else if (temp == "changeAlg")
+            {
+                int alg_no;
+                s >> alg_no;
+                sys->setAlgorithm(alg_no);
+            }
+            else if (temp == "printAlg")
+            {
+                sys->printAlgorithm();
+            }
             else if (temp == "ps")
             {
                 sys->ps();
@@ -107,6 +117,8 @@ namespace OS{
 			cout <<"ps: shows the processes in memory\n";
 			cout <<"mem: displays system memory list. mem (process#) displays process memory list\n";
 			cout <<"free: displays the amount of system free memory. free (process#) displays free memory for process.\n";
+            cout <<"changeAlg (1-4): Changes the scheduling algorithm\n";
+            cout <<"printAlg: Displays the current scheduling algorithm\n";
         }
 
         void ls(){

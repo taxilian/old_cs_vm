@@ -24,6 +24,8 @@ namespace OS {
         void ps() const;
         void run(int pid);
         void runall();
+        void setAlgorithm( int alg_no );
+        void printAlgorithm();
 		void mem();
 		void mem(int pid);
 		void free();

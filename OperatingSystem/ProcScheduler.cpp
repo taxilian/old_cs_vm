@@ -28,7 +28,19 @@ ProcScheduler::~ProcScheduler(void)
 
 void ProcScheduler::scheduleRoundRobin()
 {
-    
+    if (readyQueue.size()) {
+        // Take the next entry in the queue and set it to run
+        ProcessControlBlockPtr proc(readyQueue.front());
+        proc->procstate = ProcessState_Ready;
+        m_vm->setRegisterState(proc->vm_state);
+        m_vm->setRunning(true);
+        
+        // Move the entry to the back
+        readyQueue.push_back(proc);
+        readyQueue.pop_front();
+    } else {
+        m_vm->setRunning(false);
+    }
 }
 
 void OS::ProcScheduler::addJob( const ProcessControlBlockPtr& job )
@@ -53,6 +65,10 @@ void OS::ProcScheduler::schedule()
         if ((*it)->procstate == ProcessState_Terminating) {
             m_os->freeProcess(*it);
             it = readyQueue.erase(it);
+        } else if ((*it)->procstate == ProcessState_Ready) {
+            // If there are any running processes, suspend them
+            (*it)->procstate = ProcessState_Suspended;
+            ++it;
         } else {
             ++it;
         }
@@ -65,6 +81,28 @@ void OS::ProcScheduler::schedule()
         scheduleRoundRobin();
         break;
     default:
+        break;
+    }
+}
+
+void OS::ProcScheduler::printAlgorithm()
+{
+    std::cout << "Selected scheduling algorithm: ";
+    switch(selectedScheduler) {
+    case ProcScheduler_FirstCome:
+        std::cout << "First come first served" << std::endl;
+        break;
+    case ProcScheduler_RoundRobin:
+        std::cout << "Round Robin" << std::endl;
+        break;
+    case ProcScheduler_Priority:
+        std::cout << "Priority" << std::endl;
+        break;
+    case ProcScheduler_Advanced:
+        std::cout << "Advanced algorithm" << std::endl;
+        break;
+    default:
+        std::cout << "Err... none?" << std::endl;
         break;
     }
 }

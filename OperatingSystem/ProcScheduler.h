@@ -25,13 +25,13 @@ namespace OS {
         void addJob(const ProcessControlBlockPtr& job);
         void findJobs();
         void schedule();
+        void printAlgorithm();
 
     protected:
         void scheduleRoundRobin();
         void scheduleFirstCome();
         void schedulePriority();
         void scheduleAdvanced();
-
     private:
         OpSystem* m_os;
         VM::VMCore* m_vm;

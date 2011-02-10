@@ -21,6 +21,8 @@ OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1),s
     vm->registerInterrupt(5, boost::bind(&OpSystem::processNew, this, _1));
     vm->registerInterrupt(6, boost::bind(&OpSystem::processFree, this, _1));
     vm->registerInterrupt(7, boost::bind(&OpSystem::processYield, this, _1));
+
+    vm->configureScheduler(50, 0.5, boost::bind(&OpSystem::runScheduler, this, _1));
 }
 
 
@@ -78,7 +80,7 @@ void OS::OpSystem::load( const std::string& pathfileName,const std::string& name
 	newProgram->vm_state.pid = newProgram->pid;
     //newProgram->vm_state.reg[VMCore::SL] = offset + memorySize;
 	newProgram->vm_state.reg[VMCore::SL] = offset + memorySize + heapSize;
-    newProgram->procstate = ProcessState_Ready;
+    newProgram->procstate = ProcessState_Loading;
     std::cout << "Loaded " << name << " in pid " << newProgram->pid << std::endl;
     m_scheduler->addJob(newProgram);
 }
@@ -197,4 +199,34 @@ void OS::OpSystem::freeProcess( const ProcessControlBlockPtr& proc )
     proc->procstate = ProcessState_Terminating;
     sysMemMgr.de_allocate(proc->vm_state.offset);
     m_processList.remove(proc);
+}
+
+void OS::OpSystem::setAlgorithm( int alg_no )
+{
+    switch(alg_no) {
+    default:
+    case 1:
+        m_scheduler->setScheduler(ProcScheduler_FirstCome);
+        break;
+    case 2:
+        m_scheduler->setScheduler(ProcScheduler_RoundRobin);
+        break;
+    case 3:
+        m_scheduler->setScheduler(ProcScheduler_Priority);
+        break;
+    case 4:
+        m_scheduler->setScheduler(ProcScheduler_Advanced);
+        break;
+    }
+    m_scheduler->printAlgorithm();
+}
+
+void OS::OpSystem::printAlgorithm()
+{
+    m_scheduler->printAlgorithm();
+}
+
+void OS::OpSystem::runScheduler( VM::VMCore* vm )
+{
+    m_scheduler->schedule();
 }
