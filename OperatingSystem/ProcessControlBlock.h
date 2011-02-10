@@ -28,6 +28,7 @@ namespace OS {
             ptr->vm_state.pc = startAddr;
             ptr->procstate = ProcessState_Loading;
 			ptr->procMemMgr.setMem(heapSize, offset+size);
+            ptr->priority = 0;
             return ptr;
         }
         int pid;
@@ -36,6 +37,7 @@ namespace OS {
         VM::VMState vm_state;
         ProcessState procstate;
 		HeapMgr procMemMgr;
+        int priority;
     };
 };
 

@@ -25,6 +25,7 @@ namespace OS {
         void run(int pid);
         void runall();
         void setAlgorithm( int alg_no );
+        void setPriority( int pid, int priority );
         void printAlgorithm();
 		void mem();
 		void mem(int pid);

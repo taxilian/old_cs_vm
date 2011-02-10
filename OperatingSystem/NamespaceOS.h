@@ -73,6 +73,12 @@ namespace OS{
                 s >> alg_no;
                 sys->setAlgorithm(alg_no);
             }
+            else if (temp == "priority")
+            {
+                int pid, priority;
+                s >> pid >> priority;
+                sys->setPriority(pid, priority);
+            }
             else if (temp == "printAlg")
             {
                 sys->printAlgorithm();
@@ -119,6 +125,7 @@ namespace OS{
 			cout <<"free: displays the amount of system free memory. free (process#) displays free memory for process.\n";
             cout <<"changeAlg (1-4): Changes the scheduling algorithm\n";
             cout <<"printAlg: Displays the current scheduling algorithm\n";
+            cout <<"priority: Sets the priority of a process. priority (process#) (priority)\n";
         }
 
         void ls(){

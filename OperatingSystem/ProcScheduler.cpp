@@ -1,5 +1,7 @@
-#include "OpSystem.h"
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
 
+#include "OpSystem.h"
 #include "ProcScheduler.h"
 
 using namespace OS;
@@ -8,6 +10,10 @@ ProcScheduler::ProcScheduler( OpSystem* os, VM::VMCore* vm )
     : m_vm(vm), m_os(os), selectedScheduler(ProcScheduler_FirstCome)
 {
 
+}
+
+ProcScheduler::~ProcScheduler(void)
+{
 }
 
 void ProcScheduler::scheduleFirstCome()
@@ -22,8 +28,23 @@ void ProcScheduler::scheduleFirstCome()
     }
 }
 
-ProcScheduler::~ProcScheduler(void)
+bool sortByPriority(const ProcessControlBlockPtr& a, const ProcessControlBlockPtr& b)
 {
+    return a->priority > b->priority;
+}
+
+void OS::ProcScheduler::schedulePriority()
+{
+    if (readyQueue.size()) {
+        // Just like first come, but sorted each time by priority
+        std::sort(readyQueue.begin(), readyQueue.end(), boost::lambda::bind(&sortByPriority, boost::lambda::_1, boost::lambda::_2));
+        ProcessControlBlockPtr proc(readyQueue.front());
+        proc->procstate = ProcessState_Ready;
+        m_vm->setRegisterState(proc->vm_state);
+        m_vm->setRunning(true);
+    } else {
+        m_vm->setRunning(false);
+    }
 }
 
 void ProcScheduler::scheduleRoundRobin()
@@ -79,6 +100,9 @@ void OS::ProcScheduler::schedule()
         break;
     case ProcScheduler_RoundRobin:
         scheduleRoundRobin();
+        break;
+    case ProcScheduler_Priority:
+        schedulePriority();
         break;
     default:
         break;

@@ -39,6 +39,8 @@ void printPCB(const ProcessControlBlockPtr& pcb) {
 	std::cout << std::setw(10) << pcb->vm_state.reg[VMCore::SB];
 	std::cout << std::setw(3) << ' ';
 	std::cout << std::setw(10) << pcb->vm_state.reg[VMCore::SL];
+	std::cout << std::setw(3) << ' ';
+	std::cout << std::setw(8) << pcb->priority;
     std::cout << std::endl;
 }
 
@@ -53,6 +55,8 @@ void OS::OpSystem::ps() const
 	std::cout << std::setw(10) << "Base reg";
 	std::cout << std::setw(3) << ' ';
 	std::cout << std::setw(10) << "Limit reg";
+	std::cout << std::setw(3) << ' ';
+    std::cout << std::setw(8) << "Priority";
     std::cout << std::endl;
     std::for_each(m_processList.begin(), m_processList.end(),
         boost::lambda::bind(&printPCB, boost::lambda::_1));
@@ -229,4 +233,13 @@ void OS::OpSystem::printAlgorithm()
 void OS::OpSystem::runScheduler( VM::VMCore* vm )
 {
     m_scheduler->schedule();
+}
+
+void OS::OpSystem::setPriority( int pid, int priority )
+{
+    ProcessControlBlockPtr proc(getProcess(pid));
+    if (proc)
+        proc->priority = priority;
+    else
+        std::cout << "Error: Could not find process #" << pid << std::endl;
 }
