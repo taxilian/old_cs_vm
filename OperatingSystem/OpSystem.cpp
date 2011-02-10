@@ -17,6 +17,7 @@ OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1),s
     m_scheduler(new ProcScheduler(this, vm))
 {
     // Register any special traps here
+    vm->registerInterrupt(0, boost::bind(&OpSystem::processEnd, this, _1));
     vm->registerInterrupt(5, boost::bind(&OpSystem::processNew, this, _1));
     vm->registerInterrupt(6, boost::bind(&OpSystem::processFree, this, _1));
     vm->registerInterrupt(7, boost::bind(&OpSystem::processYield, this, _1));
@@ -122,6 +123,7 @@ void OS::OpSystem::run(int pid)
 void OS::OpSystem::runall()
 {
     do {
+        m_vm->run();
         m_scheduler->schedule();
     } while (m_vm->isRunning());
 }
@@ -186,7 +188,8 @@ void OS::OpSystem::saveContext()
 {
     VM::VMState temp = m_vm->getRegisterState();
     ProcessControlBlockPtr ptr(getProcess(temp.pid));
-    ptr->vm_state = temp;
+    if (ptr)
+        ptr->vm_state = temp;
 }
 
 void OS::OpSystem::freeProcess( const ProcessControlBlockPtr& proc )

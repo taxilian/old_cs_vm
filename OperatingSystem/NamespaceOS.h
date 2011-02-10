@@ -63,6 +63,10 @@ namespace OS{
                 s >> pid;
                 sys->run(pid);
             }
+            else if (temp == "runall")
+            {
+                sys->runall();
+            }
             else if (temp == "ps")
             {
                 sys->ps();

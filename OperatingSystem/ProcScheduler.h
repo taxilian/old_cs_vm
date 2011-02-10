@@ -37,6 +37,7 @@ namespace OS {
         VM::VMCore* m_vm;
         ProcSchedulerType selectedScheduler;
 
-        std::deque<ProcessControlBlockPtr> readyQueue;
+        typedef std::deque<ProcessControlBlockPtr> ReadyQueue;
+        ReadyQueue readyQueue;
     };
 };

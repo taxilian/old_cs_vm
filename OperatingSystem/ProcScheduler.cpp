@@ -5,16 +5,20 @@
 using namespace OS;
 
 ProcScheduler::ProcScheduler( OpSystem* os, VM::VMCore* vm )
-    : m_vm(vm), m_os(os)
+    : m_vm(vm), m_os(os), selectedScheduler(ProcScheduler_FirstCome)
 {
 
 }
 
 void ProcScheduler::scheduleFirstCome()
 {
-
-    if (readyQueue.front()->procstate == ProcessState_Ready) {
-
+    if (readyQueue.size()) {
+        ProcessControlBlockPtr proc(readyQueue.front());
+        proc->procstate = ProcessState_Ready;
+        m_vm->setRegisterState(proc->vm_state);
+        m_vm->setRunning(true);
+    } else {
+        m_vm->setRunning(false);
     }
 }
 
@@ -42,6 +46,17 @@ void OS::ProcScheduler::schedule()
 {
     m_os->saveContext();
 
+    ProcessControlBlockPtr procPtr;
+    // First things first; go through and release any jobs that are finished
+    ReadyQueue::iterator it = readyQueue.begin();
+    while (it != readyQueue.end()) {
+        if ((*it)->procstate == ProcessState_Terminating) {
+            m_os->freeProcess(*it);
+            it = readyQueue.erase(it);
+        } else {
+            ++it;
+        }
+    }
     switch(selectedScheduler) {
     case ProcScheduler_FirstCome:
         scheduleFirstCome();

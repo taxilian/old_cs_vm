@@ -23,7 +23,7 @@
 using namespace VM;
 
 VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), offset(0),
-    sched_baseTicks(30), sched_variance(0.2)
+    sched_baseTicks(30), sched_variance(0.2), pid(-1)
 {
     reset();
 
@@ -187,10 +187,8 @@ int VirtualMachine::sched_calcTarget()
 // This is the main system loop
 Status VirtualMachine::run()
 {
-    m_running = true;
-
     int i = 0;
-    Status stat;
+    Status stat = Status_Idle;
     int clock(0);
     int schedTarget(sched_calcTarget());
     while (m_running) {
@@ -369,11 +367,6 @@ void VirtualMachine::TRP(IMMEDIATE i)
 {
     DOC("TRP", i, "-"); 
     switch(i) {
-    case 0:
-        pc = 0;
-        LOG(" Program halted");
-        m_running = false;
-        break;
     case 1:
         LOG(" Writing integer: " << reg[0]);
         std::cout << (int)reg[0];
