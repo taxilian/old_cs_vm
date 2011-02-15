@@ -32,12 +32,30 @@ bool sortByPriority(const ProcessControlBlockPtr& a, const ProcessControlBlockPt
 {
     return a->priority > b->priority;
 }
+bool sortBySize(const ProcessControlBlockPtr& a, const ProcessControlBlockPtr& b)
+{
+    return a->size < b->size;
+}
 
 void OS::ProcScheduler::schedulePriority()
 {
     if (readyQueue.size()) {
         // Just like first come, but sorted each time by priority
         std::sort(readyQueue.begin(), readyQueue.end(), boost::lambda::bind(&sortByPriority, boost::lambda::_1, boost::lambda::_2));
+        ProcessControlBlockPtr proc(readyQueue.front());
+        proc->procstate = ProcessState_Ready;
+        m_vm->setRegisterState(proc->vm_state);
+        m_vm->setRunning(true);
+    } else {
+        m_vm->setRunning(false);
+    }
+}
+
+void OS::ProcScheduler::scheduleAdvanced()
+{//shortest job first scheduling
+	if (readyQueue.size()) {
+        // Just like first come, but sorted each time by priority
+        std::sort(readyQueue.begin(), readyQueue.end(), boost::lambda::bind(&sortBySize, boost::lambda::_1, boost::lambda::_2));
         ProcessControlBlockPtr proc(readyQueue.front());
         proc->procstate = ProcessState_Ready;
         m_vm->setRegisterState(proc->vm_state);
@@ -104,6 +122,9 @@ void OS::ProcScheduler::schedule()
     case ProcScheduler_Priority:
         schedulePriority();
         break;
+	case ProcScheduler_Advanced:
+		scheduleAdvanced();
+		break;
     default:
         break;
     }

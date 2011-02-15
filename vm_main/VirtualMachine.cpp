@@ -191,9 +191,16 @@ Status VirtualMachine::run()
     Status stat = Status_Idle;
     int clock(0);
     int schedTarget(sched_calcTarget());
+	ptime t1;
+	time_duration t1d;
     while (m_running) {
         //int line = this->byteToLineMap[static_cast<unsigned int>(pc)];
         stat = tick();
+		if(clock == 0)
+		{//start timer
+			ptime temp(microsec_clock::local_time());
+			t1 = temp;
+		}
         if (++clock > schedTarget) {
             // We've hit the target clock cycle to let the scheduler do its thing
             // Reset the clock and call the scheduler
@@ -204,7 +211,10 @@ Status VirtualMachine::run()
                 sched_interrupt(this);
         }
     };
-    return stat;
+	ptime t2(microsec_clock::local_time());
+	time_duration temp = t2-t1;
+	runningTime = runningTime + temp;
+	return stat;
 }
 
 Status VirtualMachine::tick()

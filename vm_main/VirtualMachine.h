@@ -5,7 +5,8 @@
 #include "VMCore.h"
 #include "VMConfig.h"
 #include "helpers.h"
-
+#include <boost\date_time\posix_time\posix_time.hpp>
+using namespace boost::posix_time;
 namespace VM {
     struct VMException : std::exception
     {
@@ -20,7 +21,8 @@ namespace VM {
     };
 
     typedef std::map<boost::uint16_t, instructionDef> FunctionMap;
-
+	
+	
     class VirtualMachine : public VMCore
     {
     public:
@@ -32,6 +34,8 @@ namespace VM {
         Status run();
         void setDebugInfo(std::map<boost::uint32_t, int>& linemap, std::map<boost::uint32_t, std::string> &revLabelMap);
     public:
+		//For CPU Utitilization stats.
+		time_duration runningTime;
         // VMCore methods
         Status tick();
         void setMemoryOffset(const uint32_t offset);
