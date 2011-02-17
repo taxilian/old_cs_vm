@@ -63,6 +63,7 @@ namespace OS {
         int m_lastPid;
 		HeapMgr sysMemMgr;
         boost::scoped_ptr<ProcScheduler> m_scheduler;
+        int m_processCount;
         friend class ProcScheduler;
     };
 }

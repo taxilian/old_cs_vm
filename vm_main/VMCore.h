@@ -9,6 +9,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/function.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <list>
 #include <map>
 
@@ -72,6 +73,9 @@ namespace VM {
         virtual bool isRunning() = 0;
         virtual void setRunning( bool isRunning ) = 0;
         virtual void configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt) = 0;
+
+        virtual void resetRunningTime() = 0;
+        virtual boost::posix_time::time_duration getRunningTime() = 0;
     };
 
 };

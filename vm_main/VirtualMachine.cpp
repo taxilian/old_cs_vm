@@ -21,6 +21,7 @@
 #endif
 
 using namespace VM;
+using namespace boost::posix_time;
 
 VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), offset(0),
     sched_baseTicks(30), sched_variance(0.2), pid(-1)
@@ -191,29 +192,26 @@ Status VirtualMachine::run()
     Status stat = Status_Idle;
     int clock(0);
     int schedTarget(sched_calcTarget());
-	ptime t1;
+	ptime t1(microsec_clock::local_time());
 	time_duration t1d;
     while (m_running) {
         //int line = this->byteToLineMap[static_cast<unsigned int>(pc)];
         stat = tick();
-		if(clock == 0)
-		{//start timer
-			ptime temp(microsec_clock::local_time());
-			t1 = temp;
-		}
         if (++clock > schedTarget) {
             // We've hit the target clock cycle to let the scheduler do its thing
             // Reset the clock and call the scheduler
             clock = 0;
+            ptime nt(microsec_clock::local_time());
+            runningTime += (nt-t1); // "pause" the timer while we call back to the OS
             schedTarget = sched_calcTarget();
             // If a scheduler interrupt handler is registered, call the scheduler
             if (sched_interrupt)
                 sched_interrupt(this);
+            t1 = microsec_clock::local_time();
         }
     };
 	ptime t2(microsec_clock::local_time());
-	time_duration temp = t2-t1;
-	runningTime = runningTime + temp;
+	runningTime += t2-t1;
 	return stat;
 }
 

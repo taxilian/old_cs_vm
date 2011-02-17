@@ -6,7 +6,7 @@
 #include "VMConfig.h"
 #include "helpers.h"
 #include <boost\date_time\posix_time\posix_time.hpp>
-using namespace boost::posix_time;
+
 namespace VM {
     struct VMException : std::exception
     {
@@ -34,8 +34,6 @@ namespace VM {
         Status run();
         void setDebugInfo(std::map<boost::uint32_t, int>& linemap, std::map<boost::uint32_t, std::string> &revLabelMap);
     public:
-		//For CPU Utitilization stats.
-		time_duration runningTime;
         // VMCore methods
         Status tick();
         void setMemoryOffset(const uint32_t offset);
@@ -53,6 +51,9 @@ namespace VM {
 
         virtual void registerInterrupt(int trap, const VM::InterruptHandler& handler);
         virtual void configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt);
+
+        virtual void resetRunningTime() { runningTime *= 0; }
+        virtual boost::posix_time::time_duration getRunningTime() { return runningTime; }
         // End VMCore methods
 
     protected:
@@ -60,6 +61,8 @@ namespace VM {
         MemoryBlock m_block;
         bool m_running;
         FunctionMap m_functionMap;
+		//For CPU Utitilization stats.`
+		boost::posix_time::time_duration runningTime;
 		//For interrupts
 		//VM::Interrupts* osInterrupts;
         VM::InterruptTable osInterrupts;

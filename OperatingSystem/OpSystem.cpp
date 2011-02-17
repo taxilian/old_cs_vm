@@ -6,11 +6,13 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/cast.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "ProcScheduler.h"
 #include "OpSystem.h"
 
 using namespace OS;
+using namespace boost::posix_time;
 using VM::VMCore;
 
 OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1),sysMemMgr(m_vm->getMemorySize(), 0),
@@ -84,7 +86,7 @@ void OS::OpSystem::load( const std::string& pathfileName,const std::string& name
 	newProgram->vm_state.pid = newProgram->pid;
     //newProgram->vm_state.reg[VMCore::SL] = offset + memorySize;
 	newProgram->vm_state.reg[VMCore::SL] = offset + memorySize + heapSize;
-    newProgram->procstate = ProcessState_Loading;
+    newProgram->setState(ProcessState_Ready);
     std::cout << "Loaded " << name << " in pid " << newProgram->pid << std::endl;
     m_scheduler->addJob(newProgram);
 }
@@ -106,7 +108,7 @@ void OS::OpSystem::run(int pid)
     ProcessControlBlockPtr ptr(getProcess(pid));
     if (ptr) {
         m_vm->setRegisterState(ptr->vm_state);
-        ptr->procstate = ProcessState_Ready;
+        ptr->setState(ProcessState_Ready);
         m_vm->run();
 		if(ptr->procstate == ProcessState_Suspended)
 		{
@@ -114,7 +116,7 @@ void OS::OpSystem::run(int pid)
 		}
 		else
 		{
-			ptr->procstate = ProcessState_Terminating;
+			ptr->setState(ProcessState_Terminating);
 			sysMemMgr.de_allocate(ptr->vm_state.offset);
             m_processList.remove(ptr);
 		}
@@ -128,10 +130,25 @@ void OS::OpSystem::run(int pid)
 
 void OS::OpSystem::runall()
 {
+    std::for_each(m_processList.begin(), m_processList.end(), boost::bind(&ProcessControlBlock::resetMainClock, _1));
+    m_processCount = m_processList.size();
+    m_vm->resetRunningTime();
+    ptime start(microsec_clock::local_time());
     do {
         m_vm->run();
         m_scheduler->schedule();
     } while (m_vm->isRunning());
+    ptime stop(microsec_clock::local_time());
+
+    time_duration len = stop-start;
+    double utilization(static_cast<double>(m_vm->getRunningTime().ticks()) / static_cast<double>(len.ticks()));
+    double pps(static_cast<double>(m_processCount) / (static_cast<double>(len.total_microseconds()) / 1000000));
+
+    std::cout << std::endl;
+    std::cout << "Process Scheduling Statistics:" << std::endl;
+    std::cout << "CPU utilization:\t" << utilization*100 << "%" << std::endl;
+    std::cout << "Processes / Sec:\t" << pps << std::endl;
+    m_scheduler->printStats();
 }
 
 void OpSystem::mem()
@@ -176,7 +193,7 @@ void OS::OpSystem::processYield(VM::VMCore* vm)
 {//interrupt 7
 	VM::VMState temp = vm->getRegisterState();
 	ProcessControlBlockPtr ptr(getProcess(temp.pid));
-	ptr->procstate = ProcessState_Suspended;
+	ptr->setState(ProcessState_Suspended);
     ptr->vm_state = temp;
     vm->setRunning(false);
 }
@@ -185,7 +202,7 @@ void OS::OpSystem::processEnd( VM::VMCore* vm )
 {// interrupt 0 / TRP 0
 	VM::VMState temp = vm->getRegisterState();
 	ProcessControlBlockPtr ptr(getProcess(temp.pid));
-	ptr->procstate = ProcessState_Terminating;
+	ptr->setState(ProcessState_Terminating);
     ptr->vm_state = temp;
     vm->setRunning(false);
 }
@@ -200,7 +217,7 @@ void OS::OpSystem::saveContext()
 
 void OS::OpSystem::freeProcess( const ProcessControlBlockPtr& proc )
 {
-    proc->procstate = ProcessState_Terminating;
+    proc->setState(ProcessState_Terminating);
     sysMemMgr.de_allocate(proc->vm_state.offset);
     m_processList.remove(proc);
 }
