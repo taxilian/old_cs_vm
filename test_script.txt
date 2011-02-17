@@ -1,0 +1,84 @@
+changeAlg 1
+
+load os1.hexe
+load os1.hexe
+load os1.hexe
+load os2.hexe
+load os2.hexe
+load os2.hexe
+load os3.hexe
+load os3.hexe
+load os3.hexe
+load project1.hexe
+load project1.hexe
+load project1.hexe
+load project1.hexe
+
+runall
+
+changeAlg 2
+
+load os1.hexe
+load os1.hexe
+load os1.hexe
+load os2.hexe
+load os2.hexe
+load os2.hexe
+load os3.hexe
+load os3.hexe
+load os3.hexe
+load project1.hexe
+load project1.hexe
+load project1.hexe
+load project1.hexe
+
+runall
+
+changeAlg 3
+
+load os1.hexe
+priority 1 20
+load os1.hexe
+priority 2 10
+load os1.hexe
+priority 3 5
+load os2.hexe
+priority 4 20
+load os2.hexe
+priority 5 10
+load os2.hexe
+priority 6 5
+load os3.hexe
+priority 7 20
+load os3.hexe
+priority 8 10
+load os3.hexe
+priority 9 5
+load project1.hexe
+priority 10 30
+load project1.hexe
+priority 11 20
+load project1.hexe
+priority 12 10
+load project1.hexe
+priority 13 5
+
+runall
+
+changeAlg 4
+
+load os1.hexe
+load os1.hexe
+load os1.hexe
+load os2.hexe
+load os2.hexe
+load os2.hexe
+load os3.hexe
+load os3.hexe
+load os3.hexe
+load project1.hexe
+load project1.hexe
+load project1.hexe
+load project1.hexe
+
+runall
