@@ -65,12 +65,14 @@
   <ItemGroup>
     <ClInclude Include="helpers.h" />
     <ClInclude Include="HexWriter.h" />
+    <ClInclude Include="VirtualDisk.h" />
     <ClInclude Include="VirtualMachine.h" />
     <ClInclude Include="VMConfig.h" />
     <ClInclude Include="VMCore.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HexWriter.cpp" />
+    <ClCompile Include="VirtualDisk.cpp" />
     <ClCompile Include="VirtualMachine.cpp" />
     <ClCompile Include="VMConfig.cpp" />
   </ItemGroup>

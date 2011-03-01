@@ -79,12 +79,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="HeapMgr.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OpSystem.cpp" />
     <ClCompile Include="ProcScheduler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FileSystem.h" />
     <ClInclude Include="HeapMgr.h" />
     <ClInclude Include="NamespaceOS.h" />
     <ClInclude Include="OpSystem.h" />
