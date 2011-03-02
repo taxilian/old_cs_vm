@@ -56,7 +56,7 @@ namespace OS {
         Directory getDirectory(const uint32_t block);
         void CreateDirectory(const std::string name, const uint32_t parent);
         void SaveDirectory( const uint32_t block, const OS::Directory& dir);
-
+		void format();
     protected:
         uint32_t findFreeBlock();
         void freeBlock(uint32_t num);

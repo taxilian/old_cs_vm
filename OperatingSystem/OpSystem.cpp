@@ -15,7 +15,7 @@ using namespace OS;
 using namespace boost::posix_time;
 using VM::VMCore;
 
-OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1),sysMemMgr(m_vm->getMemorySize(), 0),
+OpSystem::OpSystem(VM::VMCore* vm, VM::VirtualDisk* vd) : m_lastLoadAddr(0), m_vm(vm), fileSystem(vd), m_lastPid(1),sysMemMgr(m_vm->getMemorySize(), 0),
     m_scheduler(new ProcScheduler(this, vm))
 {
     // Register any special traps here
@@ -25,6 +25,7 @@ OpSystem::OpSystem(VM::VMCore* vm) : m_lastLoadAddr(0), m_vm(vm), m_lastPid(1),s
     vm->registerInterrupt(7, boost::bind(&OpSystem::processYield, this, _1));
 
     vm->configureScheduler(50, 0.5, boost::bind(&OpSystem::runScheduler, this, _1));
+	
 }
 
 
@@ -259,4 +260,8 @@ void OS::OpSystem::setPriority( int pid, int priority )
         proc->priority = priority;
     else
         std::cout << "Error: Could not find process #" << pid << std::endl;
+}
+void OS::OpSystem::bootDisk()
+{
+	fileSystem.format();
 }

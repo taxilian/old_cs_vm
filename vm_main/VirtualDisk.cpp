@@ -2,15 +2,15 @@
 
 using namespace std;
 
-VirtualDisk::VirtualDisk(const std::string& fileName) : m_filename(fileName)
+VM::VirtualDisk::VirtualDisk(const std::string& fileName) : m_filename(fileName)
 {
 }
 
-VirtualDisk::~VirtualDisk(void)
+VM::VirtualDisk::~VirtualDisk(void)
 {
 }
 
-void VirtualDisk::ReadFromDisk( int block, size_t len, char* retPtr )
+void VM::VirtualDisk::ReadFromDisk( int block, size_t len, char* retPtr )
 {
     ifstream file(m_filename.c_str(), ios::in|ios::binary);
     if (!file.is_open()) {
@@ -21,7 +21,7 @@ void VirtualDisk::ReadFromDisk( int block, size_t len, char* retPtr )
     file.close();
 }
 
-void VirtualDisk::WriteToDisk( int block, size_t len, char* data )
+void VM::VirtualDisk::WriteToDisk( int block, size_t len, char* data )
 {
     ofstream file(m_filename.c_str(), ios::out|ios::binary);
     if (!file.is_open()) {
@@ -32,7 +32,7 @@ void VirtualDisk::WriteToDisk( int block, size_t len, char* data )
     file.close();
 }
 
-void VirtualDisk::Erase(int blockCount)
+void VM::VirtualDisk::Erase(int blockCount)
 {
     char empty[BLOCK_SIZE] = {0};
     memset(empty, 0, BLOCK_SIZE);

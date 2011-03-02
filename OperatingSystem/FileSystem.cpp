@@ -55,3 +55,25 @@ void OS::FileSystem::SaveDirectory( const uint32_t block, const OS::Directory& d
     memcpy(data, &dir, sizeof(dir));
     disk->WriteToDisk(block, 1, data);
 }
+uint32_t OS::FileSystem::findFreeBlock()
+{
+	uint32_t temp;
+	return temp;
+}
+void OS::FileSystem::freeBlock(uint32_t num)
+{
+
+}
+void OS::FileSystem::format()
+{
+	char init[VM::VirtualDisk::BLOCK_SIZE];
+	init[0] = 'A';//Block with ABCD at beggining is free block.
+	init[1] = 'B';
+	init[2] = 'C';
+	init[3] = 'D';
+	disk->Erase();
+	for(int i = 0; i < VM::VirtualDisk::DEFAULT_DISK_SIZE; i++)
+	{
+		disk->WriteToDisk(i,512,init);
+	}
+}

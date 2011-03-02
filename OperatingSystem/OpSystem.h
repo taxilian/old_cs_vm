@@ -10,13 +10,14 @@
 #include "ProcessControlBlock.h"
 #include "VMCore.h"
 #include "HeapMgr.h"
-
+#include "VirtualDisk.h"
+#include "FileSystem.h"
 namespace OS {
     class ProcScheduler;
     class OpSystem : boost::noncopyable 
     {
     public:
-        OpSystem(VM::VMCore* vm);
+		OpSystem(VM::VMCore* vm, VM::VirtualDisk* vd);
         ~OpSystem(void);
 
         void load(const std::string& pathfileName,const std::string& name);
@@ -31,6 +32,9 @@ namespace OS {
 		void mem(int pid);
 		void free();
 		void free(int pid);
+		//Disk management stuff
+		void bootDisk();
+
 		//interrupts
 
 		void processNew(VM::VMCore* vm);
@@ -59,6 +63,7 @@ namespace OS {
 		static const int heapSize = 1024;
         uint32_t m_lastLoadAddr;
         VM::VMCore* m_vm;
+		FileSystem fileSystem;
         std::list<ProcessControlBlockPtr> m_processList;
         int m_lastPid;
 		HeapMgr sysMemMgr;

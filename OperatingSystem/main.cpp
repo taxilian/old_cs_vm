@@ -3,6 +3,7 @@
 #include <boost\date_time\posix_time\posix_time.hpp>
 #include "NamespaceOS.h"
 #include "VirtualMachine.h"
+#include "VirtualDisk.h"
 using namespace std;
 
 int main()
@@ -11,7 +12,8 @@ int main()
 	using namespace OS;
 	ptime t1(microsec_clock::local_time());
 	VM::VirtualMachine vm;
-	OpSystem system(&vm);
+	VM::VirtualDisk vd("DISK.txt");
+	OpSystem system(&vm,&vd);
 	Shell shell(&system);
     shell.start();
 }

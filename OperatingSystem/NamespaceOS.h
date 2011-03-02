@@ -158,7 +158,9 @@ namespace OS{
 
         void start()
         {
-            bool runShell = true;
+            //should probably format disk here at bootup
+			sys->bootDisk();
+			bool runShell = true;
             string line;
             while(runShell)
             {
