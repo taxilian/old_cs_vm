@@ -12,7 +12,7 @@ using namespace std;
 
 namespace fs = boost::filesystem;
 
-namespace OS{
+namespace OS {
     class Shell
     {
     public:
@@ -28,19 +28,39 @@ namespace OS{
             {
                 help();
             }
-            else if(temp == "dir")
+            else if(temp == "!dir")
             {
-                ls();
+                nvm_ls();
             }
-            else if(temp == "ls")
+            else if(temp == "!ls")
             {
-                ls();
+                nvm_ls();
+            }
+            else if(temp == "!cd")
+            {
+                string directory;
+                s >> directory;
+                nvm_cd(directory);
+            }
+            else if(temp == "!pwd")
+            {
+                cout << cwd.string() << endl;
             }
             else if(temp == "cd")
             {
                 string directory;
                 s >> directory;
                 cd(directory);
+            }
+            else if(temp == "md")
+            {
+                string directory;
+                s >> directory;
+                mkdir(directory);
+            }
+            else if(temp == "ls" || temp == "dir")
+            {
+                sys->ls();
             }
             else if(temp == "load")
             {
@@ -54,7 +74,7 @@ namespace OS{
                 {
                     fs::path hf = cwd/hexFile;
                     
-                    sys->load(hf.string(), hexFile);
+                    sys->nvm_load(hf.string(), hexFile);
                 }
             }
             else if (temp == "run")
@@ -128,7 +148,7 @@ namespace OS{
             cout <<"priority: Sets the priority of a process. priority (process#) (priority)\n";
         }
 
-        void ls(){
+        void nvm_ls(){
             string line;
             fs::directory_iterator dirItr( cwd );
             fs::directory_iterator endIter;
@@ -139,6 +159,14 @@ namespace OS{
         }
 
         void cd(string cdDir){
+            sys->chdir(cdDir);
+        }
+
+        void mkdir(string newDir) {
+            sys->mkdir(newDir);
+        }
+
+        void nvm_cd(string cdDir){
             cwd = fs::system_complete( fs::path( cdDir ) );
             if ( !fs::exists( cwd ) )
             {
@@ -158,13 +186,13 @@ namespace OS{
 
         void start()
         {
-            //should probably format disk here at bootup
-			sys->bootDisk();
+            // perhaps should not always format; for now you can tell it not to
+			sys->formatDisk();
 			bool runShell = true;
             string line;
             while(runShell)
             {
-                cout <<"\n" << cwd.string() + " # ";
+                cout << endl << sys->pwd() << "/ # ";
                 getline(cin, line);
                 if(line == "exit")
                 {

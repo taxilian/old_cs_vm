@@ -10,7 +10,8 @@
 namespace OS {
 
     const size_t fileDataBlks = 20;//every block is 512 bytes which gives a maximum of 10KB file size.
-    const size_t lengthPath = 80;// 20 * 4 is 80 bytes, our paths should also be 80 bytes
+    const size_t lengthPath = 20;
+    const size_t linkPath = 80;
     const size_t blkSize = VM::VirtualDisk::BLOCK_SIZE;
     const size_t numOfEntries = 10;//maximum number of directory or file entries in a directory.
 
@@ -53,14 +54,18 @@ namespace OS {
         ~FileSystem();
 
     public:
-        Directory getDirectory(const uint32_t block);
         void CreateDirectory(const std::string name, const uint32_t parent);
-        void saveDirectory( const uint32_t block, const OS::Directory& dir);
+        std::string GetDirectoryPath( int cwd );
 		void format();
+        int GetDirectoryId( int cwd, const std::string& dir );
+        void listDirectory( int cwd );
     protected:
+        Directory getDirectory(const uint32_t block);
+        void saveDirectory( const uint32_t block, const OS::Directory& dir);
         uint32_t findFreeBlock();
         void freeBlock(uint32_t num);
         void addDirectoryEntry( const uint32_t dirBlock, const Entry& entry );
+        Entry getDirectoryEntry( int parent, int blockNumber );
     private:
         VM::VirtualDisk* disk;
     };

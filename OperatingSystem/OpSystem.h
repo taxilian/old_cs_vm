@@ -20,7 +20,7 @@ namespace OS {
 		OpSystem(VM::VMCore* vm, VM::VirtualDisk* vd);
         ~OpSystem(void);
 
-        void load(const std::string& pathfileName,const std::string& name);
+        void nvm_load(const std::string& pathfileName,const std::string& name);
         int getNextPid() { return m_lastPid++; }
         void ps() const;
         void run(int pid);
@@ -32,8 +32,14 @@ namespace OS {
 		void mem(int pid);
 		void free();
 		void free(int pid);
+
 		//Disk management stuff
-		void bootDisk();
+		void formatDisk();
+        int chdir(const std::string& dir);
+        void mkdir(const std::string& dir);
+        void ls();
+        // Gets current working directory
+        std::string pwd();
 
 		//interrupts
 
@@ -70,6 +76,7 @@ namespace OS {
         boost::scoped_ptr<ProcScheduler> m_scheduler;
         int m_processCount;
         friend class ProcScheduler;
+        int cwd;
     };
 }
 #endif // OpSystem_h__

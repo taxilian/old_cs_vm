@@ -23,11 +23,11 @@ void VM::VirtualDisk::ReadFromDisk( int block, size_t len, char* retPtr )
 
 void VM::VirtualDisk::WriteToDisk( int block, size_t len, char* data )
 {
-    ofstream file(m_filename.c_str(), ios::out|ios::binary);
+    fstream file(m_filename.c_str(), ios::in|ios::out|ios::binary);
     if (!file.is_open()) {
         throw std::runtime_error("Could not open file!");
     }
-    file.seekp(BLOCK_SIZE * block);
+    file.seekp(BLOCK_SIZE * block, ios::beg);
     file.write(data, BLOCK_SIZE);
     file.close();
 }

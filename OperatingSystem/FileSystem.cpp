@@ -1,6 +1,7 @@
 #include "FileSystem.h"
 
 using namespace OS;
+using namespace std;
 
 OS::FileSystem::FileSystem( VM::VirtualDisk* disk ) : disk(disk)
 {
@@ -93,10 +94,10 @@ void OS::FileSystem::saveDirectory( const uint32_t block, const OS::Directory& d
 }
 uint32_t OS::FileSystem::findFreeBlock()
 {
-    char data[blkSize];
+    unsigned char data[blkSize];
 	for(int i = 1; i < VM::VirtualDisk::DEFAULT_DISK_SIZE; i++)
 	{
-        disk->ReadFromDisk(i, 1, data);
+        disk->ReadFromDisk(i, 1, reinterpret_cast<char*>(data));
         if (data[0] == 0xF0
             && data[1] == 0xF2
             && data[2] == 0xF1
@@ -128,4 +129,72 @@ void OS::FileSystem::format()
 	}
     // Create root directory
     CreateDirectory("", 0);
+}
+
+int OS::FileSystem::GetDirectoryId( int cwd, const std::string& dirName )
+{
+    Directory dir = getDirectory(cwd);
+    for (int i = 0; i < maxEntriesPerBlock; i++) {
+        if (dir.entries[i].type == TYPE_directory
+            && dir.entries[i].name == dirName) {
+            return dir.entries[i].ptr;
+        }
+    }
+    // If we got this far, there were no empty blocks in that directory entry and
+    // we need to chain
+    if (dir.next) {
+        // If there is another directory block after this one then chain to it
+        return GetDirectoryId(dir.next, dirName);
+    } else {
+        return -1; // invalid directory
+    }
+}
+
+Entry OS::FileSystem::getDirectoryEntry( int parent, int blockNumber )
+{
+    Directory dir = getDirectory(parent);
+    for (int i = 0; i < maxEntriesPerBlock; i++) {
+        if (dir.entries[i].type == TYPE_directory
+            && dir.entries[i].ptr == blockNumber) {
+            return dir.entries[i];
+        }
+    }
+    if (dir.next) {
+        return getDirectoryEntry(dir.next, blockNumber);
+    } else {
+        throw std::runtime_error("Invalid directory");
+    }
+}
+
+std::string OS::FileSystem::GetDirectoryPath( int cwd )
+{
+    if (cwd == 0) {
+        return "";
+    }
+    Directory dir = getDirectory(cwd);
+    
+    std::stringstream ss;
+    ss << GetDirectoryPath( dir.entries[1].ptr ) << "/";
+    ss << getDirectoryEntry( dir.entries[1].ptr, cwd).name;
+    return ss.str();
+}
+
+void OS::FileSystem::listDirectory( int cwd )
+{
+    Directory dir = getDirectory(cwd);
+    for (int i = 0; i < maxEntriesPerBlock; i++) {
+        switch(dir.entries[i].type) {
+        case TYPE_directory:
+            cout << dir.entries[i].name << "/" << endl;
+            break;
+        case TYPE_file:
+            cout << dir.entries[i].name;
+            break;
+        default:
+            break;
+        }
+    }
+    if (dir.next) {
+        listDirectory(dir.next);
+    }
 }

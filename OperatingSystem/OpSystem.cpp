@@ -15,8 +15,9 @@ using namespace OS;
 using namespace boost::posix_time;
 using VM::VMCore;
 
-OpSystem::OpSystem(VM::VMCore* vm, VM::VirtualDisk* vd) : m_lastLoadAddr(0), m_vm(vm), fileSystem(vd), m_lastPid(1),sysMemMgr(m_vm->getMemorySize(), 0),
-    m_scheduler(new ProcScheduler(this, vm))
+OpSystem::OpSystem(VM::VMCore* vm, VM::VirtualDisk* vd) :
+    m_lastLoadAddr(0), m_vm(vm), fileSystem(vd), m_lastPid(1),sysMemMgr(m_vm->getMemorySize(), 0),
+    m_scheduler(new ProcScheduler(this, vm)), cwd(0)
 {
     // Register any special traps here
     vm->registerInterrupt(0, boost::bind(&OpSystem::processEnd, this, _1));
@@ -65,7 +66,7 @@ void OS::OpSystem::ps() const
         boost::lambda::bind(&printPCB, boost::lambda::_1));
 }
 
-void OS::OpSystem::load( const std::string& pathfileName,const std::string& name)
+void OS::OpSystem::nvm_load( const std::string& pathfileName,const std::string& name)
 {
 	VM::MemoryBlock memory;
     size_t memorySize;
@@ -261,7 +262,36 @@ void OS::OpSystem::setPriority( int pid, int priority )
     else
         std::cout << "Error: Could not find process #" << pid << std::endl;
 }
-void OS::OpSystem::bootDisk()
+
+void OS::OpSystem::formatDisk()
 {
-	fileSystem.format();
+    std::cout << "Are you sure you want to erase all data on the disk? (y/N)";
+    char r = 'n';
+    std::cin >> r;
+    if (r == 'Y' || r == 'y') {
+        std::cout << "Formatting ..." << std::endl;
+    	fileSystem.format();
+    }
+    cwd = 0;
+}
+
+int OS::OpSystem::chdir( const std::string& dir )
+{
+    cwd = fileSystem.GetDirectoryId(cwd, dir);
+    return cwd;
+}
+
+std::string OS::OpSystem::pwd()
+{
+    return fileSystem.GetDirectoryPath(cwd);
+}
+
+void OS::OpSystem::mkdir( const std::string& dir )
+{
+    fileSystem.CreateDirectory(dir, cwd);
+}
+
+void OS::OpSystem::ls()
+{
+    fileSystem.listDirectory(cwd);
 }
