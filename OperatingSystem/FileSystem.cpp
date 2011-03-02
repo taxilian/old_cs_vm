@@ -316,7 +316,6 @@ bool OS::FileSystem::WriteFile( int cwd, const std::string& file, char* data, si
 
 void OS::FileSystem::catFile( int cwd, const std::string& file )
 {
-    static char buffer[blkSize];
     boost::tuple<int, const std::string> resolved = resolvePath(cwd, file);
     Entry entry = getDirectoryEntry(boost::get<0>(resolved), boost::get<1>(resolved));
     if (entry.type == TYPE_empty) {
@@ -325,18 +324,11 @@ void OS::FileSystem::catFile( int cwd, const std::string& file )
     } else if (entry.type != TYPE_file) {
         cout << "Unsupported request" << endl;
     }
-    iNFile fileNode = getFileNode(entry.ptr);
-    int32_t dataLeft = fileNode.fileSize;
-    std::stringstream ss;
-    for (int i = 0; i < fileDataBlks && dataLeft > 0; ++i) {
-        if (fileNode.dataBLKS[i]) {
-            disk->ReadFromDisk(fileNode.dataBLKS[i], 1, buffer);
-            ss << std::hex;
-            ss.write(buffer, (dataLeft > blkSize ? blkSize : dataLeft));
-            dataLeft -= blkSize;
-        }
-    }
-    cout << ss.str() << endl << "END OF FILE" << endl;
+    VM::MemoryBlock blk;
+    size_t size;
+    readFileContents(entry, blk, size);
+    cout.write((char*)blk.get(), size);
+    cout << endl << "END OF FILE" << endl;
 }
 
 boost::tuple<int, const std::string> OS::FileSystem::resolvePath( int cwd, const std::string& fileName )
@@ -366,5 +358,27 @@ boost::tuple<int, const std::string> OS::FileSystem::resolvePath( int cwd, const
     }
     // If we make it here, the path is invalid
     throw FileNotFoundError(fileName + " is not a valid path");
+}
+
+void OS::FileSystem::readFileContents( Entry &entry, VM::MemoryBlock& mem, size_t& size )
+{
+    static char buffer[blkSize];
+    iNFile fileNode = getFileNode(entry.ptr);
+    int32_t dataLeft = fileNode.fileSize;
+    size = dataLeft;
+    mem = VM::MemoryBlock(new uint8_t[dataLeft]);
+    std::stringstream ss;
+    for (int i = 0; i < fileDataBlks && dataLeft > 0; ++i) {
+        if (fileNode.dataBLKS[i]) {
+            disk->ReadFromDisk(fileNode.dataBLKS[i], 1, buffer);
+            memcpy(mem.get() + (blkSize * i), buffer, (dataLeft > blkSize ? blkSize : dataLeft));
+            dataLeft -= blkSize;
+        }
+    }
+}
+
+void OS::FileSystem::moveFile( int cwd, const std::string& src, const std::string& dest )
+{
+    
 }
 

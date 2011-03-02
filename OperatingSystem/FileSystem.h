@@ -81,6 +81,8 @@ namespace OS {
         void listDirectory( int cwd );
         void catFile( int cwd, const std::string& file );
 
+        void moveFile( int cwd, const std::string& src, const std::string& dest );
+
     protected:
         Directory getDirectory(const uint32_t block);
         void saveDirectory( const uint32_t block, const OS::Directory& dir);
@@ -95,7 +97,7 @@ namespace OS {
         Entry getDirectoryEntry( int parent, int blockNumber );
         Entry getDirectoryEntry( int parent, const std::string& fileName );
         boost::tuple<int, int> getINodeBlockAndOffset(int nodeNum);
-
+        void readFileContents( Entry &entry, VM::MemoryBlock& mem, size_t& size );
         boost::tuple<int, const std::string> resolvePath(int cwd, const std::string& fileName);
 
         template <class T>
