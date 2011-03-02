@@ -34,6 +34,8 @@ namespace OS {
 		void free(int pid);
 
 		//Disk management stuff
+        void nvm_loadToFile( const std::string& nvmFname, const std::string fname );
+        void cat( std::string fname );
 		void formatDisk();
         int chdir(const std::string& dir);
         void mkdir(const std::string& dir);

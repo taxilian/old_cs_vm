@@ -66,6 +66,22 @@ void OS::OpSystem::ps() const
         boost::lambda::bind(&printPCB, boost::lambda::_1));
 }
 
+void OS::OpSystem::nvm_loadToFile( const std::string& nvmFname, const std::string fname )
+{
+    VM::MemoryBlock memory;
+    size_t memorySize;
+    uint32_t startAddress;
+    uint32_t offset;
+
+    VM::ReadFromHex(nvmFname, memory, memorySize, startAddress, offset);
+
+    VM::MemoryBlock newMem(new uint8_t[memorySize + sizeof(startAddress)*2]);
+    *((uint32_t*)newMem.get()) = startAddress;
+    *(((uint32_t*)newMem.get())+1) = offset;
+    memcpy(newMem.get() + sizeof(startAddress)*2, memory.get(), memorySize);
+    fileSystem.WriteFile(cwd, fname, (char*)newMem.get(), memorySize + sizeof(startAddress)*2);
+}
+
 void OS::OpSystem::nvm_load( const std::string& pathfileName,const std::string& name)
 {
 	VM::MemoryBlock memory;
@@ -294,4 +310,9 @@ void OS::OpSystem::mkdir( const std::string& dir )
 void OS::OpSystem::ls()
 {
     fileSystem.listDirectory(cwd);
+}
+
+void OS::OpSystem::cat( std::string fname )
+{
+    fileSystem.catFile(cwd, fname);
 }

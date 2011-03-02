@@ -58,9 +58,22 @@ namespace OS {
                 s >> directory;
                 mkdir(directory);
             }
+            else if(temp == "cat")
+            {
+                string fname;
+                s >> fname;
+                sys->cat(fname);
+            }
             else if(temp == "ls" || temp == "dir")
             {
                 sys->ls();
+            }
+            else if(temp == "!loadToFile")
+            {
+                string src;
+                string dest;
+                s >> src >> dest;
+                sys->nvm_loadToFile(src, dest);
             }
             else if(temp == "load")
             {

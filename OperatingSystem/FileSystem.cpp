@@ -1,9 +1,10 @@
+#include <boost\date_time\posix_time\posix_time.hpp>
 #include "FileSystem.h"
 
 using namespace OS;
 using namespace std;
 
-OS::FileSystem::FileSystem( VM::VirtualDisk* disk ) : disk(disk)
+OS::FileSystem::FileSystem( VM::VirtualDisk* disk ) : disk(disk), iNodeStartBlock(1)
 {
 
 }
@@ -131,7 +132,9 @@ void OS::FileSystem::format()
     int blkCount = iNodeCount / iNodesPerBlock;
     int blk = 0;
     for (int i = 0; i < blkCount; i++) {
-        disk->WriteToDisk(findFreeBlock(), 1, data);
+        int blk = findFreeBlock();
+        if (i == 0) assert(blk == iNodeStartBlock);
+        disk->WriteToDisk(blk, 1, data);
     }
 }
 
@@ -170,6 +173,22 @@ Entry OS::FileSystem::getDirectoryEntry( int parent, int blockNumber )
     }
 }
 
+OS::Entry OS::FileSystem::getDirectoryEntry( int cwd, const std::string& fileName )
+{
+    static Entry nullEntry = {TYPE_empty, {0}, 0};
+    Directory dir = getDirectory(cwd);
+    for (int i = 0; i < maxEntriesPerBlock; i++) {
+        if (dir.entries[i].name == fileName) {
+            return dir.entries[i];
+        }
+    }
+    if (dir.next) {
+        return getDirectoryEntry(dir.next, fileName);
+    } else {
+        return nullEntry;
+    }
+}
+
 std::string OS::FileSystem::GetDirectoryPath( int cwd )
 {
     if (cwd == 0) {
@@ -192,7 +211,7 @@ void OS::FileSystem::listDirectory( int cwd )
             cout << dir.entries[i].name << "/" << endl;
             break;
         case TYPE_file:
-            cout << dir.entries[i].name;
+            cout << dir.entries[i].name << endl;
             break;
         default:
             break;
@@ -206,12 +225,12 @@ void OS::FileSystem::listDirectory( int cwd )
 OS::iNFile OS::FileSystem::getFileNode( const uint32_t iNodeNum )
 {
     boost::tuple<int, int> nodeLoc = getINodeBlockAndOffset(iNodeNum);
-    return getStructData<iNFile>(boost::get<0>(nodeLoc), boost::get<1>(nodeLoc) * sizeof(iNFile));
+    return getStructData<iNFile>(boost::get<0>(nodeLoc)+iNodeStartBlock, boost::get<1>(nodeLoc) * sizeof(iNFile));
 }
 void OS::FileSystem::saveFileNode( const uint32_t iNodeNum, const iNFile& node )
 {
     boost::tuple<int, int> nodeLoc = getINodeBlockAndOffset(iNodeNum);
-    writeStructData(boost::get<0>(nodeLoc), boost::get<1>(nodeLoc) * sizeof(node), node);
+    writeStructData(boost::get<0>(nodeLoc)+iNodeStartBlock, boost::get<1>(nodeLoc) * sizeof(node), node);
 }
 
 OS::iNLink OS::FileSystem::getLinkNode( const uint32_t iNodeNum )
@@ -231,3 +250,90 @@ boost::tuple<int, int> OS::FileSystem::getINodeBlockAndOffset( int nodeNum )
     int num = nodeNum % iNodesPerBlock;
     return boost::make_tuple(block, num);
 }
+
+int OS::FileSystem::findFreeINode()
+{
+    // Loop through iNode blocks
+    for (int i = 0; i < iNodeCount / iNodesPerBlock; i++) {
+        char data[blkSize];
+        disk->ReadFromDisk(iNodeStartBlock + i, 1, data);
+        // Loop through iNodes in the blocks
+        for (int n = 0; n < iNodesPerBlock; n++) {
+            if (data[sizeof(iNFile)*n] == 0) { // if the refcount is 0, unused
+                return n + (iNodesPerBlock * i);
+            }
+        }
+    }
+    throw std::runtime_error("No free inodes left!");
+}
+
+uint64_t getCurrentTime()
+{
+    using namespace boost::posix_time;
+    ptime t(boost::posix_time::second_clock::local_time());
+    ptime epoch(boost::gregorian::date(1970,1,1));
+    time_duration::sec_type x = (t - epoch).total_seconds();
+    return x;
+}
+
+bool OS::FileSystem::WriteFile( int cwd, const std::string& file, char* data, size_t size )
+{
+    static char gData[blkSize] = {0}; // We'll use this for partial blocks
+    // TODO: Find out if this file already exists in the directory; if so, overwrite it
+    int iNodeIdx = findFreeINode();
+    Entry fileEntry;
+    fileEntry.ptr = iNodeIdx;
+    strcpy(fileEntry.name, file.c_str());
+    fileEntry.type = TYPE_file;
+    iNFile inode;
+    memset(&inode, 0, sizeof(inode));
+    inode.creationDate = getCurrentTime();
+    inode.modifyDate = getCurrentTime();
+    inode.fileSize = size;
+    inode.refCount = 1;
+
+    // Calculate how many blocks we'll need
+    int blocksNeeded = size / blkSize + (size % blkSize == 0 ? 0 : 1);
+    assert(blocksNeeded <= fileDataBlks);
+    int curBlock = 0;
+    while (curBlock < blocksNeeded) {
+        int blkNum = findFreeBlock();
+        inode.dataBLKS[curBlock] = blkNum;
+        if (size - (curBlock*blkSize) < blkSize) {
+            // It's only a "partial" block, so we'll have to pad it
+            memcpy(gData, data+(curBlock*blkSize), size - (curBlock*blkSize));
+            disk->WriteToDisk(blkNum, 1, gData);
+        } else {
+            disk->WriteToDisk(blkNum, 1, data+(curBlock*blkSize));
+        }
+        ++curBlock;
+    }
+    saveFileNode(iNodeIdx, inode);
+    addDirectoryEntry(cwd, fileEntry);
+    return true;
+}
+
+void OS::FileSystem::catFile( int cwd, const std::string& file )
+{
+    static char buffer[blkSize];
+    Entry entry = getDirectoryEntry(cwd, file);
+    if (entry.type == TYPE_empty) {
+        cout << "No such file" << endl;
+        return;
+    } else if (entry.type != TYPE_file) {
+        cout << "Unsupported request" << endl;
+    }
+    iNFile fileNode = getFileNode(entry.ptr);
+    int32_t dataLeft = fileNode.fileSize;
+    std::stringstream ss;
+    for (int i = 0; i < fileDataBlks && dataLeft > 0; ++i) {
+        if (fileNode.dataBLKS[i]) {
+            disk->ReadFromDisk(fileNode.dataBLKS[i], 1, buffer);
+            ss << std::hex;
+            ss.write(buffer, (dataLeft > blkSize ? blkSize : dataLeft));
+            dataLeft -= blkSize;
+        }
+    }
+    cout << ss.str() << endl << "END OF FILE" << endl;
+}
+

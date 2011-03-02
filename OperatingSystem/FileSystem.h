@@ -67,7 +67,10 @@ namespace OS {
         std::string GetDirectoryPath( int cwd );
 		void format();
         int GetDirectoryId( int cwd, const std::string& dir );
+        bool WriteFile( int cwd, const std::string& file, char* data, size_t size );
         void listDirectory( int cwd );
+        void catFile( int cwd, const std::string& file );
+
     protected:
         Directory getDirectory(const uint32_t block);
         void saveDirectory( const uint32_t block, const OS::Directory& dir);
@@ -75,12 +78,13 @@ namespace OS {
         void saveFileNode( const uint32_t iNodeNum, const iNFile& node);
         iNLink getLinkNode(const uint32_t iNodeNum);
         void saveLinkNode( const uint32_t iNodeNum, const iNLink& node);
+        int findFreeINode();
         uint32_t findFreeBlock();
         void freeBlock(uint32_t num);
         void addDirectoryEntry( const uint32_t dirBlock, const Entry& entry );
         Entry getDirectoryEntry( int parent, int blockNumber );
+        Entry getDirectoryEntry( int parent, const std::string& fileName );
         boost::tuple<int, int> getINodeBlockAndOffset(int nodeNum);
-
 
         template <class T>
         T getStructData(int block, int offset)
@@ -102,6 +106,7 @@ namespace OS {
         }
     private:
         VM::VirtualDisk* disk;
+        int iNodeStartBlock;
     };
 
 }
