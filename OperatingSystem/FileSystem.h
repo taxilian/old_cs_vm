@@ -39,9 +39,9 @@ namespace OS {
         char name[lengthPath];
         uint32_t ptr;
     };
-    const size_t maxEntriesPerBlock = (blkSize - (sizeof(size_t) + sizeof(uint32_t))) / sizeof(Entry);
+    const size_t maxEntriesPerBlock = (blkSize - (/*sizeof(size_t) + */sizeof(uint32_t))) / sizeof(Entry);
     struct Directory{
-        size_t size;//number of entries in directory.
+        //size_t size; //Got looking at it and decided we don't actually need this
         uint32_t next;
         Entry entries[maxEntriesPerBlock];//if entries exceed 10 then Inode points to next dir block.
     };
@@ -55,12 +55,12 @@ namespace OS {
     public:
         Directory getDirectory(const uint32_t block);
         void CreateDirectory(const std::string name, const uint32_t parent);
-        void SaveDirectory( const uint32_t block, const OS::Directory& dir);
+        void saveDirectory( const uint32_t block, const OS::Directory& dir);
 		void format();
     protected:
         uint32_t findFreeBlock();
         void freeBlock(uint32_t num);
-        int findEmptyEntry( const OS::Directory& pDir );
+        void addDirectoryEntry( const uint32_t dirBlock, const Entry& entry );
     private:
         VM::VirtualDisk* disk;
     };
