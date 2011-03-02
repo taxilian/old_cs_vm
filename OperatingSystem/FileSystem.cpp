@@ -79,18 +79,12 @@ void OS::FileSystem::addDirectoryEntry( const uint32_t dirBlock, const Entry& en
 
 OS::Directory OS::FileSystem::getDirectory( const uint32_t block )
 {
-    OS::Directory dir;
-    char data[blkSize];
-    disk->ReadFromDisk(block, 1, data);
-    memcpy(&dir, data, sizeof(dir));
-    return dir;
+    return getStructData<Directory>(block, 0);
 }
 
 void OS::FileSystem::saveDirectory( const uint32_t block, const OS::Directory& dir)
 {
-    char data[blkSize];
-    memcpy(data, &dir, sizeof(dir));
-    disk->WriteToDisk(block, 1, data);
+    writeStructData(block, 0, dir);
 }
 uint32_t OS::FileSystem::findFreeBlock()
 {
@@ -129,6 +123,16 @@ void OS::FileSystem::format()
 	}
     // Create root directory
     CreateDirectory("", 0);
+    // Create inodes -- conveniently, they are really just 0 when they are empty
+    iNFile emptyINode;
+    char data[blkSize];
+    memset(data, 0xFE, blkSize);
+    memset(data, 0, sizeof(iNFile) * iNodesPerBlock);
+    int blkCount = iNodeCount / iNodesPerBlock;
+    int blk = 0;
+    for (int i = 0; i < blkCount; i++) {
+        disk->WriteToDisk(findFreeBlock(), 1, data);
+    }
 }
 
 int OS::FileSystem::GetDirectoryId( int cwd, const std::string& dirName )
@@ -197,4 +201,33 @@ void OS::FileSystem::listDirectory( int cwd )
     if (dir.next) {
         listDirectory(dir.next);
     }
+}
+
+OS::iNFile OS::FileSystem::getFileNode( const uint32_t iNodeNum )
+{
+    boost::tuple<int, int> nodeLoc = getINodeBlockAndOffset(iNodeNum);
+    return getStructData<iNFile>(boost::get<0>(nodeLoc), boost::get<1>(nodeLoc) * sizeof(iNFile));
+}
+void OS::FileSystem::saveFileNode( const uint32_t iNodeNum, const iNFile& node )
+{
+    boost::tuple<int, int> nodeLoc = getINodeBlockAndOffset(iNodeNum);
+    writeStructData(boost::get<0>(nodeLoc), boost::get<1>(nodeLoc) * sizeof(node), node);
+}
+
+OS::iNLink OS::FileSystem::getLinkNode( const uint32_t iNodeNum )
+{
+    boost::tuple<int, int> nodeLoc = getINodeBlockAndOffset(iNodeNum);
+    return getStructData<iNLink>(boost::get<0>(nodeLoc), boost::get<1>(nodeLoc) * sizeof(iNLink));
+}
+void OS::FileSystem::saveLinkNode( const uint32_t iNodeNum, const iNLink& node )
+{
+    boost::tuple<int, int> nodeLoc = getINodeBlockAndOffset(iNodeNum);
+    writeStructData(boost::get<0>(nodeLoc), boost::get<1>(nodeLoc) * sizeof(node), node);
+}
+
+boost::tuple<int, int> OS::FileSystem::getINodeBlockAndOffset( int nodeNum )
+{
+    int block = nodeNum / iNodesPerBlock;
+    int num = nodeNum % iNodesPerBlock;
+    return boost::make_tuple(block, num);
 }

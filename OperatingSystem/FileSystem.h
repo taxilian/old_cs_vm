@@ -3,6 +3,8 @@
 #define FILESYSTEM_H
 
 #include <string>
+#include <boost/tuple/tuple.hpp>
+#include <boost/static_assert.hpp>
 
 #include "VMCore.h"
 #include "VirtualDisk.h"
@@ -13,22 +15,29 @@ namespace OS {
     const size_t lengthPath = 20;
     const size_t linkPath = 80;
     const size_t blkSize = VM::VirtualDisk::BLOCK_SIZE;
-    const size_t numOfEntries = 10;//maximum number of directory or file entries in a directory.
-
 
     enum iNType{TYPE_empty = 0, TYPE_directory,TYPE_file,TYPE_link};
     struct iNFile {
-        uint64_t creationDate;//YYYYMMDD
-        uint64_t modifyDate;//YYYYMMDD
+        uint8_t refCount;
+        uint64_t creationDate;
+        uint64_t modifyDate;
         uint32_t fileSize;
         uint32_t dataBLKS[fileDataBlks];
     };
     struct iNLink {
-        uint64_t creationDate;//YYYYMMDD
-        uint64_t modifyDate;//YYYYMMDD
+        uint8_t refCount;
+        uint64_t creationDate;
+        uint64_t modifyDate;
         uint32_t fileSize;
-        char pathName[lengthPath];
+        char pathName[linkPath];
     };
+
+    // Make sure that the iNode types are the same size!
+    BOOST_STATIC_ASSERT(sizeof(iNFile) == sizeof(iNLink));
+
+    const size_t iNodesPerBlock = blkSize / sizeof(iNFile);
+    const size_t iNodeCount = ((256 / iNodesPerBlock) + 1) * iNodesPerBlock; // Maximum number of files supported on the disk
+
     struct Data{
         char rawData[blkSize]; 
         Data(){
@@ -62,10 +71,35 @@ namespace OS {
     protected:
         Directory getDirectory(const uint32_t block);
         void saveDirectory( const uint32_t block, const OS::Directory& dir);
+        iNFile getFileNode(const uint32_t iNodeNum);
+        void saveFileNode( const uint32_t iNodeNum, const iNFile& node);
+        iNLink getLinkNode(const uint32_t iNodeNum);
+        void saveLinkNode( const uint32_t iNodeNum, const iNLink& node);
         uint32_t findFreeBlock();
         void freeBlock(uint32_t num);
         void addDirectoryEntry( const uint32_t dirBlock, const Entry& entry );
         Entry getDirectoryEntry( int parent, int blockNumber );
+        boost::tuple<int, int> getINodeBlockAndOffset(int nodeNum);
+
+
+        template <class T>
+        T getStructData(int block, int offset)
+        {
+            T dt;
+            char data[blkSize];
+            disk->ReadFromDisk(block, 1, data);
+            memcpy(&dt, data+offset, sizeof(dt));
+            return dt;
+        }
+
+        template <class T>
+        void writeStructData(int block, int offset, const T& st)
+        {
+            char data[blkSize];
+            disk->ReadFromDisk(block, 1, data);
+            memcpy(data+offset, &st, sizeof(st));
+            disk->WriteToDisk(block, 1, data);
+        }
     private:
         VM::VirtualDisk* disk;
     };
