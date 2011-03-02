@@ -27,15 +27,19 @@ void OS::FileSystem::CreateDirectory( const std::string name, const uint32_t par
     nDir.entries[1].type = TYPE_directory;
     nDir.entries[0].ptr = parent; // Block 0, or this one
     nDir.entries[1].ptr = parent;
+    nDir.next = 0;
 
     if (name.empty() && parent == 0) {
         SaveDirectory(0, nDir);
     } else {
         nDirBlock = this->findFreeBlock();
         SaveDirectory(nDirBlock, nDir);
-        int entry = pDir.size++;
-        pDir.entries[entry].ptr = nDirBlock;
-        strcpy(pDir.entries[entry].name, name.c_str());
+        int reuse = findEmptyEntry(pDir);
+        if (pDir.size + 1 <= maxEntriesPerBlock) {
+            int entry = pDir.size++;
+            pDir.entries[entry].ptr = nDirBlock;
+            strcpy(pDir.entries[entry].name, name.c_str());
+        }
         SaveDirectory(parent, pDir);
     }
 }
@@ -76,4 +80,21 @@ void OS::FileSystem::format()
 	{
 		disk->WriteToDisk(i,512,init);
 	}
+}
+
+int OS::FileSystem::findEmptyEntry( const OS::Directory& pDir )
+{
+    OS::Directory fDir = pDir;
+    for (int n = 0; true; n++) {
+        for (int i = 0; i < maxEntriesPerBlock; i++) {
+            if (fDir.entries[i].type == TYPE_empty) {
+                return i + (maxEntriesPerBlock*n);
+            }
+        }
+        if (fDir.next > 0) {
+            fDir = getDirectory(fDir.next);
+        } else {
+            return -1;
+        }
+    }
 }

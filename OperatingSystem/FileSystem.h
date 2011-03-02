@@ -15,7 +15,7 @@ namespace OS {
     const size_t numOfEntries = 10;//maximum number of directory or file entries in a directory.
 
 
-    enum iNType{TYPE_directory,TYPE_file,TYPE_link};
+    enum iNType{TYPE_empty = 0, TYPE_directory,TYPE_file,TYPE_link};
     struct iNFile {
         uint64_t creationDate;//YYYYMMDD
         uint64_t modifyDate;//YYYYMMDD
@@ -60,7 +60,7 @@ namespace OS {
     protected:
         uint32_t findFreeBlock();
         void freeBlock(uint32_t num);
-
+        int findEmptyEntry( const OS::Directory& pDir );
     private:
         VM::VirtualDisk* disk;
     };
