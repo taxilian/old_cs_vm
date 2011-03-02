@@ -8,8 +8,18 @@
 
 #include "VMCore.h"
 #include "VirtualDisk.h"
+#include <stdexcept>
 
 namespace OS {
+
+    class FileSystemError : public std::runtime_error {
+    public:
+        FileSystemError(const std::string& msg) : std::runtime_error(msg.c_str()) {}
+    };
+    class FileNotFoundError : public FileSystemError {
+    public:
+        FileNotFoundError(const std::string& msg) : FileSystemError(msg) {}
+    };
 
     const size_t fileDataBlks = 20;//every block is 512 bytes which gives a maximum of 10KB file size.
     const size_t lengthPath = 20;
@@ -85,6 +95,8 @@ namespace OS {
         Entry getDirectoryEntry( int parent, int blockNumber );
         Entry getDirectoryEntry( int parent, const std::string& fileName );
         boost::tuple<int, int> getINodeBlockAndOffset(int nodeNum);
+
+        boost::tuple<int, const std::string> resolvePath(int cwd, const std::string& fileName);
 
         template <class T>
         T getStructData(int block, int offset)

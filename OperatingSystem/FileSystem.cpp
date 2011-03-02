@@ -1,4 +1,5 @@
 #include <boost\date_time\posix_time\posix_time.hpp>
+#include <boost/algorithm/string.hpp>
 #include "FileSystem.h"
 
 using namespace OS;
@@ -316,7 +317,8 @@ bool OS::FileSystem::WriteFile( int cwd, const std::string& file, char* data, si
 void OS::FileSystem::catFile( int cwd, const std::string& file )
 {
     static char buffer[blkSize];
-    Entry entry = getDirectoryEntry(cwd, file);
+    boost::tuple<int, const std::string> resolved = resolvePath(cwd, file);
+    Entry entry = getDirectoryEntry(boost::get<0>(resolved), boost::get<1>(resolved));
     if (entry.type == TYPE_empty) {
         cout << "No such file" << endl;
         return;
@@ -335,5 +337,34 @@ void OS::FileSystem::catFile( int cwd, const std::string& file )
         }
     }
     cout << ss.str() << endl << "END OF FILE" << endl;
+}
+
+boost::tuple<int, const std::string> OS::FileSystem::resolvePath( int cwd, const std::string& fileName )
+{
+    std::deque<std::string> dirs;
+    boost::algorithm::split(dirs, fileName, boost::is_any_of("/"));
+    if (!dirs.size()) {
+        throw FileSystemError("Invalid file or path");
+    }
+    if (dirs[0].empty()) {
+        // If it started with a "/", we start from the root
+        cwd = 0;
+        dirs.pop_front();
+    }
+    while (dirs.size()) {
+        if (dirs.size() == 1) {
+            // We've found the dir for the file; we won't look for the file itself
+            return boost::make_tuple(cwd, dirs.front());
+        }
+        Entry cur = getDirectoryEntry(cwd, dirs.front());
+        if (cur.type != TYPE_directory) {
+            throw FileNotFoundError(fileName + " is not a valid path or filename");
+        } else {
+            cwd = cur.ptr;
+        }
+        dirs.pop_front();
+    }
+    // If we make it here, the path is invalid
+    throw FileNotFoundError(fileName + " is not a valid path");
 }
 
