@@ -24,13 +24,13 @@ Token LexicalParser::nextToken()
     } else {
         t = _nextToken();
     }
-    back_q.push_back(t);
+    back_q.push_front(t);
     return t;
 }
 
 Token& LexicalParser::current()
 {
-    return back_q.back();
+    return back_q.front();
 }
 
 Token LexicalParser::peekToken( size_t n /*= 0*/ )
@@ -45,8 +45,8 @@ bool LexicalParser::backTrack( int n /*= 1*/ )
 {
     if (back_q.size() >= static_cast<size_t>(n)) {
         for (int i = 0; i < n; i++) {
-            fwd_q.push_front(back_q.back());
-            back_q.pop_back();
+            fwd_q.push_front(back_q.front());
+            back_q.pop_front();
         }
         return true;
     } else {

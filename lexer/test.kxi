@@ -3,8 +3,7 @@ void main( )
     LexicalParser parser;
     int a = 28534;
     char c;
-    Token cur;
-    while (cur.type != TT_ENDOFFILE) {
+    while (c != '5') {
         cur = parser.nextToken();
         cout << cur.toString();
         cout << '\n';
@@ -17,7 +16,7 @@ void main( )
     return 0;
 }
 
-class testClass {
+class LexicalParser {
     int a;
     int b;
     int c;

@@ -9,6 +9,7 @@
 #include <boost/noncopyable.hpp>
 
 struct SymbolData : boost::noncopyable {
+    virtual ~SymbolData() {}
     std::string accessMod;
 };
 typedef boost::shared_ptr<SymbolData> SymbolDataPtr;

@@ -79,7 +79,7 @@ public:
     void litPush(const std::string& lit, const std::string& type);
     void opPush(const std::string& op);
     void typePush(const std::string& type);
-    void varPush(const std::string& name, const std::string& type);
+    void varPush(const std::string& name);
     void begArgList();
     void endArgList();
     void func_sa();
@@ -101,6 +101,7 @@ public:
     void closeBracket();
     void oper_comma();
     void end_of_expr();
+    void eoe_assign(const SARPtr& sar);
     void oper_multdiv();
     void oper_addsub();
     void oper_assign();
@@ -125,6 +126,28 @@ protected:
     std::string makeSymbolId( const std::string& prefix );
     void registerSymbol( const SymbolEntryPtr& symbol );
 
+    template <class T>
+    bool is_a(const SARPtr& in) {
+        boost::shared_ptr<T> ptr(boost::dynamic_pointer_cast<T>(in));
+        return ptr;
+    }
+
+    template <class T>
+    boost::shared_ptr<T> as(const SARPtr& in) {
+        return boost::dynamic_pointer_cast<T>(in);
+    }
+
+    SARPtr saPop() {
+        SARPtr tmp(saStack.back());
+        saStack.pop_back();
+        return tmp;
+    }
+    std::string opPop() {
+        std::string tmp(opStack.back());
+        opStack.pop_back();
+        return tmp;
+    }
+    std::string getScopeType( const SARPtr& sar );
 private:
     LexicalParser* lexer;
     std::set<std::string> validKeywords;
@@ -150,4 +173,3 @@ private:
     std::list<ParameterDefPtr> foundParams;
     int pass;
 };
-

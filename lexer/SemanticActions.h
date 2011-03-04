@@ -8,6 +8,7 @@
 struct SAR
 {
     SAR(const std::string& val) : value(val) {}
+    virtual ~SAR() {}
     std::string value;
 };
 typedef boost::shared_ptr<SAR> SARPtr;
@@ -53,24 +54,30 @@ struct arrRef_SAR : public SAR
     arrRef_SAR(const std::string& val) : SAR(val) {}
 };
 
-struct int_SAR : public SAR
+struct lit_SAR : public SAR
 {
-    int_SAR(const std::string& val) : SAR(val) {}
+    std::string type;
+    lit_SAR(const std::string& val, const std::string& type) : SAR(val), type(type) {}
 };
 
-struct bool_SAR : public SAR
+struct int_SAR : public lit_SAR
 {
-    bool_SAR(const std::string& val) : SAR(val) {}
+    int_SAR(const std::string& val) : lit_SAR(val, "int") {}
 };
 
-struct null_SAR : public SAR
+struct bool_SAR : public lit_SAR
 {
-    null_SAR() : SAR("null") {}
+    bool_SAR(const std::string& val) : lit_SAR(val, "bool") {}
 };
 
-struct char_SAR : public SAR
+struct null_SAR : public lit_SAR
 {
-    char_SAR(const std::string& val) : SAR(val) {}
+    null_SAR() : lit_SAR("null", "null") {}
+};
+
+struct char_SAR : public lit_SAR
+{
+    char_SAR(const std::string& val) : lit_SAR(val, "char") {}
 };
 
 struct new_SAR : public SAR
