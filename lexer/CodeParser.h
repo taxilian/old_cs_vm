@@ -80,6 +80,7 @@ public:
     void opPush(const std::string& op);
     void typePush(const std::string& type);
     void varPush(const std::string& name);
+    void tempPush(const std::string& type);
     void begArgList();
     void endArgList();
     void func_sa();
@@ -148,6 +149,7 @@ protected:
         return tmp;
     }
     std::string getScopeType( const SARPtr& sar );
+    bool compatibleTypes( const SARPtr& sar1, const SARPtr& sar2 );
 private:
     LexicalParser* lexer;
     std::set<std::string> validKeywords;

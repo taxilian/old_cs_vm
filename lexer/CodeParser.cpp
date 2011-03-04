@@ -569,6 +569,7 @@ void CodeParser::cmd_cout()
 void CodeParser::cmd_cin()
 {
     assert_type_value(TT_OPERATOR, ">>");
+    lexer->nextToken();
     expression();
     assert_type(TT_SEMICOLON);
     lexer->nextToken();
@@ -590,35 +591,35 @@ void CodeParser::expression()
         lexer->nextToken();
         if (pass2())
             closeParen();
-        if (lexer->current().type == TT_OPERATOR)
+        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
             expressionz();
     } else if (curTxt == "true") {
         lexer->nextToken();
         if (pass2())
             litPush("true", "bool");
-        if (lexer->current().type == TT_OPERATOR)
+        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
             expressionz();
     } else if (curTxt == "false") {
         lexer->nextToken();
         if (pass2())
             litPush("false", "bool");
-        if (lexer->current().type == TT_OPERATOR)
+        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
             expressionz();
     } else if (curTxt == "null") {
         lexer->nextToken();
         if (pass2())
             litPush("null", "null");
-        if (lexer->current().type == TT_OPERATOR)
+        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
             expressionz();
     } else if (lexer->current().type == TT_NUMBER
         || (lexer->current().type == TT_OPERATOR && (curTxt == "-" || curTxt == "+")
             && lexer->peekToken().type == TT_NUMBER)) {
         numeric_literal();
-        if (lexer->current().type == TT_OPERATOR)
+        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
             expressionz();
     } else if (lexer->current().type == TT_CHAR) {
         character_literal();
-        if (lexer->current().type == TT_OPERATOR)
+        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
             expressionz();
     } else {
         identifier();
@@ -632,7 +633,7 @@ void CodeParser::expression()
         if (lexer->current().type == TT_OPERATOR && lexer->current().text == ".") {
             member_refz();
         }
-        if (lexer->current().type == TT_OPERATOR)
+        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
             expressionz();
     }
 }
@@ -759,9 +760,7 @@ void CodeParser::new_declaration()
             opPush("(");
             begArgList();
         }
-        lexer->nextToken();
         argument_list();
-        assert_type_value(TT_GROUPCLOSE, ")");
         if (pass2()) {
             closeParen();
             endArgList();
@@ -931,6 +930,8 @@ std::string CodeParser::getScopeType( const SARPtr& sar )
         return fnd->second->kind;
     } else if (is_a<lit_SAR>(sar)) {
         return as<lit_SAR>(sar)->type;
+    } else if (is_a<var_SAR>(sar)) {
+        return as<var_SAR>(sar)->type;
     } else {
         assert(false);
         return "";
@@ -961,15 +962,11 @@ void CodeParser::closeParen()
             || op == ">" || op == "<"
             || op == ">=" || op == "<="
             || op == "&&" || op == "||") {
-            SARPtr sar1(saPop());
-            SARPtr sar2(saPop());
-            // These all require the type to be the same
-            if (getScopeType(sar1) != getScopeType(sar2))
-                throw SyntaxParserException("Invalid rval type: expected " + getScopeType(sar1) + " but found " + getScopeType(sar2));
-            // Do something awesome here
-        }       
+            oper_compare();
+        } else if (op == "(") {
+            return;
+        }
     }
-    throw std::runtime_error("Not implemented");
 }
 
 void CodeParser::closeBracket()
@@ -998,15 +995,26 @@ void CodeParser::end_of_expr()
     //throw std::runtime_error("Not implemented");
 }
 
+bool CodeParser::compatibleTypes( const SARPtr& sar1, const SARPtr& sar2 )
+{
+    std::string type1(getScopeType(sar1));
+    std::string type2(getScopeType(sar2));
+    if (type1 == "int") {
+        return type2 == "int";
+    } else if (type1 == "bool") {
+        return type2 == "bool";
+    } else if (type1 == "char") {
+        return type2 == "char" || type2 == "int";
+    }
+}
+
 void CodeParser::eoe_assign(const SARPtr& sar)
 {
     SARPtr lval(saPop());
     if (is_a<var_SAR>(lval) && is_a<lit_SAR>(sar)) {
         // Assignment to new variable
         boost::shared_ptr<var_SAR> ptr(as<var_SAR>(lval));
-        if ((ptr->type == "int" && !is_a<int_SAR>(sar))
-            || (ptr->type == "char" && !is_a<char_SAR>(sar))
-            || (ptr->type == "bool" && !is_a<bool_SAR>(sar))) {
+        if (!compatibleTypes(ptr, sar)) {
             throw SyntaxParserException("Unexpected rval does not match type: " + ptr->type);
         } else {
             // TODO: Handle assignment
@@ -1031,7 +1039,15 @@ void CodeParser::oper_assign()
 
 void CodeParser::oper_compare()
 {
-    throw std::runtime_error("Not implemented");
+    SARPtr sar1(saPop());
+    SARPtr sar2(saPop());
+    // These all require the type to be the same
+    if (getScopeType(sar1) != getScopeType(sar2))
+        throw SyntaxParserException("Invalid rval type: expected " + getScopeType(sar1) + " but found " + getScopeType(sar2));
+    // Do something awesome here
+
+    // Create a temporary variable and push it onto the stack
+    tempPush("bool");
 }
 
 void CodeParser::oper_andor()
@@ -1061,7 +1077,17 @@ void CodeParser::arr_sa()
 
 void CodeParser::keyword_sa( const std::string &kw )
 {
-    throw std::runtime_error("Not implemented");
+    if (kw == "while") {
+        SARPtr sar(saPop());
+        if ((is_a<var_SAR>(sar) && as<var_SAR>(sar)->type != "bool")
+            || (is_a<lit_SAR>(sar) && as<lit_SAR>(sar)->type != "bool")) {
+            throw SyntaxParserException("Expecting bool and didn't find it!");
+        } else {
+            // TODO: Whatever we should do with this while
+        }
+    } else {
+        throw std::runtime_error("Not implemented");
+    }
 }
 
 void CodeParser::newObj()
@@ -1077,5 +1103,20 @@ void CodeParser::newArr()
 void CodeParser::builtin_sa( const std::string& func )
 {
     throw std::runtime_error("Not implemented");
+}
+
+void CodeParser::tempPush( const std::string& type )
+{
+    SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
+    symb->id = makeSymbolId("T");
+    symb->kind = "variable";
+    symb->scope = getScopeString();
+    symb->value = symb->id;
+    TypeDataPtr tdata = boost::make_shared<TypeData>();
+    tdata->accessMod = "private";
+    tdata->type = type;
+    symb->data = tdata;
+    registerSymbol(symb);
+    saStack.push_back(boost::make_shared<var_SAR>(symb->value, type));
 }
 

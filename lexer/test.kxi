@@ -1,37 +1,21 @@
 void main( )
 {
-    LexicalParser parser;
-    int a = 28534;
-    char c;
-    while (c != '5') {
-        cur = parser.nextToken();
-        cout << cur.toString();
-        cout << '\n';
-    }
+    int v = 0;
+    char n = 0;
+    Calculator b = new Calculator();
+    Calculator b0 = null;
 
-    a = a + 37812;
-
-    c = '\n';
-
-    return 0;
+    cout << '>';
+    cin >> v;
+    v = b.add(v, 4);
+    v = b.mult(5, v);
+    v = b.mult(v, b.div(v, 6));
+    cout << v; 
 }
 
-class LexicalParser {
-    int a;
-    int b;
-    int c;
-
-    public testClass(bool a, double d, testClass c) {
-        int z;
-        int y;
-        int x = 47;
-
-        return x+y*x/2;
-    }
-
-    bool doSomethingCool(int a, int b, int c)
-    {
-        bool d = false;
-        return 3+6*17-(3-5);
-    }
+class Calculator {
+    int add(int a, int b) { return a+b; }
+    int sub(int a, int b) { return a-b; }
+    int mult(int a, int b) { return a*b; }
+    int div(int a, int b) { return a/b; }
 }
