@@ -5,6 +5,7 @@
 
 #include <string>
 #include <list>
+#include <vector>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
 
@@ -20,7 +21,7 @@ struct ParameterDef : boost::noncopyable {
 typedef boost::shared_ptr<ParameterDef> ParameterDefPtr;
 
 struct MethodData : public SymbolData {
-    std::list<ParameterDefPtr> Parameters;
+    std::vector<ParameterDefPtr> Parameters;
     std::string returnType;
 };
 typedef boost::shared_ptr<MethodData> MethodDataPtr;

@@ -127,14 +127,14 @@ protected:
     std::string makeSymbolId( const std::string& prefix );
     void registerSymbol( const SymbolEntryPtr& symbol );
 
-    template <class T>
-    bool is_a(const SARPtr& in) {
+    template <class T, class T2>
+    bool is_a(const T2& in) {
         boost::shared_ptr<T> ptr(boost::dynamic_pointer_cast<T>(in));
         return ptr;
     }
 
-    template <class T>
-    boost::shared_ptr<T> as(const SARPtr& in) {
+    template <class T, class T2>
+    boost::shared_ptr<T> as(const T2& in) {
         return boost::dynamic_pointer_cast<T>(in);
     }
 
@@ -150,6 +150,7 @@ protected:
     }
     std::string getScopeType( const SARPtr& sar );
     bool compatibleTypes( const SARPtr& sar1, const SARPtr& sar2 );
+    bool findFunction( const std::string& scope, const std::string& name, const boost::shared_ptr<argList_SAR>& argList );
 private:
     LexicalParser* lexer;
     std::set<std::string> validKeywords;
@@ -172,6 +173,6 @@ private:
     std::string lastSeenType;
     std::string lastSeenFieldType;
 
-    std::list<ParameterDefPtr> foundParams;
+    std::vector<ParameterDefPtr> foundParams;
     int pass;
 };

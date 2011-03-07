@@ -4,6 +4,10 @@
 #include "CodeParser.h"
 #include <boost/smart_ptr/make_shared.hpp>
 
+#include <vector>
+
+using namespace std;
+
 CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(1)
 {
     current_scope.push_back("g");
@@ -756,14 +760,8 @@ void CodeParser::new_declaration()
 {
     if (lexer->current().type == TT_GROUPOPEN
         && lexer->current().text == "(") {
-        if (pass2()) {
-            opPush("(");
-            begArgList();
-        }
         argument_list();
         if (pass2()) {
-            closeParen();
-            endArgList();
             newObj();
         }
     } else if (lexer->current().type == TT_GROUPOPEN
@@ -803,6 +801,9 @@ void CodeParser::fn_arr_member()
     if (lexer->current().type == TT_GROUPOPEN
         && lexer->current().text == "(") {
         argument_list();
+        if (pass2()) {
+            func_sa();
+        }
     } else if (lexer->current().type == TT_GROUPOPEN
         && lexer->current().text == "[") {
         if (pass2())
@@ -823,8 +824,8 @@ void CodeParser::argument_list()
     assert_type_value(TT_GROUPOPEN, "(");
     lexer->nextToken();
     if (pass2()) {
-        opPush("(");
         begArgList();
+        opPush("(");
     }
     while (lexer->current().text != ")") {
         expression();
@@ -835,9 +836,8 @@ void CodeParser::argument_list()
         }
     }
     if (pass2()) {
-        closeParen();
+        //closeParen();
         endArgList();
-        func_sa();
     }
     lexer->nextToken();
 }
@@ -985,6 +985,7 @@ void CodeParser::end_of_expr()
     
     if (is_a<var_SAR>(sar)) {
         // TODO: Initialize new variable
+    } else if (is_a<new_SAR>(sar)) {
     } else if (is_a<lit_SAR>(sar)) {
         // Found a literal -- there should be an operator of some kind
         std::string op(opPop());
@@ -1005,6 +1006,8 @@ bool CodeParser::compatibleTypes( const SARPtr& sar1, const SARPtr& sar2 )
         return type2 == "bool";
     } else if (type1 == "char") {
         return type2 == "char" || type2 == "int";
+    } else {
+        return false;
     }
 }
 
@@ -1057,12 +1060,18 @@ void CodeParser::oper_andor()
 
 void CodeParser::begArgList()
 {
-    throw std::runtime_error("Not implemented");
+    saStack.push_back(boost::make_shared<begArgList_SAR>(""));
 }
 
 void CodeParser::endArgList()
 {
-    throw std::runtime_error("Not implemented");
+    SARPtr sar(saPop());
+    boost::shared_ptr<argList_SAR> al(boost::make_shared<argList_SAR>());
+    while (!is_a<begArgList_SAR>(sar)) {
+        al->pushArg(sar);
+        sar = saPop();
+    }
+    saStack.push_back(al);
 }
 
 void CodeParser::func_sa()
@@ -1092,7 +1101,12 @@ void CodeParser::keyword_sa( const std::string &kw )
 
 void CodeParser::newObj()
 {
-    throw std::runtime_error("Not implemented");
+    boost::shared_ptr<argList_SAR> argList(as<argList_SAR>(saPop()));
+    boost::shared_ptr<type_SAR> type(as<type_SAR>(saPop()));
+    std::string scope = "g." + type->value;
+    if (!findFunction(scope, type->value, argList)) {
+        throw SyntaxParserException("Cannot find a valid constructor for " + type->value + " with matching these arguments");
+    }
 }
 
 void CodeParser::newArr()
@@ -1118,5 +1132,27 @@ void CodeParser::tempPush( const std::string& type )
     symb->data = tdata;
     registerSymbol(symb);
     saStack.push_back(boost::make_shared<var_SAR>(symb->value, type));
+}
+
+bool CodeParser::findFunction( const std::string& scope, const std::string& name, const boost::shared_ptr<argList_SAR>& argList )
+{
+    std::string symName = scope + "." + name;
+    if (symbol_name_map.find(symName) != symbol_name_map.end()) {
+        SymbolEntryPtr s(symbol_name_map[symName]);
+        MethodDataPtr m(as<MethodData>(s->data));
+        if (m->Parameters.size() != argList->argList.size())
+            return false;
+        int i = 0;
+        for (vector<ParameterDefPtr>::iterator it = m->Parameters.begin(); it != m->Parameters.end(); ++it) {
+            SymbolEntryPtr param(symbol_id_map[(*it)->paramId]);
+            TypeDataPtr t(as<TypeData>(param->data));
+            if (t->type != getScopeType(argList->argList[i]))
+                return false;
+            ++i;
+        }
+        return true;
+    } else {
+        return false;
+    }
 }
 

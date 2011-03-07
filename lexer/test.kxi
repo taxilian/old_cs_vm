@@ -14,8 +14,9 @@ void main( )
 }
 
 class Calculator {
-    int add(int a, int b) { return a+b; }
-    int sub(int a, int b) { return a-b; }
-    int mult(int a, int b) { return a*b; }
-    int div(int a, int b) { return a/b; }
+    public Calculator() {}
+    public int add(int a, int b) { return a+b; }
+    public int sub(int a, int b) { return a-b; }
+    public int mult(int a, int b) { return a*b; }
+    public int div(int a, int b) { return a/b; }
 }

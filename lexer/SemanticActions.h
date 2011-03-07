@@ -2,6 +2,7 @@
 #define SymanticActions_h__
 
 #include <string>
+#include <vector>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 
@@ -41,7 +42,12 @@ struct begArgList_SAR : public SAR
 
 struct argList_SAR : public SAR
 {
-    argList_SAR(const std::string& val) : SAR(val) {}
+    argList_SAR() : SAR("") {}
+
+    void pushArg(const SARPtr& arg) {
+        argList.push_back(arg);
+    }
+    std::vector<SARPtr> argList;
 };
 
 struct func_SAR : public SAR
