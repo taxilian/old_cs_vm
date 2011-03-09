@@ -98,6 +98,7 @@ namespace OS {
         void addDirectoryEntry( const uint32_t dirBlock, const Entry& entry );
         Entry getDirectoryEntry( int parent, int blockNumber );
         Entry getDirectoryEntry( int parent, const std::string& fileName );
+		void clearDirectoryEntry(int parent, const std::string& fileName );
         boost::tuple<int, int> getINodeBlockAndOffset(int nodeNum);
         void readFileContents( Entry &entry, VM::MemoryBlock& mem, size_t& size );
         boost::tuple<int, const std::string> resolvePath(int cwd, const std::string& fileName);

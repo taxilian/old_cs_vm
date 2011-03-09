@@ -189,6 +189,17 @@ OS::Entry OS::FileSystem::getDirectoryEntry( int cwd, const std::string& fileNam
         return nullEntry;
     }
 }
+void OS::FileSystem::clearDirectoryEntry( int cwd, const std::string& fileName )
+{
+	Entry nullEntry = {TYPE_empty, {0}, 0};
+    Directory dir = getDirectory(cwd);
+    for (int i = 0; i < maxEntriesPerBlock; i++) {
+        if (dir.entries[i].name == fileName) {
+            dir.entries[i]= nullEntry;
+        }
+    }
+	saveDirectory(cwd, dir);
+}
 
 std::string OS::FileSystem::GetDirectoryPath( int cwd )
 {
@@ -401,29 +412,18 @@ void OS::FileSystem::moveFile( int cwd, const std::string& src, const std::strin
 
 void OS::FileSystem::rmDirLinFil(int _cwd, const std::string& name)
 {
-	OS::Directory dir = getDirectory(_cwd);
-	int size = sizeof(dir.entries)/sizeof(Entry);
-	bool found = false;
-	Entry _entry;
-	int i = 0;
-	for (i; i < size; i++)
+	boost::tuple<int, const std::string> resolved = resolvePath(_cwd, name);
+    Entry entry = getDirectoryEntry(boost::get<0>(resolved), boost::get<1>(resolved));
+	if(entry.type == iNType::TYPE_file)
 	{
-		if(dir.entries[i].name == name)
+		iNFile inode = getFileNode(entry.ptr);
+		for(int i = 0; i < fileDataBlks; i++)
 		{
-			_entry = dir.entries[i];
-			found = true;
-			break;
+			freeBlock(inode.dataBLKS[i]);
 		}
-	}
-	if(found)
-	{
-		if(_entry.type == iNType::TYPE_file)
-		{
-			freeBlock(_entry.ptr);
-			Entry nullEntry = {TYPE_empty, {0}, 0};
-			dir.entries[i] = nullEntry;
-			saveDirectory(_cwd, dir);
-		}
+		memset(&inode, 0, sizeof(inode));
+		saveFileNode(entry.ptr,inode);
+		clearDirectoryEntry(_cwd,name);
 	}
 }
 

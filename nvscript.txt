@@ -7,5 +7,3 @@ cat dtext1.txt
 cat dtext2.txt
 cat dtext3.txt
 rm dtext2.txt
-cat dtext3.txt
-
