@@ -1,23 +1,12 @@
 md noel
+md bob
 cd noel
 !loadToFile text1.txt dtext1.txt
 !loadToFile text2.txt dtext2.txt
 !loadToFile text3.txt dtext3.txt
-!loadToFile text3.txt dtext4.txt
-!loadToFile text3.txt dtext5.txt
-!loadToFile text3.txt dtext6.txt
-!loadToFile text3.txt dtext7.txt
-!loadToFile text3.txt dtext8.txt
-!loadToFile text3.txt dtext9.txt
-!loadToFile text3.txt dtext10.txt
-!loadToFile text3.txt dtext11.txt
-!loadToFile text3.txt dtext12.txt
-!loadToFile text3.txt dtext13.txt
-!loadToFile text3.txt dtext14.txt
-!loadToFile text3.txt dtext15.txt
-!loadToFile text3.txt dtext16.txt
-!loadToFile text3.txt dtext17.txt
-!loadToFile text3.txt dtext18.txt
-!loadToFile text3.txt dtext19.txt
-!loadToFile text3.txt dtext20.txt
+ls
+mv dtext2.txt /bob/
+ls
+cd ..
+cd bob
 ls

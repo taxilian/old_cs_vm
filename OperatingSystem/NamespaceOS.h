@@ -95,6 +95,13 @@ namespace OS {
 				s >> file >> dest;
 				sys->cp(file, dest);
 			}
+			else if(temp == "mv")
+			{
+				string file;
+				string dest;
+				s >> file >> dest;
+				sys->mv(file, dest);
+			}
             else if(temp == "load")
             {
                 string hexFile;
@@ -180,6 +187,7 @@ namespace OS {
             cout <<"printAlg: Displays the current scheduling algorithm\n";
             cout <<"priority: Sets the priority of a process. priority (process#) (priority)\n";
 			cout <<"cp: copies a file to another location. cp (file) (location)\n";
+			cout <<"mv: moves a file to another location. mv (file) (location)\n";
         }
 
         void nvm_ls(){

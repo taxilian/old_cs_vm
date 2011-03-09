@@ -362,6 +362,12 @@ void OS::FileSystem::cpFile(int cwd, const std::string& file, const std::string&
 	WriteFile(boost::get<0>(resolvedDirectory), file, (char*)blk.get(), size);
 }
 
+void OS::FileSystem::mvFile(int cwd, const std::string& file, const std::string& dest)
+{
+	cpFile(cwd, file, dest);
+	rmDirLinFil(cwd,file);
+}
+
 boost::tuple<int, const std::string> OS::FileSystem::resolvePath( int cwd, const std::string& fileName )
 {
     std::deque<std::string> dirs;
