@@ -202,7 +202,6 @@ void OS::FileSystem::clearDirectoryEntry( int cwd, const std::string& fileName )
     }
 	if(dir.next)
 		clearDirectoryEntry(dir.next, fileName);
-	
 }
 
 std::string OS::FileSystem::GetDirectoryPath( int cwd )

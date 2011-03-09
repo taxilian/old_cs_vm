@@ -86,6 +86,7 @@
     <ClCompile Include="ProcScheduler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FileHandle.h" />
     <ClInclude Include="FileSystem.h" />
     <ClInclude Include="HeapMgr.h" />
     <ClInclude Include="NamespaceOS.h" />
