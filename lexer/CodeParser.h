@@ -99,15 +99,11 @@ public:
     // Operator semantic actions  //
     ////////////////////////////////
     void closeParen();
+
+    void processOperatorStack();
+
     void closeBracket();
-    void oper_comma();
     void end_of_expr();
-    void eoe_assign(const SARPtr& sar);
-    void oper_multdiv();
-    void oper_addsub();
-    void oper_assign();
-    void oper_compare();
-    void oper_andor();
 
 public:
     void setPass(int pass) { this->pass = pass; }
@@ -164,6 +160,8 @@ private:
     std::deque<std::string> scope_type;
     std::map<std::string, SymbolEntryPtr> symbol_id_map;
     std::map<std::string, SymbolEntryPtr> symbol_name_map;
+
+    std::map<std::string, int> operatorPrecedence;
 
     long nextId;
 

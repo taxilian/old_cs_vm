@@ -10,6 +10,7 @@ void main( )
     v = b.add(v, 4);
     v = b.mult(5, v);
     v = b.mult(v, b.div(v, 6));
+    v = (4+3) * 3 + 2 / 3 + 12 / 143;
     cout << v; 
 }
 
