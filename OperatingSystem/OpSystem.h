@@ -35,11 +35,13 @@ namespace OS {
 
 		//Disk management stuff
         void nvm_loadToFile( const std::string& nvmFname, const std::string fname );
+		void nvm_loadTxtFile(const std::string& nvmFname, const std::string fname );
         void cat( std::string fname );
 		void formatDisk();
         int chdir(const std::string& dir);
         void mkdir(const std::string& dir);
         void ls();
+		void rm(const std::string& name);
         // Gets current working directory
         std::string pwd();
 

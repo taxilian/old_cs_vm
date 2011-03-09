@@ -16,7 +16,7 @@ namespace VM {
         ~VirtualDisk(void);
 
         void ReadFromDisk(int block, size_t len, char* retPtr);
-        void WriteToDisk(int block, size_t len, char* data);
+        void WriteToDisk(int block, size_t len, const char* data);
         void Erase(int blockCount = DEFAULT_DISK_SIZE);
 
     private:

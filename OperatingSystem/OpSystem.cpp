@@ -82,6 +82,20 @@ void OS::OpSystem::nvm_loadToFile( const std::string& nvmFname, const std::strin
     fileSystem.WriteFile(cwd, fname, (char*)newMem.get(), memorySize + sizeof(startAddress)*2);
 }
 
+void OS::OpSystem::nvm_loadTxtFile(const std::string& nvmFname, const std::string fname )
+{
+	std::ifstream in(nvmFname);
+	std::string data;
+	std::string temp;
+	size_t size=0;
+	while(getline(in, temp))
+	{
+		data+= temp;
+		size+= temp.size();
+	}
+	fileSystem.WriteFile(cwd, fname, data.c_str(), size);
+}
+
 void OS::OpSystem::nvm_load( const std::string& pathfileName,const std::string& name)
 {
 	VM::MemoryBlock memory;
@@ -315,4 +329,9 @@ void OS::OpSystem::ls()
 void OS::OpSystem::cat( std::string fname )
 {
     fileSystem.catFile(cwd, fname);
+}
+
+void OS::OpSystem::rm(const std::string& name)
+{
+	fileSystem.rmDirLinFil(cwd, name);
 }

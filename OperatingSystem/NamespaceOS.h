@@ -58,6 +58,12 @@ namespace OS {
                 s >> directory;
                 mkdir(directory);
             }
+			else if(temp =="rm")
+			{
+				string name;//could be file, link or directory
+				s >> name;
+				sys->rm(name);
+			}
             else if(temp == "cat")
             {
                 string fname;
@@ -72,8 +78,15 @@ namespace OS {
             {
                 string src;
                 string dest;
-                s >> src >> dest;
-                sys->nvm_loadToFile(src, dest);
+				string temp = ".hexe";
+				s >> src >> dest;
+				size_t pos = src.find(temp);
+				if(pos != string::npos)
+				{
+					sys->nvm_loadToFile(src, dest);
+				}
+				else
+					sys->nvm_loadTxtFile(src,dest);
             }
             else if(temp == "load")
             {

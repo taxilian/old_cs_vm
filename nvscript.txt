@@ -1,0 +1,11 @@
+md noel
+cd noel
+!loadToFile text1.txt dtext1.txt
+!loadToFile text2.txt dtext2.txt
+!loadToFile text3.txt dtext3.txt
+cat dtext1.txt
+cat dtext2.txt
+cat dtext3.txt
+rm dtext2.txt
+cat dtext3.txt
+

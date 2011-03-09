@@ -277,7 +277,7 @@ uint64_t getCurrentTime()
     return x;
 }
 
-bool OS::FileSystem::WriteFile( int cwd, const std::string& file, char* data, size_t size )
+bool OS::FileSystem::WriteFile( int cwd, const std::string& file, const char* data, size_t size )
 {
     static char gData[blkSize] = {0}; // We'll use this for partial blocks
     // TODO: Find out if this file already exists in the directory; if so, overwrite it
@@ -380,5 +380,33 @@ void OS::FileSystem::readFileContents( Entry &entry, VM::MemoryBlock& mem, size_
 void OS::FileSystem::moveFile( int cwd, const std::string& src, const std::string& dest )
 {
     
+}
+
+void OS::FileSystem::rmDirLinFil(int _cwd, const std::string& name)
+{
+	OS::Directory dir = getDirectory(_cwd);
+	int size = sizeof(dir.entries)/sizeof(Entry);
+	bool found = false;
+	Entry _entry;
+	int i = 0;
+	for (i; i < size; i++)
+	{
+		if(dir.entries[i].name == name)
+		{
+			_entry = dir.entries[i];
+			found = true;
+			break;
+		}
+	}
+	if(found)
+	{
+		if(_entry.type == iNType::TYPE_file)
+		{
+			freeBlock(_entry.ptr);
+			Entry nullEntry = {TYPE_empty, {0}, 0};
+			dir.entries[i] = nullEntry;
+			saveDirectory(_cwd, dir);
+		}
+	}
 }
 

@@ -21,7 +21,7 @@ void VM::VirtualDisk::ReadFromDisk( int block, size_t len, char* retPtr )
     file.close();
 }
 
-void VM::VirtualDisk::WriteToDisk( int block, size_t len, char* data )
+void VM::VirtualDisk::WriteToDisk( int block, size_t len, const char* data )
 {
     fstream file(m_filename.c_str(), ios::in|ios::out|ios::binary);
     if (!file.is_open()) {

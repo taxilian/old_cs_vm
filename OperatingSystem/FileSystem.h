@@ -77,9 +77,10 @@ namespace OS {
         std::string GetDirectoryPath( int cwd );
 		void format();
         int GetDirectoryId( int cwd, const std::string& dir );
-        bool WriteFile( int cwd, const std::string& file, char* data, size_t size );
+        bool WriteFile( int cwd, const std::string& file, const char* data, size_t size );
         void listDirectory( int cwd );
         void catFile( int cwd, const std::string& file );
+		void rmDirLinFil(int _cwd, const std::string& name); 
 
         void moveFile( int cwd, const std::string& src, const std::string& dest );
 
