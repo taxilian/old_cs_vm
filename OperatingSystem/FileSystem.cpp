@@ -196,9 +196,13 @@ void OS::FileSystem::clearDirectoryEntry( int cwd, const std::string& fileName )
     for (int i = 0; i < maxEntriesPerBlock; i++) {
         if (dir.entries[i].name == fileName) {
             dir.entries[i]= nullEntry;
+			saveDirectory(cwd, dir);
+			return;
         }
     }
-	saveDirectory(cwd, dir);
+	if(dir.next)
+		clearDirectoryEntry(dir.next, fileName);
+	
 }
 
 std::string OS::FileSystem::GetDirectoryPath( int cwd )
@@ -419,7 +423,8 @@ void OS::FileSystem::rmDirLinFil(int _cwd, const std::string& name)
 		iNFile inode = getFileNode(entry.ptr);
 		for(int i = 0; i < fileDataBlks; i++)
 		{
-			freeBlock(inode.dataBLKS[i]);
+			if(inode.dataBLKS[i] > 0)
+				freeBlock(inode.dataBLKS[i]);
 		}
 		memset(&inode, 0, sizeof(inode));
 		saveFileNode(entry.ptr,inode);
