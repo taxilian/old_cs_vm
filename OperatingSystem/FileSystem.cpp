@@ -294,7 +294,11 @@ uint64_t getCurrentTime()
 bool OS::FileSystem::WriteFile( int cwd, const std::string& file, const char* data, size_t size )
 {
     static char gData[blkSize] = {0}; // We'll use this for partial blocks
-    // TODO: Find out if this file already exists in the directory; if so, overwrite it
+    
+    // Check if the file exists; if so, delete it first
+    if (fileExists(cwd, file))
+        rmDirLinFil(cwd, file);
+
     int iNodeIdx = findFreeINode();
     Entry fileEntry;
     fileEntry.ptr = iNodeIdx;
@@ -330,13 +334,10 @@ bool OS::FileSystem::WriteFile( int cwd, const std::string& file, const char* da
 
 void OS::FileSystem::catFile( int cwd, const std::string& file )
 {
-    boost::tuple<int, const std::string> resolved = resolvePath(cwd, file);
-    Entry entry = getDirectoryEntry(boost::get<0>(resolved), boost::get<1>(resolved));
+    Entry entry = getFileEntry(cwd, file);
     if (entry.type == TYPE_empty) {
         cout << "No such file" << endl;
         return;
-    } else if (entry.type != TYPE_file) {
-        cout << "Unsupported request" << endl;
     }
     VM::MemoryBlock blk;
     size_t size;
@@ -347,8 +348,8 @@ void OS::FileSystem::catFile( int cwd, const std::string& file )
 
 void OS::FileSystem::cpFile(int cwd, const std::string& file, const std::string& dest)
 {
-	boost::tuple<int, const std::string> resolvedFile = resolvePath(cwd, file);
-	boost::tuple<int, const std::string> resolvedDirectory = resolvePath(cwd, dest);
+	boost::tuple<int, std::string> resolvedFile = resolvePath(cwd, file);
+	boost::tuple<int, std::string> resolvedDirectory = resolvePath(cwd, dest);
     Entry entry = getDirectoryEntry(boost::get<0>(resolvedFile), boost::get<1>(resolvedFile));
     if (entry.type == TYPE_empty) {
         cout << "No such file" << endl;
@@ -368,7 +369,7 @@ void OS::FileSystem::mvFile(int cwd, const std::string& file, const std::string&
 	rmDirLinFil(cwd,file);
 }
 
-boost::tuple<int, const std::string> OS::FileSystem::resolvePath( int cwd, const std::string& fileName )
+boost::tuple<int, std::string> OS::FileSystem::resolvePath( int cwd, const std::string& fileName )
 {
     std::deque<std::string> dirs;
     boost::algorithm::split(dirs, fileName, boost::is_any_of("/"));
@@ -421,7 +422,7 @@ void OS::FileSystem::moveFile( int cwd, const std::string& src, const std::strin
 
 void OS::FileSystem::rmDirLinFil(int _cwd, const std::string& name)
 {
-	boost::tuple<int, const std::string> resolved = resolvePath(_cwd, name);
+	boost::tuple<int, std::string> resolved = resolvePath(_cwd, name);
     Entry entry = getDirectoryEntry(boost::get<0>(resolved), boost::get<1>(resolved));
 	if(entry.type == iNType::TYPE_file)
 	{
@@ -435,5 +436,53 @@ void OS::FileSystem::rmDirLinFil(int _cwd, const std::string& name)
 		saveFileNode(entry.ptr,inode);
 		clearDirectoryEntry(_cwd,name);
 	}
+}
+
+bool OS::FileSystem::fileExists( int cwd, const std::string filename )
+{
+    Entry entry = getFileEntry(cwd, filename);
+    if (entry.type == TYPE_file)
+        return true;
+    if (entry.type == TYPE_empty)
+        return false;
+    else
+        throw FileSystemError(filename + " is not a valid filename");
+}
+
+Entry OS::FileSystem::getFileEntry( int cwd, const std::string& file )
+{
+    boost::tuple<int, std::string> resolved = resolvePath(cwd, file);
+    Entry entry = getDirectoryEntry(boost::get<0>(resolved), boost::get<1>(resolved));
+    for (int n = 0; entry.type == TYPE_link && n < 20; ++n) {
+        // If this is a symlink, get the file it points to; loop so that if that is a symlink we
+        // get what it points to, etc.  keep a counter to detect recursive links
+        iNLink link = getLinkNode(entry.ptr);
+        resolved = resolvePath(boost::get<0>(resolved), link.pathName);
+        entry = getDirectoryEntry(boost::get<0>(resolved), boost::get<1>(resolved));
+    }
+    if (entry.type == TYPE_empty || entry.type == TYPE_file) {
+        return entry;
+    } else {
+        throw FileSystemError("Unsupported request");
+    }
+}
+
+size_t OS::FileSystem::getFileSize( int cwd, const std::string& filename )
+{
+    Entry entry = getFileEntry(cwd, filename);
+    if (entry.type == TYPE_empty)
+        return 0;
+    else {
+        iNFile node = getFileNode(entry.ptr);
+        return node.fileSize;
+    }
+}
+
+void OS::FileSystem::readFile( int cwd, const std::string& file, VM::MemoryBlock& block, size_t& size )
+{
+    Entry entry = getFileEntry(cwd, file);
+    if (entry.type != TYPE_empty) {
+        this->readFileContents(entry, block, size);
+    }
 }
 

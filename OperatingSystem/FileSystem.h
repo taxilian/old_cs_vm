@@ -80,11 +80,17 @@ namespace OS {
         bool WriteFile( int cwd, const std::string& file, const char* data, size_t size );
         void listDirectory( int cwd );
         void catFile( int cwd, const std::string& file );
-		void cpFile(int cwd, const std::string& file, const std::string& dest);
+
+        Entry getFileEntry( int cwd, const std::string& file );
+
+        void cpFile(int cwd, const std::string& file, const std::string& dest);
 		void mvFile(int cwd, const std::string& file, const std::string& dest);
 		void rmDirLinFil(int _cwd, const std::string& name); 
 
         void moveFile( int cwd, const std::string& src, const std::string& dest );
+        void readFile( int cwd, const std::string& filename, VM::MemoryBlock& block, size_t& size );
+        bool fileExists( int cwd, const std::string filename );
+        size_t getFileSize( int cwd, const std::string& filename );
 
     protected:
         Directory getDirectory(const uint32_t block);
@@ -102,7 +108,7 @@ namespace OS {
 		void clearDirectoryEntry(int parent, const std::string& fileName );
         boost::tuple<int, int> getINodeBlockAndOffset(int nodeNum);
         void readFileContents( Entry &entry, VM::MemoryBlock& mem, size_t& size );
-        boost::tuple<int, const std::string> resolvePath(int cwd, const std::string& fileName);
+        boost::tuple<int, std::string> resolvePath(int cwd, const std::string& fileName);
 
         template <class T>
         T getStructData(int block, int offset)
