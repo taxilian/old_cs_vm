@@ -331,6 +331,23 @@ void OS::FileSystem::catFile( int cwd, const std::string& file )
     cout << endl << "END OF FILE" << endl;
 }
 
+void OS::FileSystem::cpFile(int cwd, const std::string& file, const std::string& dest)
+{
+	boost::tuple<int, const std::string> resolvedFile = resolvePath(cwd, file);
+	boost::tuple<int, const std::string> resolvedDirectory = resolvePath(cwd, dest);
+    Entry entry = getDirectoryEntry(boost::get<0>(resolvedFile), boost::get<1>(resolvedFile));
+    if (entry.type == TYPE_empty) {
+        cout << "No such file" << endl;
+        return;
+    } else if (entry.type != TYPE_file) {
+        cout << "Unsupported request" << endl;
+    }
+    VM::MemoryBlock blk;
+    size_t size;
+    readFileContents(entry, blk, size);
+	WriteFile(boost::get<0>(resolvedDirectory), file, (char*)blk.get(), size);
+}
+
 boost::tuple<int, const std::string> OS::FileSystem::resolvePath( int cwd, const std::string& fileName )
 {
     std::deque<std::string> dirs;

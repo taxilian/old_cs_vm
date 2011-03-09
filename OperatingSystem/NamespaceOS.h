@@ -88,6 +88,13 @@ namespace OS {
 				else
 					sys->nvm_loadTxtFile(src,dest);
             }
+			else if(temp == "cp")
+			{
+				string file;
+				string dest;
+				s >> file >> dest;
+				sys->cp(file, dest);
+			}
             else if(temp == "load")
             {
                 string hexFile;
@@ -172,6 +179,7 @@ namespace OS {
             cout <<"changeAlg (1-4): Changes the scheduling algorithm\n";
             cout <<"printAlg: Displays the current scheduling algorithm\n";
             cout <<"priority: Sets the priority of a process. priority (process#) (priority)\n";
+			cout <<"cp: copies a file to another location. cp (file) (location)\n";
         }
 
         void nvm_ls(){

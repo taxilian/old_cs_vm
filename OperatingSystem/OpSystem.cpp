@@ -331,6 +331,11 @@ void OS::OpSystem::cat( std::string fname )
     fileSystem.catFile(cwd, fname);
 }
 
+void OS::OpSystem::cp(std::string fname, std::string location)
+{
+	fileSystem.cpFile(cwd, fname, location);
+}
+
 void OS::OpSystem::rm(const std::string& name)
 {
 	fileSystem.rmDirLinFil(cwd, name);

@@ -1,0 +1,10 @@
+md noel
+md bob
+ls
+cd noel
+!loadToFile text1.txt dtext1.txt
+ls
+cp dtext1.txt /bob/
+cd ..
+cd bob
+ls
