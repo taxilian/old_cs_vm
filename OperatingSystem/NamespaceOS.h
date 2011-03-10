@@ -195,6 +195,13 @@ namespace OS {
 			{
 				sys->du();
 			}
+			else if(temp == "touch")
+			{
+				string file;
+				string date;
+				s >> file >> date;
+				sys->touch(file,date);
+			}
             else
                 cout <<"command not defined" << endl;
         }
@@ -219,6 +226,7 @@ namespace OS {
 			cout <<"pwd: print the working directory.\n";
 			cout <<"df: shows amount of free disk space.\n";
 			cout <<"du: shows amount of used disk space.\n";
+			cout <<"touch: set the date of a file or create if doesn't exist. touch (file) (yyyy-mm-dd)\n";
         }
 
         void nvm_ls(){

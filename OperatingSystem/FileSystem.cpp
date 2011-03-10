@@ -220,13 +220,16 @@ std::string OS::FileSystem::GetDirectoryPath( int cwd )
 void OS::FileSystem::listDirectory( int cwd )
 {
     Directory dir = getDirectory(cwd);
+	iNFile temp;
     for (int i = 0; i < maxEntriesPerBlock; i++) {
         switch(dir.entries[i].type) {
         case TYPE_directory:
             cout << dir.entries[i].name << "/" << endl;
             break;
         case TYPE_file:
-            cout << dir.entries[i].name << endl;
+			temp = getFileNode(dir.entries[i].ptr);
+            cout << dir.entries[i].name << "\tCreation date: " << timeToString(temp.creationDate) << 
+				"\tModified date: " <<timeToString(temp.modifyDate)<<endl;
             break;
         default:
             break;
@@ -289,6 +292,28 @@ uint64_t getCurrentTime()
     ptime epoch(boost::gregorian::date(1970,1,1));
     time_duration::sec_type x = (t - epoch).total_seconds();
     return x;
+}
+
+string OS::FileSystem::timeToString(uint64_t& t)
+{
+	string temp;
+	using namespace boost::posix_time;
+	
+	ptime time(boost::gregorian::date(1970,1,1),seconds(t));
+	temp = to_simple_string(time);
+	return temp;
+}
+
+void OS::FileSystem::touchFile(int cwd, std::string& file, std::string& date)
+{
+	Entry entry = getDirectoryEntry(cwd,file);
+	iNFile infile = getFileNode(entry.ptr);
+	using namespace boost::posix_time;
+	ptime t(time_from_string(date));
+	ptime epoch(boost::gregorian::date(1970,3,25));
+	time_duration::sec_type x = (t - epoch).total_seconds();
+	infile.modifyDate = x;
+	saveFileNode(entry.ptr,infile);
 }
 
 bool OS::FileSystem::WriteFile( int cwd, const std::string& file, const char* data, size_t size )

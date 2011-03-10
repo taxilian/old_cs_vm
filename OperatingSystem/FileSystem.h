@@ -89,6 +89,7 @@ namespace OS {
 		void rmDirLinFil(int _cwd, const std::string& name);
 		void dfFile();
 		void duFile();
+		void touchFile(int cwd, std::string& file, std::string& date);
 
         void moveFile( int cwd, const std::string& src, const std::string& dest );
         void readFile( int cwd, const std::string& filename, VM::MemoryBlock& block, size_t& size );
@@ -113,6 +114,7 @@ namespace OS {
         boost::tuple<int, int> getINodeBlockAndOffset(int nodeNum);
         void readFileContents( Entry &entry, VM::MemoryBlock& mem, size_t& size );
         boost::tuple<int, std::string> resolvePath(int cwd, const std::string& fileName);
+		std::string timeToString(uint64_t& t);
 
         template <class T>
         T getStructData(int block, int offset)

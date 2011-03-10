@@ -48,6 +48,7 @@ namespace OS {
 		void rm(const std::string& name);
 		void df();
 		void du();
+		void touch(std::string fname, std::string date);
         // Gets current working directory
         std::string pwd();
 
