@@ -11,10 +11,11 @@ namespace OS {
         VirtualFileHandle(const std::string& filename, FileSystem* fs);
         ~VirtualFileHandle(void);
 
-        virtual void seek(int offset) = 0;
-        virtual int tell() = 0;
-        virtual void write(const char* bytes, size_t len) = 0;
-        virtual void read(char* bytes, size_t& len) = 0;
+        virtual void seek(int offset);
+        virtual int tell();
+        virtual void write(const char* bytes, size_t len);
+        virtual void read(char* bytes, size_t& len);
+        virtual std::string getFilename();
 
     private:
         const std::string m_filename;

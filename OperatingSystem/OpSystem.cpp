@@ -8,6 +8,7 @@
 #include <boost/cast.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include "VirtualFileHandle.h"
 #include "ProcScheduler.h"
 #include "OpSystem.h"
 
@@ -233,6 +234,13 @@ void OS::OpSystem::processEnd( VM::VMCore* vm )
 {// interrupt 0 / TRP 0
 	VM::VMState temp = vm->getRegisterState();
 	ProcessControlBlockPtr ptr(getProcess(temp.pid));
+    
+    // Close all open files
+    for (std::map<int, FileHandlePtr>::iterator it(fileTable.begin()); it != fileTable.end(); ++it) {
+        fileTable.erase(fileTable.find(it->first));
+    }
+    ptr->fileTable.clear();
+
 	ptr->setState(ProcessState_Terminating);
     ptr->vm_state = temp;
     vm->setRunning(false);
@@ -360,12 +368,12 @@ void OS::OpSystem::fsOpen( VM::VMCore* vm )
 	VM::VMState temp = vm->getRegisterState();
 	ProcessControlBlockPtr ptr(getProcess(temp.pid));
     char filename[80] = {0};
-    MemoryBlock b;
+    VM::MemoryBlock b;
     vm->readMemory(temp.reg[0], b, 80);
     b[79] = 0; // Just in case; make sure we don't read off into nowhere
-    strcpy(filename, b.get());
+    strcpy(filename, (const char*)b.get());
     if (!fileOpen(filename)) {
-        FileHandlePtr fhptr = boost::make_shared<VirtualFileHandle>(filename);
+        FileHandlePtr fhptr = boost::make_shared<VirtualFileHandle>(filename, &fileSystem);
         int fh = ++lastFH;
         ptr->fileTable[fh] = fhptr;
         fileTable[fh] = fhptr;
@@ -414,3 +422,15 @@ void OS::OpSystem::fsRead( VM::VMCore* vm )
 {
 
 }
+
+bool OS::OpSystem::fileOpen( const std::string& filename )
+{
+    for (std::map<int, OS::FileHandlePtr>::iterator it = fileTable.begin();
+        it != fileTable.end(); ++it) {
+        if (it->second->getFilename() == filename) {
+            return true;
+        }
+    }
+    return false;
+}
+

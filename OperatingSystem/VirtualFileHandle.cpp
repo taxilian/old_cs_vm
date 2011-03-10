@@ -59,3 +59,8 @@ void OS::VirtualFileHandle::read( char* bytes, size_t& len )
         memcpy(bytes, block.get() + pos, len);
     }
 }
+
+std::string OS::VirtualFileHandle::getFilename()
+{
+    return m_filename;
+}

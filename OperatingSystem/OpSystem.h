@@ -79,6 +79,7 @@ namespace OS {
                 container.push_back(*it);
             }
         }
+        bool fileOpen( const std::string& filename );
     private:
         static const int stackSize = 4096;
 		static const int heapSize = 1024;
