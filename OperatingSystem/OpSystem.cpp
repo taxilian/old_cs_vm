@@ -369,6 +369,7 @@ void OS::OpSystem::rm(const std::string& name)
 	fileSystem.rmDirLinFil(cwd, name);
 }
 
+<<<<<<< Updated upstream
 void OS::OpSystem::fsOpen( VM::VMCore* vm )
 {
 	VM::VMState temp = vm->getRegisterState();
@@ -454,3 +455,14 @@ bool OS::OpSystem::fileOpen( const std::string& filename )
     return false;
 }
 
+=======
+void OS::OpSystem::df()
+{
+	fileSystem.dfFile();
+}
+
+void OS::OpSystem::du()
+{
+	fileSystem.duFile();
+}
+>>>>>>> Stashed changes

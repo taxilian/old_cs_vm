@@ -187,6 +187,14 @@ namespace OS {
 				else
 					sys->free(pid); 
 			}
+			else if(temp == "df")
+			{
+				sys->df();
+			}
+			else if(temp == "du")
+			{
+				sys->du();
+			}
             else
                 cout <<"command not defined" << endl;
         }
@@ -209,6 +217,8 @@ namespace OS {
 			cout <<"head: show the first n lines of a file. head (file) (n)\n";
 			cout <<"tail: show the last n lines of a file. tail (file) (n)\n";
 			cout <<"pwd: print the working directory.\n";
+			cout <<"df: shows amount of free disk space.\n";
+			cout <<"du: shows amount of used disk space.\n";
         }
 
         void nvm_ls(){

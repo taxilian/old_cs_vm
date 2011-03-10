@@ -46,6 +46,8 @@ namespace OS {
         void mkdir(const std::string& dir);
         void ls();
 		void rm(const std::string& name);
+		void df();
+		void du();
         // Gets current working directory
         std::string pwd();
 

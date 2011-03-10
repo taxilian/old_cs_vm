@@ -493,6 +493,36 @@ void OS::FileSystem::rmDirLinFil(int _cwd, const std::string& name)
 	}
 }
 
+int OS::FileSystem::totalFreeBlocks()
+{
+	unsigned char data[blkSize];
+	int freeBlocks = 0;
+	for(int i = 1; i < VM::VirtualDisk::DEFAULT_DISK_SIZE; i++)
+	{
+        disk->ReadFromDisk(i, 1, reinterpret_cast<char*>(data));
+        if (data[0] == 0xF0
+            && data[1] == 0xF2
+            && data[2] == 0xF1
+            && data[3] == 0xF3) {
+            freeBlocks++;
+        }
+	}
+	return freeBlocks;
+}
+
+void OS::FileSystem::dfFile()
+{
+	int freeBlocks = totalFreeBlocks();
+	cout << freeBlocks * blkSize << " bytes free" << endl;
+}
+
+void OS::FileSystem::duFile()
+{
+	int freeBlocks = totalFreeBlocks();
+	int usedBlocks = VM::VirtualDisk::DEFAULT_DISK_SIZE - freeBlocks;
+	cout << usedBlocks * blkSize << " bytes used" << endl;
+}
+
 bool OS::FileSystem::fileExists( int cwd, const std::string filename )
 {
     Entry entry = getFileEntry(cwd, filename);

@@ -86,7 +86,9 @@ namespace OS {
 
         void cpFile(int cwd, const std::string& file, const std::string& dest);
 		void mvFile(int cwd, const std::string& file, const std::string& dest);
-		void rmDirLinFil(int _cwd, const std::string& name); 
+		void rmDirLinFil(int _cwd, const std::string& name);
+		void dfFile();
+		void duFile();
 
         void moveFile( int cwd, const std::string& src, const std::string& dest );
         void readFile( int cwd, const std::string& filename, VM::MemoryBlock& block, size_t& size );
@@ -102,6 +104,7 @@ namespace OS {
         void saveLinkNode( const uint32_t iNodeNum, const iNLink& node);
         int findFreeINode();
         uint32_t findFreeBlock();
+		int totalFreeBlocks();
         void freeBlock(uint32_t num);
         void addDirectoryEntry( const uint32_t dirBlock, const Entry& entry );
         Entry getDirectoryEntry( int parent, int blockNumber );
