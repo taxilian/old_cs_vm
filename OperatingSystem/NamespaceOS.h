@@ -46,6 +46,10 @@ namespace OS {
             {
                 cout << cwd.string() << endl;
             }
+			else if(temp == "pwd")
+			{
+				cout << sys->pwd() << endl;
+			}
             else if(temp == "cd")
             {
                 string directory;
@@ -76,6 +80,13 @@ namespace OS {
 				int n = 0;
 				s >> fname >> n;
 				sys->head(fname, n);
+			}
+			else if(temp == "tail")
+			{//tail (file) (n)
+				string fname;
+				int n = 0;
+				s >> fname >> n;
+				sys->tail(fname, n);
 			}
             else if(temp == "ls" || temp == "dir")
             {
@@ -196,6 +207,8 @@ namespace OS {
 			cout <<"cp: copies a file to another location. cp (file) (location)\n";
 			cout <<"mv: moves a file to another location. mv (file) (location)\n";
 			cout <<"head: show the first n lines of a file. head (file) (n)\n";
+			cout <<"tail: show the last n lines of a file. tail (file) (n)\n";
+			cout <<"pwd: print the working directory.\n";
         }
 
         void nvm_ls(){

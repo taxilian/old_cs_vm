@@ -92,7 +92,6 @@ void OS::OpSystem::nvm_loadTxtFile(const std::string& nvmFname, const std::strin
 		data+= temp;
 		data.append("\n");
 	}
-	data.erase(data.end() -1);
 	fileSystem.WriteFile(cwd, fname, data.c_str(), data.size());
 }
 
@@ -334,6 +333,11 @@ void OS::OpSystem::cat( std::string fname )
 void OS::OpSystem::head(std::string fname, int n)
 {
 	fileSystem.headFile(cwd,fname,n);
+}
+
+void OS::OpSystem::tail(std::string fname, int n)
+{
+	fileSystem.tailFile(cwd,fname,n);
 }
 
 void OS::OpSystem::cp(std::string fname, std::string location)
