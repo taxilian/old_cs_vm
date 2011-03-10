@@ -8,6 +8,7 @@
 #include <map>
 #include "VMCore.h"
 #include "HeapMgr.h"
+#include "FileHandle.h"
 
 namespace OS {
     enum ProcessState {
@@ -62,6 +63,7 @@ namespace OS {
         boost::posix_time::ptime ptime;
         StateClock stateClock;
         boost::posix_time::ptime totalTime;
+        std::map<int, FileHandlePtr> fileTable;
     };
 };
 

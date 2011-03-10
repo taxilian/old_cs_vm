@@ -54,6 +54,7 @@ namespace VM {
 
         virtual void resetRunningTime() { runningTime *= 0; }
         virtual boost::posix_time::time_duration getRunningTime() { return runningTime; }
+        virtual void readMemory(const uint32_t addr, MemoryBlock& memory, size_t size);
         // End VMCore methods
 
     protected:

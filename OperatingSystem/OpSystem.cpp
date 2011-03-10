@@ -17,7 +17,7 @@ using VM::VMCore;
 
 OpSystem::OpSystem(VM::VMCore* vm, VM::VirtualDisk* vd) :
     m_lastLoadAddr(0), m_vm(vm), fileSystem(vd), m_lastPid(1),sysMemMgr(m_vm->getMemorySize(), 0),
-    m_scheduler(new ProcScheduler(this, vm)), cwd(0)
+    m_scheduler(new ProcScheduler(this, vm)), cwd(0), lastFH(0)
 {
     // Register any special traps here
     vm->registerInterrupt(0, boost::bind(&OpSystem::processEnd, this, _1));
@@ -349,4 +349,64 @@ void OS::OpSystem::mv(std::string fname, std::string location)
 void OS::OpSystem::rm(const std::string& name)
 {
 	fileSystem.rmDirLinFil(cwd, name);
+}
+
+void OS::OpSystem::fsOpen( VM::VMCore* vm )
+{
+	VM::VMState temp = vm->getRegisterState();
+	ProcessControlBlockPtr ptr(getProcess(temp.pid));
+    char filename[80] = {0};
+    MemoryBlock b;
+    vm->readMemory(temp.reg[0], b, 80);
+    b[79] = 0; // Just in case; make sure we don't read off into nowhere
+    strcpy(filename, b.get());
+    if (!fileOpen(filename)) {
+        FileHandlePtr fhptr = boost::make_shared<VirtualFileHandle>(filename);
+        int fh = ++lastFH;
+        ptr->fileTable[fh] = fhptr;
+        fileTable[fh] = fhptr;
+        temp.reg[0] = fh;
+    } else {
+        temp.reg[0] = 0;
+    }
+    vm->setRegisterState(temp);
+}
+
+void OS::OpSystem::fsClose( VM::VMCore* vm )
+{
+	VM::VMState temp = vm->getRegisterState();
+	ProcessControlBlockPtr ptr(getProcess(temp.pid));
+    int fh = temp.reg[0];
+    if (ptr->fileTable.find(fh) != ptr->fileTable.end()) {
+        ptr->fileTable.erase(ptr->fileTable.find(fh));
+        fileTable.erase(fileTable.find(fh));
+    }
+}
+
+void OS::OpSystem::fsSeek( VM::VMCore* vm )
+{
+	VM::VMState temp = vm->getRegisterState();
+	ProcessControlBlockPtr ptr(getProcess(temp.pid));
+    int fh = temp.reg[0];
+    int pos = temp.reg[1];
+    ptr->fileTable[fh]->seek(pos);
+}
+
+void OS::OpSystem::fsLoc( VM::VMCore* vm )
+{
+	VM::VMState temp = vm->getRegisterState();
+	ProcessControlBlockPtr ptr(getProcess(temp.pid));
+    int fh = temp.reg[0];
+    temp.reg[0] = ptr->fileTable[fh]->tell();
+    vm->setRegisterState(temp);
+}
+
+void OS::OpSystem::fsWrite( VM::VMCore* vm )
+{
+
+}
+
+void OS::OpSystem::fsRead( VM::VMCore* vm )
+{
+
 }

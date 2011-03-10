@@ -12,4 +12,5 @@ namespace OS {
         virtual void write(const char* bytes, size_t len) = 0;
         virtual void read(char* bytes, size_t& len) = 0;
     };
+    typedef boost::shared_ptr<FileHandle> FileHandlePtr;
 };

@@ -21,4 +21,5 @@ namespace OS {
         FileSystem* fs;
         size_t pos;
     };
+    typedef boost::shared_ptr<VirtualFileHandle> VFHandlerPtr;
 };

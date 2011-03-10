@@ -164,6 +164,14 @@ void VM::VirtualMachine::configureScheduler( const int baseTicks, const double v
     sched_interrupt = interrupt;
 }
 
+void VM::VirtualMachine::readMemory( const uint32_t addr, MemoryBlock& memory, size_t size )
+{
+    if (!memory) {
+        memory = MemoryBlock(new uint8_t[size]);
+    }
+    memcpy(memory.get(), m_block.get() + offset, size);
+}
+
 std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
     std::map<boost::uint32_t, std::string>::iterator fnd = labelReverse.find(addr);
     std::string out;

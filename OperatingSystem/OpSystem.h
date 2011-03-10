@@ -35,7 +35,7 @@ namespace OS {
 
 		//Disk management stuff
         void nvm_loadToFile( const std::string& nvmFname, const std::string fname );
-		void nvm_loadTxtFile(const std::string& nvmFname, const std::string fname );
+		void nvm_loadTxtFile( const std::string& nvmFname, const std::string fname );
         void cat( std::string fname );
 		void head(std::string fname, int n);
 		void cp(std::string fname, std::string location);
@@ -54,6 +54,13 @@ namespace OS {
 		void processFree(VM::VMCore* vm);
 		void processYield(VM::VMCore* vm);
         void processEnd(VM::VMCore* vm);
+
+        void fsOpen(VM::VMCore* vm);
+        void fsClose(VM::VMCore* vm);
+        void fsSeek(VM::VMCore* vm);
+        void fsLoc(VM::VMCore* vm);
+        void fsWrite(VM::VMCore* vm);
+        void fsRead(VM::VMCore* vm);
 
         void runScheduler(VM::VMCore* vm);
 
@@ -84,6 +91,8 @@ namespace OS {
         int m_processCount;
         friend class ProcScheduler;
         int cwd;
+        int lastFH;
+        std::map<int, FileHandlePtr> fileTable;
     };
 }
 #endif // OpSystem_h__
