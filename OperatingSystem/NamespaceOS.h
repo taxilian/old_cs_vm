@@ -70,6 +70,13 @@ namespace OS {
                 s >> fname;
                 sys->cat(fname);
             }
+			else if(temp == "head")
+			{//head (file) (n)
+				string fname;
+				int n = 0;
+				s >> fname >> n;
+				sys->head(fname, n);
+			}
             else if(temp == "ls" || temp == "dir")
             {
                 sys->ls();
@@ -188,6 +195,7 @@ namespace OS {
             cout <<"priority: Sets the priority of a process. priority (process#) (priority)\n";
 			cout <<"cp: copies a file to another location. cp (file) (location)\n";
 			cout <<"mv: moves a file to another location. mv (file) (location)\n";
+			cout <<"head: show the first n lines of a file. head (file) (n)\n";
         }
 
         void nvm_ls(){

@@ -37,6 +37,7 @@ namespace OS {
         void nvm_loadToFile( const std::string& nvmFname, const std::string fname );
 		void nvm_loadTxtFile(const std::string& nvmFname, const std::string fname );
         void cat( std::string fname );
+		void head(std::string fname, int n);
 		void cp(std::string fname, std::string location);
 		void mv(std::string fname, std::string location);
 		void formatDisk();

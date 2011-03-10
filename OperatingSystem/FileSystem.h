@@ -80,6 +80,7 @@ namespace OS {
         bool WriteFile( int cwd, const std::string& file, const char* data, size_t size );
         void listDirectory( int cwd );
         void catFile( int cwd, const std::string& file );
+		void headFile(int cwd, const std::string& file, int n);
 		void cpFile(int cwd, const std::string& file, const std::string& dest);
 		void mvFile(int cwd, const std::string& file, const std::string& dest);
 		void rmDirLinFil(int _cwd, const std::string& name); 

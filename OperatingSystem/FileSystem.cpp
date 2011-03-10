@@ -345,6 +345,32 @@ void OS::FileSystem::catFile( int cwd, const std::string& file )
     cout << endl << "END OF FILE" << endl;
 }
 
+void OS::FileSystem::headFile(int cwd, const std::string& file, int n)
+{
+	boost::tuple<int, const std::string> resolved = resolvePath(cwd, file);
+    Entry entry = getDirectoryEntry(boost::get<0>(resolved), boost::get<1>(resolved));
+    if (entry.type == TYPE_empty) {
+        cout << "No such file" << endl;
+        return;
+    } else if (entry.type != TYPE_file) {
+        cout << "Unsupported request" << endl;
+    }
+    VM::MemoryBlock blk;
+    size_t size;
+    readFileContents(entry, blk, size);
+	string temp;
+	int m = 0;
+	for (int i = 0; i < size; i++)
+	{
+		if(m >= n)
+			break;
+		else
+			cout << blk[i];
+		if(blk[i] == '\n')
+			++m;
+	}
+}
+
 void OS::FileSystem::cpFile(int cwd, const std::string& file, const std::string& dest)
 {
 	boost::tuple<int, const std::string> resolvedFile = resolvePath(cwd, file);
