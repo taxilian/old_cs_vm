@@ -169,7 +169,12 @@ void VM::VirtualMachine::readMemory( const uint32_t addr, MemoryBlock& memory, s
     if (!memory) {
         memory = MemoryBlock(new uint8_t[size]);
     }
-    memcpy(memory.get(), m_block.get() + offset, size);
+    memcpy(memory.get(), m_block.get() + offset + addr, size);
+}
+
+void VM::VirtualMachine::writeMemory( const uint32_t addr, const char* memory, size_t size )
+{
+    memcpy(m_block.get() + offset + addr, memory, size);
 }
 
 std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {

@@ -68,6 +68,7 @@ namespace VM {
 
         virtual uint32_t getMemorySize() = 0;
         virtual void readMemory(const uint32_t addr, MemoryBlock& memory, size_t size) = 0;
+        virtual void writeMemory(const uint32_t addr, const char* memory, size_t size) = 0;
 
         virtual void registerInterrupt(int trap, const InterruptHandler& handler) = 0;
 

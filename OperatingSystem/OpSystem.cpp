@@ -27,7 +27,13 @@ OpSystem::OpSystem(VM::VMCore* vm, VM::VirtualDisk* vd) :
     vm->registerInterrupt(7, boost::bind(&OpSystem::processYield, this, _1));
 
     vm->configureScheduler(50, 0.5, boost::bind(&OpSystem::runScheduler, this, _1));
-	
+
+    vm->registerInterrupt(11, boost::bind(&OpSystem::fsOpen, this, _1));
+    vm->registerInterrupt(12, boost::bind(&OpSystem::fsClose, this, _1));
+    vm->registerInterrupt(13, boost::bind(&OpSystem::fsSeek, this, _1));
+    vm->registerInterrupt(14, boost::bind(&OpSystem::fsTell, this, _1));
+    vm->registerInterrupt(15, boost::bind(&OpSystem::fsWrite, this, _1));
+    vm->registerInterrupt(16, boost::bind(&OpSystem::fsRead, this, _1));
 }
 
 
@@ -404,7 +410,7 @@ void OS::OpSystem::fsSeek( VM::VMCore* vm )
     ptr->fileTable[fh]->seek(pos);
 }
 
-void OS::OpSystem::fsLoc( VM::VMCore* vm )
+void OS::OpSystem::fsTell( VM::VMCore* vm )
 {
 	VM::VMState temp = vm->getRegisterState();
 	ProcessControlBlockPtr ptr(getProcess(temp.pid));
@@ -415,12 +421,26 @@ void OS::OpSystem::fsLoc( VM::VMCore* vm )
 
 void OS::OpSystem::fsWrite( VM::VMCore* vm )
 {
-
+	VM::VMState temp = vm->getRegisterState();
+	ProcessControlBlockPtr ptr(getProcess(temp.pid));
+    VM::MemoryBlock b;
+    int fh = temp.reg[0];
+    vm->readMemory(temp.reg[1], b, temp.reg[2]);
+    ptr->fileTable[fh]->write((const char*)b.get(), temp.reg[2]);
+    vm->setRegisterState(temp);
 }
 
 void OS::OpSystem::fsRead( VM::VMCore* vm )
 {
-
+	VM::VMState temp = vm->getRegisterState();
+	ProcessControlBlockPtr ptr(getProcess(temp.pid));
+    VM::MemoryBlock b(new uint8_t[2048]);
+    int fh = temp.reg[0];
+    size_t size(temp.reg[2]);
+    ptr->fileTable[fh]->read((char*)b.get(), size);
+    temp.reg[2] = size;
+    vm->writeMemory(temp.reg[1], (const char*)b.get(), temp.reg[2]);
+    vm->setRegisterState(temp);
 }
 
 bool OS::OpSystem::fileOpen( const std::string& filename )

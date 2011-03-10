@@ -59,7 +59,7 @@ namespace OS {
         void fsOpen(VM::VMCore* vm);
         void fsClose(VM::VMCore* vm);
         void fsSeek(VM::VMCore* vm);
-        void fsLoc(VM::VMCore* vm);
+        void fsTell(VM::VMCore* vm);
         void fsWrite(VM::VMCore* vm);
         void fsRead(VM::VMCore* vm);
 
