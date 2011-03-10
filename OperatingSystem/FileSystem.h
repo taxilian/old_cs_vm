@@ -81,6 +81,7 @@ namespace OS {
         void listDirectory( int cwd );
         void catFile( int cwd, const std::string& file );
 		void headFile(int cwd, const std::string& file, int n);
+		void tailFile(int cwd, const std::string& file, int n);
         Entry getFileEntry( int cwd, const std::string& file );
 
         void cpFile(int cwd, const std::string& file, const std::string& dest);

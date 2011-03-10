@@ -359,7 +359,6 @@ void OS::FileSystem::headFile(int cwd, const std::string& file, int n)
     VM::MemoryBlock blk;
     size_t size;
     readFileContents(entry, blk, size);
-	string temp;
 	int m = 0;
 	for (int i = 0; i < size; i++)
 	{
@@ -371,7 +370,37 @@ void OS::FileSystem::headFile(int cwd, const std::string& file, int n)
 			++m;
 	}
 }
-
+void OS::FileSystem::tailFile(int cwd, const std::string& file, int n)
+{
+	boost::tuple<int, const std::string> resolved = resolvePath(cwd, file);
+    Entry entry = getDirectoryEntry(boost::get<0>(resolved), boost::get<1>(resolved));
+    if (entry.type == TYPE_empty) {
+        cout << "No such file" << endl;
+        return;
+    } else if (entry.type != TYPE_file) {
+        cout << "Unsupported request" << endl;
+    }
+    VM::MemoryBlock blk;
+    size_t size;
+    readFileContents(entry, blk, size);
+	string temp;
+	std::vector<string> container;
+	int m = 0;
+	for (int i = 0; i < size; i++)
+	{
+		temp.append(1,blk[i]);
+		if(blk[i] == '\n')
+		{
+			container.push_back(temp);
+			temp.erase();
+			++m;
+		}
+	}
+	for(int i = container.size() - n; i < container.size(); i++)
+	{
+		cout << container[i];
+	}
+}
 void OS::FileSystem::cpFile(int cwd, const std::string& file, const std::string& dest)
 {
 	boost::tuple<int, std::string> resolvedFile = resolvePath(cwd, file);
