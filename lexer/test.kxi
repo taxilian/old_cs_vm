@@ -11,13 +11,30 @@ void main( )
     v = b.mult(5, v);
     v = b.mult(v, b.div(v, 6));
     v = (4+3) * 3 + 2 / 3 + 12 / 143;
+    v = b.getTest().x;
+    v = b.getTest().copy(3,4);
     cout << v; 
 }
 
+class Test2 {
+    public int i = 0;
+    public int x = 1;
+    private int z = -5;
+
+    public Test2(int x, int z) {
+        this.x = x;
+        this.z = z;
+    }
+    public int copy(int a, int b) { return a * b; }
+}
+
 class Calculator {
+    private Test2 test = new Test2(5, 9);
+
     public Calculator() {}
     public int add(int a, int b) { return a+b; }
     public int sub(int a, int b) { return a-b; }
     public int mult(int a, int b) { return a*b; }
     public int div(int a, int b) { return a/b; }
+    public Test2 getTest() { return test; }
 }

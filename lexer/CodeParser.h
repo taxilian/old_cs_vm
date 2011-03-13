@@ -145,8 +145,10 @@ protected:
         return tmp;
     }
     std::string getScopeType( const SARPtr& sar );
+    std::string getScopeType( const std::string& addr );
     bool compatibleTypes( const SARPtr& sar1, const SARPtr& sar2 );
     bool findFunction( const std::string& scope, const std::string& name, const boost::shared_ptr<argList_SAR>& argList );
+    std::string findClass();
 private:
     LexicalParser* lexer;
     std::set<std::string> validKeywords;

@@ -37,9 +37,9 @@ struct var_SAR : public typedSAR
     var_SAR(const std::string& val, const std::string& type) : typedSAR(val, type) {}
 };
 
-struct ref_SAR : public SAR
+struct ref_SAR : public typedSAR
 {
-    ref_SAR(const std::string& val) : SAR(val) {}
+    ref_SAR(const std::string& val, const std::string& type) : typedSAR(val, type) {}
 };
 
 struct begArgList_SAR : public SAR

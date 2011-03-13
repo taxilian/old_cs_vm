@@ -26,7 +26,6 @@ CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(
     validKeywords.insert("object");
     validKeywords.insert("return");
     validKeywords.insert("string");
-    validKeywords.insert("this");
     validKeywords.insert("true");
     validKeywords.insert("while");
 
@@ -66,6 +65,7 @@ CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(
     operatorPrecedence["||"] = 5;
     operatorPrecedence["="] = 6;
     operatorPrecedence[","] = 7;
+    operatorPrecedence["("] = 7;
 }
 
 
@@ -313,8 +313,8 @@ void CodeParser::class_declaration()
         symb->scope = getScopeString();
         symb->value = lastSeenName;
         registerSymbol(symb);
-        current_scope.push_back(lastSeenName);
     }
+    current_scope.push_back(lastSeenName);
     assert_type_value(TT_GROUPOPEN, "{");
     lexer->nextToken();
     class_member_declaration();
@@ -347,6 +347,7 @@ void CodeParser::class_member_declaration()
 
 void CodeParser::constructor_declaration()
 {
+    // TODO: This is where I left off - 3/12/2011
     class_name();
     if (pass2())
         ctordecl(lastSeenName);
@@ -371,6 +372,9 @@ void CodeParser::constructor_declaration()
         registerSymbol(symb);
     }
     assert_type_value(TT_GROUPCLOSE, ")");
+    if (pass2()) {
+        closeParen();
+    }
     lexer->nextToken();
     current_scope.push_back(lastSeenFunction);
     method_body();
@@ -642,8 +646,6 @@ void CodeParser::expression()
             expressionz();
     } else {
         identifier();
-        if (pass2())
-            idPush(lastSeenName);
         if (lexer->current().type == TT_GROUPOPEN) {
             fn_arr_member();
         }
@@ -735,9 +737,7 @@ void CodeParser::expressionz()
 void CodeParser::assignment_expression()
 {
     const std::string& curTxt = lexer->current().text;
-    if (curTxt == "this") {
-        lexer->nextToken();
-    } else if (curTxt == "new") {
+    if (curTxt == "new") {
         lexer->nextToken();
         type();
         new_declaration();
@@ -800,17 +800,12 @@ void CodeParser::member_refz()
     assert_type_value(TT_OPERATOR, ".");
     lexer->nextToken();
     if (pass2()) {
-        idExist();
         opPush(".");
     }
     identifier();
-    if (pass2())
-        idPush(lastSeenName);
     if (lexer->current().type == TT_GROUPOPEN) {
         fn_arr_member();
     }
-    if (pass2())
-        refExist();
     if (lexer->current().type == TT_OPERATOR && lexer->current().text == ".") {
         member_refz();
     }
@@ -948,16 +943,24 @@ void CodeParser::varPush( const std::string& name )
     saStack.push_back(boost::make_shared<var_SAR>(sar1->value, sar2->value));
 }
 
+std::string CodeParser::getScopeType( const std::string& scopeStr )
+{
+    std::map<std::string, SymbolEntryPtr>::iterator fnd = symbol_name_map.find(scopeStr);
+    if(fnd->second->kind == "variable") {
+        boost::shared_ptr<TypeData> td(boost::dynamic_pointer_cast<TypeData>(fnd->second->data));
+        return td->type;
+    } else if (fnd->second->kind == "method") {
+        MethodDataPtr methoddata = as<MethodData>(fnd->second->data);
+        return methoddata->returnType;
+    }
+    assert(false);
+    return "";
+}
 std::string CodeParser::getScopeType( const SARPtr& sar )
 {
     if (is_a<id_SAR>(sar)) {
         std::string scopeStr = getScopeString() + "." + sar->value;
-        std::map<std::string, SymbolEntryPtr>::iterator fnd = symbol_name_map.find(scopeStr);
-        if(fnd->second->kind == "variable") {
-            boost::shared_ptr<TypeData> td(boost::dynamic_pointer_cast<TypeData>(fnd->second->data));
-            return td->type;
-        }
-        return fnd->second->kind;
+        return getScopeType(scopeStr);
     } else if (is_a<typedSAR>(sar)) {
         return as<typedSAR>(sar)->getType();
     } else {
@@ -971,14 +974,22 @@ bool CodeParser::idExist()
     SARPtr sar(saPop());
     assert(is_a<id_SAR>(sar));
 
-    if (opStack.back() == ".") {
+    if (opStack.size() && opStack.back() == ".") {
         processOperatorStack();
         assert(is_a<ref_SAR>(saStack.back()));
+        boost::shared_ptr<ref_SAR> rsar(as<ref_SAR>(saStack.back()));
+
     } else {
-        std::string scopeStr = getScopeString() + "." + sar->value;
-        if (symbol_name_map.find(scopeStr) == symbol_name_map.end())
-            throw SyntaxParserException("Undefined symbol: " + sar->value);
-        saStack.push_back(sar); // If it exists, push it back onto the stack
+        if (sar->value == "this") {
+            std::string type(findClass());
+            boost::shared_ptr<var_SAR> vsar(boost::make_shared<var_SAR>("this", type));
+            saStack.push_back(vsar);
+        } else {
+            std::string scopeStr = getScopeString() + "." + sar->value;
+            if (symbol_name_map.find(scopeStr) == symbol_name_map.end())
+                throw SyntaxParserException("Undefined symbol: " + sar->value);
+            saStack.push_back(sar); // If it exists, push it back onto the stack
+        }
     }
     return true;
 }
@@ -1008,14 +1019,8 @@ void CodeParser::end_of_expr()
 {
     SARPtr sar(saStack.back());
     
-    if (is_a<var_SAR>(sar) && opStack.back() == "=") {
-        saStack.pop_back();
-        opPop();
-        // TODO: Initialize new variable
-    } else {
-        while (!opStack.empty()) {
-            processOperatorStack();
-        }
+    while (!opStack.empty()) {
+        processOperatorStack();
     }
 }
 
@@ -1055,7 +1060,17 @@ void CodeParser::endArgList()
 
 void CodeParser::func_sa()
 {
-    throw std::runtime_error("Not implemented");
+    boost::shared_ptr<argList_SAR> argList(as<argList_SAR>(saPop()));
+    SARPtr funcnamesar(saPop());
+    SARPtr varsar(saPop());
+    std::string type = getScopeType(varsar);
+    std::string scope = "g." + type;
+    if (!findFunction(scope, funcnamesar->value, argList)) {
+        throw SyntaxParserException("Cannot find a method matching " + type + " with these arguments");
+    }
+    // TODO: Add code to call function
+    tempPush(getScopeType(scope + "." + funcnamesar->value));
+    opPop();
 }
 
 void CodeParser::arr_sa()
@@ -1178,9 +1193,8 @@ void CodeParser::processOperatorStack()
         SARPtr rval(saPop());
         SARPtr lval(saPop());
         // Assignment to new variable
-        boost::shared_ptr<var_SAR> ptr(as<var_SAR>(lval));
-        if (!compatibleTypes(ptr, rval)) {
-            throw SyntaxParserException("Unexpected rval does not match type: " + ptr->type);
+        if (!compatibleTypes(lval, rval)) {
+            throw SyntaxParserException("Unexpected rval does not match type: " + getScopeType(lval));
         } else {
             // TODO: Handle assignment
         }
@@ -1188,12 +1202,31 @@ void CodeParser::processOperatorStack()
         assert(saStack.size() > 1);
         SARPtr rval(saPop());
         SARPtr lval(saPop());
+        boost::shared_ptr<ref_SAR> ref;
 
-        if (is_a<id_SAR>(lval)) {
-            std::string type = getScopeType(lval);
-            std::string scopeStr = "g." + type;
-            assert (symbol_name_map.find(scopeStr) == symbol_name_map.end());
+        std::string type = getScopeType(lval);
+        std::string scopeStr = "g." + type + "." + rval->value;
+        assert (symbol_name_map.find(scopeStr) != symbol_name_map.end());
+        std::string rvalType = getScopeType(scopeStr);
+        tempPush(rvalType);
+    }
+}
+
+std::string CodeParser::findClass()
+{
+    std::string str(getScopeString());
+    int n=0;
+    for (unsigned int i = 0; i < str.size(); ++i) {
+        if (str[i] == '.') ++n;
+        if (n > 1) {
+            str[i] = 0; // Terminate the string here
         }
+    }
+    str = str.c_str();
+    if (symbol_name_map[str.c_str()]->kind == "class") {
+        return symbol_name_map[str]->value;
+    } else {
+        return "";
     }
 }
 
