@@ -228,7 +228,13 @@ void OS::FileSystem::listDirectory( int cwd )
             break;
         case TYPE_file:
 			temp = getFileNode(dir.entries[i].ptr);
-            cout << dir.entries[i].name << "\tCreation date: " << timeToString(temp.creationDate) << 
+			cout << dir.entries[i].name << " size: " << temp.fileSize <<"\tCreation date: " << timeToString(temp.creationDate) << 
+				"\tModified date: " <<timeToString(temp.modifyDate)<<endl;
+            break;
+		case TYPE_link:
+			iNLink temp;
+			temp = getLinkNode(dir.entries[i].ptr);
+			cout << dir.entries[i].name << " size: " << temp.fileSize << "\tCreation date: " << timeToString(temp.creationDate) << 
 				"\tModified date: " <<timeToString(temp.modifyDate)<<endl;
             break;
         default:
@@ -316,6 +322,38 @@ void OS::FileSystem::touchFile(int cwd, std::string& file, std::string& date)
 	saveFileNode(entry.ptr,infile);
 }
 
+void OS::FileSystem::lnFile(int cwd, std::string& file, std::string& lname, std::string& sym)
+{
+	
+	if(sym=="-s")
+	{
+		int iNodeIdx = findFreeINode();
+		Entry linkEntry;
+		linkEntry.ptr = iNodeIdx;
+		strcpy(linkEntry.name, lname.c_str());
+		linkEntry.type = TYPE_link;
+		iNLink inode;
+		memset(&inode, 0, sizeof(inode));
+		inode.creationDate = getCurrentTime();
+		inode.modifyDate = getCurrentTime();
+		inode.fileSize = file.size();
+		strcpy(inode.pathName, file.c_str());
+		inode.refCount = 1;
+		saveLinkNode(iNodeIdx, inode);
+		addDirectoryEntry(cwd, linkEntry);
+	}
+	else
+	{
+		boost::tuple<int, const std::string> resolved = resolvePath(cwd, file);
+		Entry entry = getDirectoryEntry(boost::get<0>(resolved), boost::get<1>(resolved));
+		iNFile inode = getFileNode(entry.ptr);
+		inode.refCount++;
+		saveFileNode(entry.ptr,inode);
+		strcpy(entry.name, lname.c_str());
+		addDirectoryEntry(cwd,entry);
+	}
+}
+
 bool OS::FileSystem::WriteFile( int cwd, const std::string& file, const char* data, size_t size )
 {
     static char gData[blkSize] = {0}; // We'll use this for partial blocks
@@ -360,10 +398,17 @@ bool OS::FileSystem::WriteFile( int cwd, const std::string& file, const char* da
 void OS::FileSystem::catFile( int cwd, const std::string& file )
 {
     Entry entry = getFileEntry(cwd, file);
+
     if (entry.type == TYPE_empty) {
         cout << "No such file" << endl;
         return;
     }
+	if (entry.type == TYPE_link) {
+		iNLink temp = getLinkNode(entry.ptr);
+		boost::tuple<int, const std::string> resolved = resolvePath(cwd, temp.pathName);
+		catFile(boost::get<0>(resolved), boost::get<1>(resolved));
+		return;
+	}
     VM::MemoryBlock blk;
     size_t size;
     readFileContents(entry, blk, size);
@@ -507,14 +552,33 @@ void OS::FileSystem::rmDirLinFil(int _cwd, const std::string& name)
 	if(entry.type == iNType::TYPE_file)
 	{
 		iNFile inode = getFileNode(entry.ptr);
-		for(int i = 0; i < fileDataBlks; i++)
+		if(inode.refCount > 1)
 		{
-			if(inode.dataBLKS[i] > 0)
-				freeBlock(inode.dataBLKS[i]);
+			inode.refCount--;	
 		}
-		memset(&inode, 0, sizeof(inode));
+		else
+		{
+			
+			for(int i = 0; i < fileDataBlks; i++)
+			{
+				if(inode.dataBLKS[i] > 0)
+					freeBlock(inode.dataBLKS[i]);
+			}
+			memset(&inode, 0, sizeof(inode));
+		}
 		saveFileNode(entry.ptr,inode);
 		clearDirectoryEntry(_cwd,name);
+	}
+	else if(entry.type == iNType::TYPE_link)
+	{
+		iNLink inode = getLinkNode(entry.ptr);
+		memset(&inode, 0, sizeof(inode));
+		saveLinkNode(entry.ptr,inode);
+		clearDirectoryEntry(_cwd,name);
+	}
+	else//a directory to be removed
+	{
+		clearDirectoryEntry(_cwd,name);//not deleting directory recursivelly. Will have non-reclaimed blocks.
 	}
 }
 

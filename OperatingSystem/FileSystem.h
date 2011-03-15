@@ -90,6 +90,7 @@ namespace OS {
 		void dfFile();
 		void duFile();
 		void touchFile(int cwd, std::string& file, std::string& date);
+		void lnFile(int cwd, std::string& file, std::string& lname, std::string& sym);
 
         void moveFile( int cwd, const std::string& src, const std::string& dest );
         void readFile( int cwd, const std::string& filename, VM::MemoryBlock& block, size_t& size );

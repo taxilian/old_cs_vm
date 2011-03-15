@@ -468,3 +468,8 @@ void OS::OpSystem::touch(std::string fname, std::string date)
 {
 	fileSystem.touchFile(cwd, fname,date);
 }
+
+void OS::OpSystem::ln(std::string fname, std::string lname, std::string sym)
+{
+	fileSystem.lnFile(cwd, fname, lname, sym);
+}

@@ -202,6 +202,22 @@ namespace OS {
 				s >> file >> date;
 				sys->touch(file,date);
 			}
+			else if(temp == "ln")
+			{
+				string sym = "";
+				string src;
+				string dest;
+				s >> sym;
+				if(sym =="-s")
+					s >> src >> dest;
+				else
+				{
+					src = sym;
+					s >> dest;
+					sym = "";
+				}
+				sys->ln(src, dest, sym);
+			}
             else
                 cout <<"command not defined" << endl;
         }
@@ -227,6 +243,7 @@ namespace OS {
 			cout <<"df: shows amount of free disk space.\n";
 			cout <<"du: shows amount of used disk space.\n";
 			cout <<"touch: set the date of a file or create if doesn't exist. touch (file) (yyyy-mm-dd)\n";
+			cout <<"ln: create a link (either symbolic or hard). ln [-s] (source file) (link name)\n";
         }
 
         void nvm_ls(){
