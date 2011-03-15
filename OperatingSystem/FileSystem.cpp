@@ -358,21 +358,28 @@ bool OS::FileSystem::WriteFile( int cwd, const std::string& file, const char* da
 {
     static char gData[blkSize] = {0}; // We'll use this for partial blocks
     
-    // Check if the file exists; if so, delete it first
-    if (fileExists(cwd, file))
-        rmDirLinFil(cwd, file);
-
-    int iNodeIdx = findFreeINode();
     Entry fileEntry;
-    fileEntry.ptr = iNodeIdx;
-    strcpy(fileEntry.name, file.c_str());
-    fileEntry.type = TYPE_file;
+    int iNodeIdx = findFreeINode();
     iNFile inode;
-    memset(&inode, 0, sizeof(inode));
-    inode.creationDate = getCurrentTime();
-    inode.modifyDate = getCurrentTime();
+    // Check if the file exists; if so, reuse the iNode
+    if (fileExists(cwd, file)) {
+        iNodeIdx = getFileEntry(cwd, file).ptr;
+        inode = getFileNode(iNodeIdx);
+        for (int i = 0; i < maxEntriesPerBlock; ++i) {
+            if (inode.dataBLKS[i] > 0)
+                freeBlock(inode.dataBLKS[i]);
+            inode.dataBLKS[i] = 0;
+        }
+    } else {
+        fileEntry.ptr = iNodeIdx;
+        strcpy(fileEntry.name, file.c_str());
+        fileEntry.type = TYPE_file;
+        memset(&inode, 0, sizeof(inode));
+        inode.creationDate = getCurrentTime();
+        inode.refCount = 1;
+    }
     inode.fileSize = size;
-    inode.refCount = 1;
+    inode.modifyDate = getCurrentTime();
 
     // Calculate how many blocks we'll need
     int blocksNeeded = size / blkSize + (size % blkSize == 0 ? 0 : 1);
