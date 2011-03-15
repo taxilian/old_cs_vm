@@ -23,6 +23,7 @@ namespace OS {
         void nvm_load(const std::string& pathfileName,const std::string& name);
         int getNextPid() { return m_lastPid++; }
         void ps() const;
+        void load(const std::string& pathfileName);
         void run(int pid);
         void runall();
         void setAlgorithm( int alg_no );

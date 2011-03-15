@@ -102,6 +102,36 @@ void OS::OpSystem::nvm_loadTxtFile(const std::string& nvmFname, const std::strin
 	fileSystem.WriteFile(cwd, fname, data.c_str(), data.size());
 }
 
+void OS::OpSystem::load( const std::string& pathfileName )
+{
+    VM::MemoryBlock memory;
+    size_t memorySize;
+    uint32_t startAddress;
+    uint32_t offset;
+    fileSystem.readFile(cwd, pathfileName, memory, memorySize);
+    startAddress = *((uint32_t*)memory.get());
+    offset = *(((uint32_t*)memory.get())+1);
+
+	offset = sysMemMgr.allocate(memorySize + stackSize + heapSize - sizeof(startAddress)*2);
+    VM::MemoryBlock memblk(new uint8_t[memorySize - sizeof(startAddress)*2]);
+    memcpy(memblk.get(), memory.get()+sizeof(startAddress)*2, memorySize - sizeof(startAddress)*2);
+    m_vm->loadProgram(memblk, memorySize - sizeof(startAddress)*2, offset);
+    ProcessControlBlockPtr newProgram(ProcessControlBlock::create(getNextPid(), pathfileName, memorySize, offset, startAddress, heapSize));
+    m_processList.push_back(newProgram);
+
+    // Set up the stack
+    newProgram->vm_state.reg[VMCore::SB] = 
+        newProgram->vm_state.reg[VMCore::SP] = 
+        newProgram->vm_state.reg[VMCore::FP] = 
+            offset + memorySize + stackSize;
+	newProgram->vm_state.pid = newProgram->pid;
+    //newProgram->vm_state.reg[VMCore::SL] = offset + memorySize;
+	newProgram->vm_state.reg[VMCore::SL] = offset + memorySize + heapSize;
+    newProgram->setState(ProcessState_Ready);
+    std::cout << "Loaded " << pathfileName << " in pid " << newProgram->pid << std::endl;
+    m_scheduler->addJob(newProgram);
+}
+
 void OS::OpSystem::nvm_load( const std::string& pathfileName,const std::string& name)
 {
 	VM::MemoryBlock memory;

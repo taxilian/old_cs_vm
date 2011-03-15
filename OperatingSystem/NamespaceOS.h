@@ -120,7 +120,7 @@ namespace OS {
 				s >> file >> dest;
 				sys->mv(file, dest);
 			}
-            else if(temp == "load")
+            else if(temp == "!load")
             {
                 string hexFile;
                 s >> hexFile;
@@ -133,6 +133,19 @@ namespace OS {
                     fs::path hf = cwd/hexFile;
                     
                     sys->nvm_load(hf.string(), hexFile);
+                }
+            }
+            else if(temp == "load")
+            {
+                string hexFile;
+                s >> hexFile;
+                if(hexFile == "")
+                {
+                    cout << "must be of form: load (process)" << endl;
+                }
+                else
+                {
+                    sys->load(hexFile);
                 }
             }
             else if (temp == "run")
