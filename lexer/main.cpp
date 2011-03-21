@@ -14,7 +14,7 @@ int main(int argc, char *argv[] )
 
     lexer1.nextToken();
     do {
-        syntax.compilation_unit();   
+        syntax.compilation_unit();
     } while (lexer1.current().type != TT_ENDOFFILE);
 
     LexicalParser lexer2(argv[1]);

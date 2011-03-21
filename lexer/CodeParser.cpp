@@ -373,7 +373,11 @@ void CodeParser::constructor_declaration()
     }
     assert_type_value(TT_GROUPCLOSE, ")");
     if (pass2()) {
-        closeParen();
+        // Process all them parameter thingies
+        while (saStack.size()) {
+            this->saPop();
+            this->saPop();
+        }
     }
     lexer->nextToken();
     current_scope.push_back(lastSeenFunction);
@@ -443,6 +447,12 @@ void CodeParser::field_declaration()
         methoddata->Parameters = foundParams;
         symb->data = methoddata;
         registerSymbol(symb);
+    } else if (pass2()) {
+        while (saStack.size() > 1) {
+            saPop(); // Pop off each parameter;
+            saPop(); // we don't need them
+        }
+        saPop();     // Finally pop off the type of this function; we know it
     }
     assert_type_value(TT_GROUPCLOSE, ")");
     lexer->nextToken();
@@ -946,7 +956,7 @@ void CodeParser::varPush( const std::string& name )
 std::string CodeParser::getScopeType( const std::string& scopeStr )
 {
     std::map<std::string, SymbolEntryPtr>::iterator fnd = symbol_name_map.find(scopeStr);
-    if(fnd->second->kind == "variable") {
+    if(fnd->second->kind == "variable" || fnd->second->kind == "param") {
         boost::shared_ptr<TypeData> td(boost::dynamic_pointer_cast<TypeData>(fnd->second->data));
         return td->type;
     } else if (fnd->second->kind == "method") {
@@ -985,10 +995,10 @@ bool CodeParser::idExist()
             boost::shared_ptr<var_SAR> vsar(boost::make_shared<var_SAR>("this", type));
             saStack.push_back(vsar);
         } else {
-            std::string scopeStr = getScopeString() + "." + sar->value;
-            if (symbol_name_map.find(scopeStr) == symbol_name_map.end())
+            std::string scopestr = findInScope(sar->value);
+            if (scopestr.empty())
                 throw SyntaxParserException("Undefined symbol: " + sar->value);
-            saStack.push_back(sar); // If it exists, push it back onto the stack
+            saStack.push_back(sar);
         }
     }
     return true;
@@ -1228,5 +1238,21 @@ std::string CodeParser::findClass()
     } else {
         return "";
     }
+}
+
+std::string CodeParser::findInScope( const std::string& id )
+{
+    std::string scope = getScopeString();
+    std::vector<std::string> scopeList;
+    boost::algorithm::split(scopeList, scope, boost::algorithm::is_any_of("."));
+
+    while (scopeList.size()) {
+        std::string scopeStr = boost::algorithm::join(scopeList, ".") + "." + id;
+        if (symbol_name_map.find(scopeStr) != symbol_name_map.end()) {
+            return scopeStr;
+        }
+        scopeList.pop_back();
+    }
+    return std::string();
 }
 

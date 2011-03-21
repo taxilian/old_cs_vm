@@ -92,6 +92,9 @@ public:
     void builtin_sa(const std::string& func);
 
     bool idExist();
+
+    std::string findInScope( const std::string& id );
+
     bool refExist();
     bool typeExist(const std::string &type);
 
