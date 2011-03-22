@@ -49,7 +49,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -74,6 +74,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ICodeWriter.h" />
     <ClInclude Include="LexicalParser.h" />
     <ClInclude Include="SemanticActions.h" />
     <ClInclude Include="SymbolEntry.h" />
@@ -81,6 +82,7 @@
     <ClInclude Include="Token.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ICodeWriter.cpp" />
     <ClCompile Include="LexicalParser.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="CodeParser.cpp" />

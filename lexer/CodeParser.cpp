@@ -1,14 +1,16 @@
-#include "SymbolEntry.h"
 #include <boost/algorithm/string.hpp>
-
-#include "CodeParser.h"
 #include <boost/smart_ptr/make_shared.hpp>
 
+#include "CodeParser.h"
+#include "SymbolEntry.h"
+#include "ICodeWriter.h"
+
 #include <vector>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
-CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(1)
+CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(1), icode(NULL)
 {
     current_scope.push_back("g");
 
@@ -135,7 +137,14 @@ void CodeParser::compilation_unit()
                 methoddata->returnType = "void";
                 symb->data = methoddata;
                 registerSymbol(symb);
+            } else if (pass2()) {
+                icode->Comment("Calling function main");
+                icode->Label("START");
+                icode->Write("FRAME", "main", "0");
+                icode->Write("CALL", "main");
             }
+            lastSeenName = "main";
+            lastSeenFunction = "main";
             current_scope.push_back("main");
             method_body();
             current_scope.pop_back();
@@ -225,6 +234,21 @@ void CodeParser::method_body()
     assert_type_value(TT_GROUPOPEN, "{");
     lexer->nextToken();
 
+    if (pass2()) {
+        icode->Blank();
+        icode->Blank();
+        icode->Comment("Begin function " + getScopeString());
+        icode->Label("FN_" + symbol_name_map[getScopeString()]->id);
+        icode->Write("FUNC", symbol_name_map[getScopeString()]->id);
+        //SymbolEntryPtr symb = symbol_name_map[getScopeString()];
+        //MethodDataPtr mdata = as<MethodData>(symb->data);
+        //for (int i = 0; i < mdata->Parameters.size(); ++i) {
+        //    SymbolEntryPtr p(symbol_id_map[mdata->Parameters[i]->paramId]);
+        //    TypeDataPtr t(as<TypeData>(p->data));
+
+        //}
+    }
+
     variable_declaration();
 
     while (lexer->current().text != "}") {
@@ -273,8 +297,9 @@ void CodeParser::variable_declaration()
             tdata->type = lastSeenType;
             symb->data = tdata;
             registerSymbol(symb);
-        } else if (pass2())
+        } else if (pass2()) {
             end_of_expr();
+        }
         assert_type(TT_SEMICOLON);
         lexer->nextToken();
     }
@@ -1106,6 +1131,7 @@ void CodeParser::keyword_sa( const std::string &kw )
         // Implement cin with whatever is on the stack
     } else if (kw == "return") {
         SARPtr sar(saPop());
+        icode->Write("RETURN", getRval(sar));
         // Return whatever is on the stack
     } else {
         throw std::runtime_error("Not implemented");
@@ -1120,7 +1146,14 @@ void CodeParser::newObj()
     if (!findFunction(scope, type->value, argList)) {
         throw SyntaxParserException("Cannot find a valid constructor for " + type->value + " with matching these arguments");
     }
-    saStack.push_back(boost::make_shared<new_SAR>(scope, type->getType()));
+    std::string var = tempPush(type->getType());
+    // Allocate memory and then call the constructor
+    icode->Write("NEWI", boost::lexical_cast<std::string>(getTypeSize(type->getType())), var);
+    if (symbol_name_map.find(scope + "." + type->value) != symbol_name_map.end()) {
+        SymbolEntryPtr ctor(symbol_name_map[scope + "." + type->value]);
+        icode->Write("FRAME", ctor->id, var);
+        icode->Write("CALL", ctor->id);
+    }
 }
 
 void CodeParser::newArr()
@@ -1133,7 +1166,7 @@ void CodeParser::builtin_sa( const std::string& func )
     throw std::runtime_error("Not implemented");
 }
 
-void CodeParser::tempPush( const std::string& type )
+std::string CodeParser::tempPush( const std::string& type )
 {
     SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
     symb->id = makeSymbolId("T");
@@ -1146,6 +1179,7 @@ void CodeParser::tempPush( const std::string& type )
     symb->data = tdata;
     registerSymbol(symb);
     saStack.push_back(boost::make_shared<var_SAR>(symb->value, type));
+    return symb->id;
 }
 
 bool CodeParser::findFunction( const std::string& scope, const std::string& name, const boost::shared_ptr<argList_SAR>& argList )
@@ -1170,6 +1204,36 @@ bool CodeParser::findFunction( const std::string& scope, const std::string& name
     }
 }
 
+std::string CodeParser::getRval(const SARPtr& rval) {
+    if (rval->value == "this") {
+        return rval->value;
+    } else if (is_a<lit_SAR>(rval)) {
+        if (is_a<int_SAR>(rval)) {
+            return rval->value;
+        } else if (is_a<bool_SAR>(rval)) {
+            return rval->value == "true" ? "1" : "0";
+        } else if (is_a<null_SAR>(rval)) {
+            return "0";
+        } else if (is_a<char_SAR>(rval)) {
+            return boost::lexical_cast<std::string>((int)rval->value[0]);
+        } else throw SyntaxParserException("WTF?");
+    } else if (is_a<var_SAR>(rval)) {
+        SymbolEntryPtr right = symbol_name_map[findInScope(rval->value)];
+        return right->id;
+    } else if (is_a<new_SAR>(rval)) {
+        return rval->value;
+    } else if (is_a<id_SAR>(rval)) {
+        SymbolEntryPtr right = symbol_name_map[findInScope(rval->value)];
+        return right->id;
+    }
+    return "";
+}
+
+std::string CodeParser::getLval(const SARPtr& lval) {
+    SymbolEntryPtr left = symbol_name_map[findInScope(lval->value)];
+    return left->id;
+}
+
 void CodeParser::processOperatorStack()
 {
     std::string op = opPop();
@@ -1182,10 +1246,9 @@ void CodeParser::processOperatorStack()
         // These all require the type to be the same
         if (getScopeType(sar1) != getScopeType(sar2))
             throw SyntaxParserException("Invalid rval type: expected " + getScopeType(sar1) + " but found " + getScopeType(sar2));
-        // Do something awesome here
-
         // Create a temporary variable and push it onto the stack
-        tempPush("bool");
+        std::string tempId = tempPush("bool");
+        icode->DoMath(op, tempId, getRval(sar1), getRval(sar2));
     } else if (op == "(" || op == ",") {
         return;
     } else if (op == "+" || op == "-" || op == "*" || op == "/") {
@@ -1194,10 +1257,9 @@ void CodeParser::processOperatorStack()
         // These all require the type to be the same
         if (getScopeType(sar1) != getScopeType(sar2))
             throw SyntaxParserException("Invalid rval type: expected " + getScopeType(sar1) + " but found " + getScopeType(sar2));
-        // Do something awesome here
-
         // Create a temporary variable and push it onto the stack
-        tempPush(getScopeType(sar1));
+        std::string tempId = tempPush(getScopeType(sar1));
+        icode->DoMath(op, tempId, getRval(sar1), getRval(sar2));
     } else if (op == "=") {
         assert(saStack.size() > 1);
         SARPtr rval(saPop());
@@ -1206,19 +1268,21 @@ void CodeParser::processOperatorStack()
         if (!compatibleTypes(lval, rval)) {
             throw SyntaxParserException("Unexpected rval does not match type: " + getScopeType(lval));
         } else {
-            // TODO: Handle assignment
+            std::string left = getLval(lval);
+            std::string right = getRval(rval);
+            icode->Write("MOVE", left, right);
         }
     } else if (op == ".") {
         assert(saStack.size() > 1);
         SARPtr rval(saPop());
         SARPtr lval(saPop());
-        boost::shared_ptr<ref_SAR> ref;
 
         std::string type = getScopeType(lval);
         std::string scopeStr = "g." + type + "." + rval->value;
         assert (symbol_name_map.find(scopeStr) != symbol_name_map.end());
         std::string rvalType = getScopeType(scopeStr);
-        tempPush(rvalType);
+        std::string tempId = tempPush(rvalType);
+        icode->Write("REF", tempId, getRval(lval), getRval(lval));
     }
 }
 
@@ -1254,5 +1318,35 @@ std::string CodeParser::findInScope( const std::string& id )
         scopeList.pop_back();
     }
     return std::string();
+}
+
+std::string getParentScope(const std::string& scope) {
+    std::string pscope = scope.substr(0, scope.rfind('.'));
+    return pscope;
+}
+
+int CodeParser::getTypeSize( const std::string& type, bool nested/* = false*/ )
+{
+    if (type == "bool" || type == "char") return 1;
+    else if (type == "null") return 4;
+    else if (type == "int") return 8;
+    else if (nested) return 8; // If this type is inside another class, it's just a pointer
+    else {
+        int size(0);
+        std::string typeFQN("g." + type);
+        SymbolEntryPtr symb(symbol_name_map[typeFQN]);
+        assert(symb->kind == "class");
+        for (std::map<std::string, SymbolEntryPtr>::iterator it(symbol_name_map.begin());
+            it != symbol_name_map.end(); ++it) {
+            if (getParentScope(it->first) == typeFQN) {
+                SymbolEntryPtr child(it->second);
+                if (child->kind == "variable") {
+                    TypeDataPtr childType(as<TypeData>(child->data));
+                    size += getTypeSize(childType->type, true);
+                }
+            }
+        }
+        return size;
+    }
 }
 

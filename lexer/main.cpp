@@ -2,6 +2,7 @@
 #include <iostream>
 #include "LexicalParser.h"
 #include "CodeParser.h"
+#include "ICodeWriter.h"
 
 int main(int argc, char *argv[] )
 {
@@ -18,8 +19,10 @@ int main(int argc, char *argv[] )
     } while (lexer1.current().type != TT_ENDOFFILE);
 
     LexicalParser lexer2(argv[1]);
+    ICodeWriter writer("TEMP_FILE.icd");
     syntax.setLexer(&lexer2);
     syntax.setPass(2);
+    syntax.setCodeWriter(&writer);
     lexer2.nextToken();
     do {
         syntax.compilation_unit();   

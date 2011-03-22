@@ -7,6 +7,7 @@
 #include "SymbolEntry.h"
 #include "SemanticActions.h"
 
+
 struct SyntaxParserException : std::exception
 {
     SyntaxParserException(const std::string& error)
@@ -19,6 +20,8 @@ struct SyntaxParserException : std::exception
     std::string m_error;
 };
 
+class ICodeWriter;
+
 class CodeParser
 {
 public:
@@ -26,6 +29,7 @@ public:
     ~CodeParser(void);
 
     void setLexer(LexicalParser* lexer) { this->lexer = lexer; }
+    void setCodeWriter( ICodeWriter* writer ) { icode = writer; }
 
     //////////////////////////////////////
     // Grammer parsing rule functions   //
@@ -80,7 +84,7 @@ public:
     void opPush(const std::string& op);
     void typePush(const std::string& type);
     void varPush(const std::string& name);
-    void tempPush(const std::string& type);
+    std::string tempPush(const std::string& type);
     void begArgList();
     void endArgList();
     void func_sa();
@@ -92,8 +96,6 @@ public:
     void builtin_sa(const std::string& func);
 
     bool idExist();
-
-    std::string findInScope( const std::string& id );
 
     bool refExist();
     bool typeExist(const std::string &type);
@@ -107,6 +109,13 @@ public:
 
     void closeBracket();
     void end_of_expr();
+
+    /////////////////////////////
+    // Code generation helpers //
+    /////////////////////////////
+    std::string findInScope( const std::string& id );
+    std::string getRval(const SARPtr& rval);
+    std::string getLval(const SARPtr& lval);
 
 public:
     void setPass(int pass) { this->pass = pass; }
@@ -152,8 +161,10 @@ protected:
     bool compatibleTypes( const SARPtr& sar1, const SARPtr& sar2 );
     bool findFunction( const std::string& scope, const std::string& name, const boost::shared_ptr<argList_SAR>& argList );
     std::string findClass();
+    int getTypeSize( const std::string& type, bool nested = false );
 private:
     LexicalParser* lexer;
+    ICodeWriter* icode;
     std::set<std::string> validKeywords;
     std::set<std::string> validTypes;
     std::set<std::string> validModifiers;
