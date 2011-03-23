@@ -174,6 +174,7 @@ private:
     std::deque<std::string> opStack;
     std::deque<std::string> current_scope;
     std::deque<std::string> scope_type;
+    std::deque<std::string> loop_id;
     std::map<std::string, SymbolEntryPtr> symbol_id_map;
     std::map<std::string, SymbolEntryPtr> symbol_name_map;
 

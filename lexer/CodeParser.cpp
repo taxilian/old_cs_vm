@@ -330,6 +330,7 @@ void CodeParser::class_declaration()
     scope_type.push_back("class");
     lexer->nextToken();
     class_name();
+    icode->Comment("Begin class " + lastSeenName);
     if (pass1()) {
         // Create symbol table entry for class name
         SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
