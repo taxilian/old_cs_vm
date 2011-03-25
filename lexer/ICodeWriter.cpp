@@ -31,29 +31,29 @@ void ICodeWriter::Write( const std::string& instruction, const std::string& op1,
 {
     std::string label(nextLabel);
     if (nextLineNo >= 0) {
-        file << "                ; Line " << nextLineNo << std::endl;
+        getStream() << "                ; Line " << nextLineNo << std::endl;
     }
     do {
         label += " ";
     } while (label.size() < 16);
 
-    file << label.c_str() << instruction.c_str();
-    if (!op1.empty()) file << " " << op1.c_str();
-    if (!op2.empty()) file << ", " << op2.c_str();
-    if (!op3.empty()) file << ", " << op3.c_str();
-    file << std::endl;
+    getStream() << label.c_str() << instruction.c_str();
+    if (!op1.empty()) getStream() << " " << op1.c_str();
+    if (!op2.empty()) getStream() << ", " << op2.c_str();
+    if (!op3.empty()) getStream() << ", " << op3.c_str();
+    getStream() << std::endl;
     nextLabel = "";
     nextLineNo = -1;
 }
 
 void ICodeWriter::Blank()
 {
-    file << std::endl;
+    getStream() << std::endl;
 }
 
 void ICodeWriter::Comment( const std::string& comment )
 {
-    file << "                ; " << comment.c_str() << std::endl;
+    getStream() << "                ; " << comment.c_str() << std::endl;
 }
 
 void ICodeWriter::DoMath( std::string op, std::string tempId, std::string op1, std::string op2 )
@@ -75,4 +75,25 @@ void ICodeWriter::DoMath( std::string op, std::string tempId, std::string op1, s
         assert(false); //panic!
     }
     Write(inst, tempId, op1, op2);
+}
+
+void ICodeWriter::beginSection(const std::string& name)
+{
+    curSection = name;
+    if (m_sections.find(name) == m_sections.end()) {
+        m_sections[name] = std::string();
+    }
+}
+void ICodeWriter::endSection()
+{
+	std::string prevText = m_sections[curSection];
+	std::string newText = buffer.str();
+    m_sections[curSection] = prevText + newText;
+    curSection = "";
+    buffer.str("");
+}
+void ICodeWriter::writeSection(const std::string& name)
+{
+    getStream() << m_sections[name];
+    m_sections.erase(m_sections.find(name));
 }

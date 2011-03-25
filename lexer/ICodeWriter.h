@@ -1,5 +1,9 @@
 #pragma once
 #include <fstream>
+#include <string>
+#include <sstream>
+#include <map>
+
 class ICodeWriter
 {
 public:
@@ -16,10 +20,25 @@ public:
     void Blank();
     void Comment(const std::string& comment);
     void DoMath( std::string op, std::string tempId, std::string op1, std::string op2 );
+
+    void beginSection(const std::string& name);
+    void endSection();
+    void writeSection(const std::string& name);
+
+private:
+    std::ostream& getStream() {
+        if (curSection.empty())
+			return file;
+        else
+			return buffer;
+    }
 private:
     std::ofstream file;
+	std::ostringstream buffer;
     std::string fname;
 
+    std::string curSection;
+    std::map<std::string, std::string> m_sections;
     std::string nextLabel;
     int nextLineNo;
 };

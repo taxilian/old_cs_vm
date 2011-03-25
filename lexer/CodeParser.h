@@ -177,6 +177,8 @@ private:
     std::deque<std::string> loop_stack;
     std::map<std::string, SymbolEntryPtr> symbol_id_map;
     std::map<std::string, SymbolEntryPtr> symbol_name_map;
+    bool foundConstructor;
+    bool foundReturn;
 
     std::map<std::string, int> operatorPrecedence;
 

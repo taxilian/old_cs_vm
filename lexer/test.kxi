@@ -38,3 +38,11 @@ class Calculator {
     public int div(int a, int b) { return a/b; }
     public Test2 getTest() { return test; }
 }
+
+class SomeTestClass {
+    int a = 0;
+    int b = 0;
+
+    int getA() { return a; }
+    int getB() { return b; }
+}

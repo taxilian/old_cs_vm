@@ -156,6 +156,7 @@ void CodeParser::compilation_unit()
 
 void CodeParser::method_body()
 {
+    foundReturn = false;
     assert_type_value(TT_GROUPOPEN, "{");
     lexer->nextToken();
 	
@@ -165,19 +166,24 @@ void CodeParser::method_body()
         icode->Comment("Begin function " + getScopeString());
         icode->Label("FN_" + symbol_name_map[getScopeString()]->id);
         icode->Write("FUNC", symbol_name_map[getScopeString()]->id);
-        //SymbolEntryPtr symb = symbol_name_map[getScopeString()];
-        //MethodDataPtr mdata = as<MethodData>(symb->data);
-        //for (int i = 0; i < mdata->Parameters.size(); ++i) {
-        //    SymbolEntryPtr p(symbol_id_map[mdata->Parameters[i]->paramId]);
-        //    TypeDataPtr t(as<TypeData>(p->data));
-		
-        //}
+        if (scope_type.size() && scope_type.back() == "constructor") {
+            icode->Comment("initialize default class values");
+            icode->writeSection("constructor");
+            icode->Comment("end initialization");
+        }
     }
 	
     variable_declaration();
 	
     while (lexer->current().text != "}") {
         statement();
+    }
+
+    if (pass2()) {
+        if (!foundReturn) {
+            icode->Comment("No return value");
+            icode->Write("RTN");
+        }
     }
 	
     assert_type_value(TT_GROUPCLOSE, "}");
@@ -232,10 +238,12 @@ void CodeParser::variable_declaration()
 
 void CodeParser::class_declaration()
 {
+    foundConstructor = false;
     assert_type_value(TT_KEYWORD, "class");
     scope_type.push_back("class");
     lexer->nextToken();
     class_name();
+    std::string className = lastSeenName;
     
     if (pass1()) {
         // Create symbol table entry for class name
@@ -246,12 +254,44 @@ void CodeParser::class_declaration()
         symb->value = lastSeenName;
         registerSymbol(symb);
     } else if (pass2()) {
+		icode->Blank();
+		icode->Blank();
 		icode->Comment("Begin class " + lastSeenName);
 	}
     current_scope.push_back(lastSeenName);
     assert_type_value(TT_GROUPOPEN, "{");
     lexer->nextToken();
+
     class_member_declaration();
+    
+    if (!foundConstructor) {
+        if (pass1()) {
+            // Create an empty constructor
+            SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
+            symb->id = makeSymbolId("S");
+            symb->value = className;
+            symb->kind = "constructor";
+            symb->scope = getScopeString();
+            MethodDataPtr methoddata = boost::make_shared<MethodData>();
+            methoddata->accessMod = "public";
+            methoddata->returnType = className;
+            symb->data = methoddata;
+            registerSymbol(symb);
+        } else {
+            current_scope.push_back(className);
+            icode->Blank();
+            icode->Blank();
+            icode->Comment("Begin generated constructor " + getScopeString());
+            icode->Label("FN_" + symbol_name_map[getScopeString()]->id);
+            icode->Write("FUNC", symbol_name_map[getScopeString()]->id);
+
+            icode->writeSection("constructor");
+            icode->Comment("end initialization");
+            icode->Write("RTN");
+            current_scope.pop_back();
+        }
+    }
+
     assert_type_value(TT_GROUPCLOSE, "}");
     scope_type.pop_back();
     current_scope.pop_back();
@@ -281,7 +321,7 @@ void CodeParser::class_member_declaration()
 
 void CodeParser::constructor_declaration()
 {
-    // TODO: This is where I left off - 3/12/2011
+    foundConstructor = true;
     class_name();
     if (pass2())
         ctordecl(lastSeenName);
@@ -315,7 +355,9 @@ void CodeParser::constructor_declaration()
     }
     lexer->nextToken();
     current_scope.push_back(lastSeenFunction);
+    scope_type.push_back("constructor");
     method_body();
+    scope_type.pop_back();
     current_scope.pop_back();
 }
 
@@ -330,8 +372,10 @@ void CodeParser::field_declaration()
         lastSeenType += "[]";
         lastSeenFieldType = "array";
     }
-    if (pass2())
+    if (pass2()) {
         varPush(lastSeenName);
+        icode->beginSection("constructor");
+    }
     if (lexer->current().type == TT_OPERATOR
         && lexer->current().text == "=") {
         if (pass2())
@@ -360,10 +404,13 @@ void CodeParser::field_declaration()
         }
         return; // If it's a variable we stop here
     }
+    if (pass2())
+        icode->endSection();
     lastSeenFieldType = "function";
     lastSeenFunction = lastSeenName;
     assert_type_value(TT_GROUPOPEN, "(");
     lexer->nextToken();
+
     // Add the function name to the scope
     current_scope.push_back(lastSeenName); 
     parameter_list();
@@ -1137,6 +1184,7 @@ void CodeParser::keyword_sa( const std::string &kw )
     } else if (kw == "return") {
         SARPtr sar(saPop());
         icode->Write("RETURN", getRval(sar));
+        foundReturn = true;
         // Return whatever is on the stack
     } else {
         throw std::runtime_error("Not implemented");
