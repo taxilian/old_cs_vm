@@ -5,7 +5,6 @@
 
 #include <boost/shared_array.hpp>
 #include "VMConfig.h"
-#include "helpers.h"
 
 struct VMException : std::exception
 {
@@ -18,6 +17,11 @@ struct VMException : std::exception
     }
     std::string m_error;
 };
+
+//typedef char REGISTER;
+typedef unsigned short ADDRESS;
+typedef int IMMEDIATE;
+typedef int REGISTER;
 
 struct thread
 {
@@ -119,5 +123,7 @@ protected:
     void LCK(ADDRESS addr);
     void ULK(ADDRESS addr);
 };
+
+#include "helpers.h"
 
 #endif

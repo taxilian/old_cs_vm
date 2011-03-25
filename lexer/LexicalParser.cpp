@@ -5,10 +5,10 @@
 #include "LexicalParser.h"
 
 LexicalParser::LexicalParser(const std::string& filename)
-    : m_filename(filename), m_file(filename), m_lineNo(0), m_state(STATE_EMPTY)
+    : m_filename(filename), m_file(filename.c_str()), m_lineNo(0), m_state(STATE_EMPTY)
 {
     if (!m_file)
-        throw std::exception(("Could not load " + m_filename).c_str());
+        throw LexicalParserException(("Could not load " + m_filename).c_str());
 }
 
 LexicalParser::~LexicalParser(void)

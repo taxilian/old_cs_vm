@@ -5,10 +5,7 @@
 #define H_VM_HELPERS_RB_
 
 #include "VMConfig.h"
-//typedef char REGISTER;
-typedef unsigned short ADDRESS;
-typedef int IMMEDIATE;
-typedef int REGISTER;
+
 
 
 class VirtualMachine;

@@ -10,3 +10,5 @@ Debug/
 *.sdf
 *.opensdf
 lexer/TEMP_FILE.icd
+TEMP_FILE.icd
+build

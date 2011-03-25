@@ -154,86 +154,11 @@ void CodeParser::compilation_unit()
     }
 }
 
-void CodeParser::modifier()
-{
-    if (lexer->current().type == TT_KEYWORD
-        && is_in_set(lexer->current().text, validModifiers)) {
-        lastSeenModifier = lexer->current().text;
-        lexer->nextToken();
-    } else {
-        raiseError("modifier", lexer->current());
-    }
-}
-
-void CodeParser::class_name()
-{
-    if (lexer->current().type == TT_KEYWORD
-        && !is_reserved(lexer->current().text)) {
-        lastSeenName = lexer->current().text;
-        lexer->nextToken();
-    } else {
-        raiseError("class_name", lexer->current());
-    }
-}
-
-void CodeParser::type()
-{
-    if (lexer->current().type == TT_KEYWORD
-        && (is_in_set(lexer->current().text, validTypes)
-            || !is_reserved(lexer->current().text))) {
-        lastSeenType = lexer->current().text;
-        if (pass2())
-            typePush(lastSeenType);
-        lexer->nextToken();
-        return;
-    }
-    raiseError("typename", lexer->current());
-}
-
-void CodeParser::character_literal()
-{
-    if (lexer->current().type == TT_CHAR) {
-        if (pass2())
-            litPush(lexer->current().text, "char");
-        lexer->nextToken();
-    } else {
-        raiseError("character_literal", lexer->current());
-    }
-}
-
-void CodeParser::numeric_literal()
-{
-    bool pos = true;
-    if (lexer->current().type == TT_OPERATOR) {
-        if (lexer->current().text == "+"
-            || lexer->current().text == "-") {
-            if (lexer->current().text == "-")
-                pos = false;
-            lexer->nextToken();
-        } else {
-            raiseError("numeric_literal", lexer->current());
-        }
-    }
-    number(pos);
-}
-
-void CodeParser::number(bool pos/* = true*/)
-{
-    if (lexer->current().type == TT_NUMBER) {
-        std::string num = (pos ? "+" : "-") + lexer->current().text;
-        if (pass2())
-            litPush(num, "int");
-        lexer->nextToken();
-    } else {
-        raiseError("number", lexer->current());
-    }
-}
-
 void CodeParser::method_body()
 {
     assert_type_value(TT_GROUPOPEN, "{");
     lexer->nextToken();
-
+	
     if (pass2()) {
         icode->Blank();
         icode->Blank();
@@ -245,16 +170,16 @@ void CodeParser::method_body()
         //for (int i = 0; i < mdata->Parameters.size(); ++i) {
         //    SymbolEntryPtr p(symbol_id_map[mdata->Parameters[i]->paramId]);
         //    TypeDataPtr t(as<TypeData>(p->data));
-
+		
         //}
     }
-
+	
     variable_declaration();
-
+	
     while (lexer->current().text != "}") {
         statement();
     }
-
+	
     assert_type_value(TT_GROUPCLOSE, "}");
     lexer->nextToken();
 }
@@ -262,10 +187,10 @@ void CodeParser::method_body()
 void CodeParser::variable_declaration()
 {
     while (lexer->current().type == TT_KEYWORD
-        && (is_in_set(lexer->current().text, validTypes)
-            || !is_reserved(lexer->current().text))
-        && lexer->peekToken(0).type == TT_KEYWORD
-        && !is_reserved(lexer->peekToken(0).text)) {
+		   && (is_in_set(lexer->current().text, validTypes)
+			   || !is_reserved(lexer->current().text))
+		   && lexer->peekToken(0).type == TT_KEYWORD
+		   && !is_reserved(lexer->peekToken(0).text)) {
         type();
         if (pass2())
             typeExist(lastSeenType);
@@ -283,7 +208,7 @@ void CodeParser::variable_declaration()
             lexer->nextToken();
             if (pass2())
                 opPush("=");
-
+			
             assignment_expression();
         }
         if (pass1()) {
@@ -305,32 +230,13 @@ void CodeParser::variable_declaration()
     }
 }
 
-void CodeParser::identifier()
-{
-    if (lexer->current().type == TT_KEYWORD && !is_reserved(lexer->current().text)) {
-        lastSeenName = lexer->current().text;
-        if (pass2())
-            idPush(lastSeenName);
-        lexer->nextToken();
-    } else {
-        raiseError("identifier", lexer->current());
-    }
-}
-
-void CodeParser::assert_is( bool param1 )
-{
-    if (!param1) {
-        throw SyntaxParserException("Syntax Error!");
-    }
-}
-
 void CodeParser::class_declaration()
 {
     assert_type_value(TT_KEYWORD, "class");
     scope_type.push_back("class");
     lexer->nextToken();
     class_name();
-    icode->Comment("Begin class " + lastSeenName);
+    
     if (pass1()) {
         // Create symbol table entry for class name
         SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
@@ -339,7 +245,9 @@ void CodeParser::class_declaration()
         symb->scope = getScopeString();
         symb->value = lastSeenName;
         registerSymbol(symb);
-    }
+    } else if (pass2()) {
+		icode->Comment("Begin class " + lastSeenName);
+	}
     current_scope.push_back(lastSeenName);
     assert_type_value(TT_GROUPOPEN, "{");
     lexer->nextToken();
@@ -503,7 +411,7 @@ void CodeParser::parameter_list()
             typedata->type = lastSeenType;
             symb->data = typedata;
             registerSymbol(symb);
-
+			
             ParameterDefPtr param = boost::make_shared<ParameterDef>(); 
             param->paramId = symb->id;
             foundParams.push_back(param);
@@ -511,20 +419,6 @@ void CodeParser::parameter_list()
         if (lexer->current().text == ",") {
             lexer->nextToken();
         }
-    }
-}
-
-void CodeParser::parameter()
-{
-    type();
-    if (pass2())
-        typeExist(lastSeenType);
-    identifier();
-    if (lexer->current().type == TT_GROUPOPEN) {
-        assert_type_value(TT_GROUPOPEN, "[");
-        lexer->nextToken();
-        assert_type_value(TT_GROUPCLOSE, "]");
-        lexer->nextToken();
     }
 }
 
@@ -671,29 +565,29 @@ void CodeParser::expression()
         if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
             expressionz();
     } else if (lexer->current().type == TT_NUMBER
-        || (lexer->current().type == TT_OPERATOR && (curTxt == "-" || curTxt == "+")
-            && lexer->peekToken().type == TT_NUMBER)) {
-        numeric_literal();
-        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
-            expressionz();
-    } else if (lexer->current().type == TT_CHAR) {
-        character_literal();
-        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
-            expressionz();
-    } else {
-        identifier();
-        if (lexer->current().type == TT_GROUPOPEN) {
-            fn_arr_member();
-        }
-        if (pass2()) {
-            idExist();
-        }
-        if (lexer->current().type == TT_OPERATOR && lexer->current().text == ".") {
-            member_refz();
-        }
-        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
-            expressionz();
-    }
+			   || (lexer->current().type == TT_OPERATOR && (curTxt == "-" || curTxt == "+")
+				   && lexer->peekToken().type == TT_NUMBER)) {
+				   numeric_literal();
+				   if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
+					   expressionz();
+			   } else if (lexer->current().type == TT_CHAR) {
+				   character_literal();
+				   if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
+					   expressionz();
+			   } else {
+				   identifier();
+				   if (lexer->current().type == TT_GROUPOPEN) {
+					   fn_arr_member();
+				   }
+				   if (pass2()) {
+					   idExist();
+				   }
+				   if (lexer->current().type == TT_OPERATOR && lexer->current().text == ".") {
+					   member_refz();
+				   }
+				   if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
+					   expressionz();
+			   }
 }
 
 void CodeParser::expressionz()
@@ -817,7 +711,7 @@ void CodeParser::new_declaration()
             newObj();
         }
     } else if (lexer->current().type == TT_GROUPOPEN
-        && lexer->current().text == "[") {
+			   && lexer->current().text == "[") {
         if (pass2()) {
             opPush("[");
         }
@@ -856,7 +750,7 @@ void CodeParser::fn_arr_member()
             func_sa();
         }
     } else if (lexer->current().type == TT_GROUPOPEN
-        && lexer->current().text == "[") {
+			   && lexer->current().text == "[") {
         if (pass2())
             opPush("[");
         lexer->nextToken();
@@ -893,6 +787,114 @@ void CodeParser::argument_list()
     lexer->nextToken();
 }
 
+void CodeParser::modifier()
+{
+    if (lexer->current().type == TT_KEYWORD
+        && is_in_set(lexer->current().text, validModifiers)) {
+        lastSeenModifier = lexer->current().text;
+        lexer->nextToken();
+    } else {
+        raiseError("modifier", lexer->current());
+    }
+}
+
+void CodeParser::class_name()
+{
+    if (lexer->current().type == TT_KEYWORD
+        && !is_reserved(lexer->current().text)) {
+        lastSeenName = lexer->current().text;
+        lexer->nextToken();
+    } else {
+        raiseError("class_name", lexer->current());
+    }
+}
+
+void CodeParser::type()
+{
+    if (lexer->current().type == TT_KEYWORD
+        && (is_in_set(lexer->current().text, validTypes)
+            || !is_reserved(lexer->current().text))) {
+        lastSeenType = lexer->current().text;
+        if (pass2())
+            typePush(lastSeenType);
+        lexer->nextToken();
+        return;
+    }
+    raiseError("typename", lexer->current());
+}
+
+void CodeParser::character_literal()
+{
+    if (lexer->current().type == TT_CHAR) {
+        if (pass2())
+            litPush(lexer->current().text, "char");
+        lexer->nextToken();
+    } else {
+        raiseError("character_literal", lexer->current());
+    }
+}
+
+void CodeParser::numeric_literal()
+{
+    bool pos = true;
+    if (lexer->current().type == TT_OPERATOR) {
+        if (lexer->current().text == "+"
+            || lexer->current().text == "-") {
+            if (lexer->current().text == "-")
+                pos = false;
+            lexer->nextToken();
+        } else {
+            raiseError("numeric_literal", lexer->current());
+        }
+    }
+    number(pos);
+}
+
+void CodeParser::number(bool pos/* = true*/)
+{
+    if (lexer->current().type == TT_NUMBER) {
+        std::string num = (pos ? "+" : "-") + lexer->current().text;
+        if (pass2())
+            litPush(num, "int");
+        lexer->nextToken();
+    } else {
+        raiseError("number", lexer->current());
+    }
+}
+
+void CodeParser::identifier()
+{
+    if (lexer->current().type == TT_KEYWORD && !is_reserved(lexer->current().text)) {
+        lastSeenName = lexer->current().text;
+        if (pass2())
+            idPush(lastSeenName);
+        lexer->nextToken();
+    } else {
+        raiseError("identifier", lexer->current());
+    }
+}
+
+void CodeParser::assert_is( bool param1 )
+{
+    if (!param1) {
+        throw SyntaxParserException("Syntax Error!");
+    }
+}
+
+void CodeParser::parameter()
+{
+    type();
+    if (pass2())
+        typeExist(lastSeenType);
+    identifier();
+    if (lexer->current().type == TT_GROUPOPEN) {
+        assert_type_value(TT_GROUPOPEN, "[");
+        lexer->nextToken();
+        assert_type_value(TT_GROUPCLOSE, "]");
+        lexer->nextToken();
+    }
+}
+
 const std::string CodeParser::getScopeString()
 {
     return boost::algorithm::join(current_scope, ".");
@@ -912,6 +914,8 @@ void CodeParser::registerSymbol( const SymbolEntryPtr& symbol )
     symbol_name_map[getScopeString()] = symbol;
     current_scope.pop_back();
 }
+
+
 
 //////////////////////////////////////
 // Symantic Action stuff            //

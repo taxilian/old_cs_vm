@@ -2,7 +2,6 @@
 #include <iostream>
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
-#include <conio.h>
 
 #ifdef _DEBUG
 #define TRACEON
@@ -85,7 +84,7 @@ void VirtualMachine::callHandler(unsigned int instruction)
         str += (pc - 4);
         str += " (line " + byteToLineMap[pc-4];
         str += "!";
-        throw std::exception(str.c_str());
+        throw VMException(str.c_str());
     }
 }
 
@@ -416,14 +415,14 @@ void VirtualMachine::TRP(IMMEDIATE i)
         }
         break;
     case 4:
-        reg[8] = _getch();
+        reg[8] = getchar();
         if (reg[8] == '\r')
             reg[8] = '\n';
         std::cout << reg[8];
         LOG(" Received character " << reg[8] << "('" << (char)reg[8] << "')");
         break;
     default:
-        throw std::exception("Invalid TRP statement!");
+        throw VMException("Invalid TRP statement!");
     }
 }
 

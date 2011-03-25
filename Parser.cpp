@@ -104,7 +104,7 @@ void Parser::processFile()
                         d->value = boost::lexical_cast<int>(data);
                         m_queue.push_back(d);
                     } else {
-                        throw std::exception("Bad DATA type found");
+                        throw ParserException("Bad DATA type found");
                     }
                     // This is a data piece
                 } else {

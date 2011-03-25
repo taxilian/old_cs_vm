@@ -96,6 +96,6 @@ private:
     std::string lastSeenType;
     std::string lastSeenFieldType;
 
-    std::list<ParameterDefPtr> foundParams;
+    std::vector<ParameterDefPtr> foundParams;
 };
 

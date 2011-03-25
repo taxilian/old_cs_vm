@@ -2,7 +2,7 @@
 #include "ICodeWriter.h"
 #include <assert.h>
 
-ICodeWriter::ICodeWriter( const std::string& fname ) : fname(fname), file(fname)
+ICodeWriter::ICodeWriter( const std::string& fname ) : fname(fname), file(fname.c_str())
 {
 }
 
