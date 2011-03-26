@@ -13,3 +13,5 @@ lexer/TEMP_FILE.icd
 TEMP_FILE.icd
 build
 tags
+*.pbxuser
+*.mode1v3
