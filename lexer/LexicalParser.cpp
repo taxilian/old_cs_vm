@@ -1,14 +1,21 @@
 
 #include <iostream>
 #include <exception>
+#include <boost/algorithm/string.hpp>
 
 #include "LexicalParser.h"
 
 LexicalParser::LexicalParser(const std::string& filename)
-    : m_filename(filename), m_file(filename.c_str()), m_lineNo(0), m_state(STATE_EMPTY)
+    : m_filename(filename), m_file(filename.c_str()), m_lineNo(1), m_state(STATE_EMPTY), bufferpos(0), startLinePos(0)
 {
     if (!m_file)
         throw LexicalParserException(("Could not load " + m_filename).c_str());
+    char c;
+    std::stringstream data;
+    while (m_file.get(c)) {
+        data << c;
+    }
+    buffer = data.str();
 }
 
 LexicalParser::~LexicalParser(void)
@@ -54,12 +61,26 @@ bool LexicalParser::backTrack( int n /*= 1*/ )
     }
 }
 
+bool LexicalParser::nextChar(char& c)
+{
+    if (bufferpos >= buffer.size())
+        return false;
+    if (buffer[bufferpos] == '\n' && bufferpos > startLinePos) {
+        m_lineNo++;
+        std::string line = buffer.substr(startLinePos, bufferpos-startLinePos);
+        boost::algorithm::erase_all(line, "\r");
+        boost::algorithm::erase_all(line, "\n");
+        m_lineCache[m_lineNo] = line;
+        startLinePos = bufferpos;
+    }
+    c = buffer[bufferpos++];
+    return true;
+}
+
 Token LexicalParser::_nextToken()
 {
     char c(0);
-    while (m_file.get(c)) {
-        if (c == '\n')
-            ++m_lineNo;
+    while (nextChar(c)) {
         switch(getState()) {
         case STATE_EMPTY:
             // Nothing accumulated
@@ -123,7 +144,7 @@ Token LexicalParser::_nextToken()
             break;
         case STATE_SQUOTE:
             if (c == '\\') {
-                if (!m_file.get(c)) {
+                if (!nextChar(c)) {
                     throw LexicalParserException("Unmatched ' quote! Unexpected End of File!");
                 }
                 if (c == 'r')
@@ -140,7 +161,7 @@ Token LexicalParser::_nextToken()
             break;
         case STATE_DQUOTE:
             if (c == '\\') {
-                if (!m_file.get(c)) {
+                if (!nextChar(c)) {
                     throw LexicalParserException("Unmatched \" quote! Unexpected End of File!");
                 }
                 if (c == 'r')
@@ -152,7 +173,7 @@ Token LexicalParser::_nextToken()
             } else if (c == '"') {
                 return endToken(TT_STRING);
             } else if (c == '\n') {
-                std::cerr << "Unmatched \" in string on line " << (m_lineNo - 1);
+                std::cerr << "Unmatched \" in string on line " << m_lineNo;
                 return endToken(TT_STRING);
             } else {
                 ss << c;
@@ -168,9 +189,7 @@ Token LexicalParser::endToken(const TokenType type, const bool back_up)
     setState(STATE_EMPTY);
 
     if (back_up) {
-        std::streamoff pos(m_file.tellg());
-        --pos;
-        m_file.seekg(pos);
+        --bufferpos;
     }
 
     Token out(type, ss.str());

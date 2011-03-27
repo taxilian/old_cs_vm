@@ -19,6 +19,23 @@ void main( )
         cout << v;
         v = v + 1;
     }
+    if (v == 10) {
+        cout << 'i';
+        cout << 't';
+        cout << ' ';
+        cout << 'w';
+        cout << 'o';
+        cout << 'r';
+        cout << 'k';
+        cout << 'e';
+        cout << 'd';
+        cout << '\n';
+    }
+    if (v < 10) {
+        cout << '!';
+    } else {
+        cout << '@';
+    }
 }
 
 class Test2 {

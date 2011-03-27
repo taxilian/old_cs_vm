@@ -163,6 +163,11 @@ protected:
     bool findFunction( const std::string& scope, const std::string& name, const boost::shared_ptr<argList_SAR>& argList );
     std::string findClass();
     int getTypeSize( const std::string& type, bool nested = false );
+
+protected:
+    int lastLine;
+    void LineComment();
+
 private:
     LexicalParser* lexer;
     ICodeWriter* icode;

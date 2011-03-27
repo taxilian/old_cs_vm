@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <deque>
+#include <map>
 #include "Token.h"
 
 struct LexicalParserException : std::exception
@@ -28,6 +29,8 @@ public:
     Token nextToken();
     Token peekToken(size_t n = 0);
     bool backTrack(int n = 1);
+    int getLineNumber() { return m_lineNo; }
+    std::string getLine(int num) { return m_lineCache[num]; }
 
 private:
     Token _nextToken();
@@ -52,7 +55,12 @@ protected:
     bool isOperator( const char c );
     Token endToken( const TokenType type, const bool back_up = false);
     bool isValidIdentifier( const char c, const bool isFirstChar = false );
+    bool nextChar(char& c);
 private:
+    std::string buffer;
+    int startLinePos;
+    int bufferpos;
+    std::map<int, std::string> m_lineCache;
     std::string m_filename;
     std::ifstream m_file;
     StateEnum m_state;

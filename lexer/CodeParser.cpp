@@ -10,7 +10,7 @@
 
 using namespace std;
 
-CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(1), icode(NULL)
+CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(1), icode(NULL), lastLine(-1)
 {
     current_scope.push_back("g");
 
@@ -112,9 +112,21 @@ void CodeParser::assert_type_value( const TokenType type, const std::string& val
     }
 }
 
+void CodeParser::LineComment()
+{
+    if (pass2() && lastLine != lexer->getLineNumber()) {
+        lastLine = lexer->getLineNumber();
+        std::stringstream ss;
+        ss << "Line " << lastLine << ": ";
+        ss << lexer->getLine(lastLine);
+        icode->Comment(ss.str());
+    }
+}
+
 // Start point
 void CodeParser::compilation_unit()
 {
+    LineComment();
     while (true) {
         if (lexer->current().type == TT_KEYWORD
             && lexer->current().text == "class") {
@@ -177,6 +189,7 @@ void CodeParser::method_body()
     variable_declaration();
 	
     while (lexer->current().text != "}") {
+        LineComment();
         statement();
     }
 
@@ -198,6 +211,7 @@ void CodeParser::variable_declaration()
 			   || !is_reserved(lexer->current().text))
 		   && lexer->peekToken(0).type == TT_KEYWORD
 		   && !is_reserved(lexer->peekToken(0).text)) {
+        LineComment();
         type();
         if (pass2())
             typeExist(lastSeenType);
@@ -509,8 +523,13 @@ void CodeParser::statement()
 void CodeParser::cmd_if()
 {
     assert_type_value(TT_GROUPOPEN, "(");
-    if (pass2())
+    std::string ifId;
+    if (pass2()) {
         opPush("(");
+        icode->Comment("Begin if");
+        ifId = makeSymbolId("IF");
+        loop_stack.push_back(ifId);
+    }
     lexer->nextToken();
     expression();
     assert_type_value(TT_GROUPCLOSE, ")");
@@ -523,7 +542,20 @@ void CodeParser::cmd_if()
     if (lexer->current().type == TT_KEYWORD
         && lexer->current().text == "else") {
         lexer->nextToken();
+        if (pass2()) {
+            keyword_sa("else");
+        }
         statement();
+        if (pass2()) {
+            icode->Label(ifId + "_SEL");
+        }
+    } else if (pass2()) {
+        icode->Label(ifId + "_SIF");
+    }
+    if (pass2()) {
+        icode->Write("NOOP");
+        icode->Comment("endif");
+        loop_stack.pop_back();
     }
 }
 
@@ -1199,15 +1231,28 @@ void CodeParser::keyword_sa( const std::string &kw )
         }
     } else if (kw == "cout") {
         SARPtr sar(saPop());
-        // Implement cout with whatever is on the stack
+        icode->Write("WRITE", getRval(sar));
     } else if (kw == "cin") {
         SARPtr sar(saPop());
-        // Implement cin with whatever is on the stack
+        icode->Write("READ", getRval(sar));
     } else if (kw == "return") {
         SARPtr sar(saPop());
         icode->Write("RETURN", getRval(sar));
         foundReturn = true;
         // Return whatever is on the stack
+    } else if (kw == "if") {
+        SARPtr sar(saPop());
+        if ((is_a<var_SAR>(sar) && as<var_SAR>(sar)->type != "bool")
+            || (is_a<lit_SAR>(sar) && as<lit_SAR>(sar)->type != "bool")) {
+            throw SyntaxParserException("Expecting bool and didn't find it!");
+        } else {
+            std::string ifId = loop_stack.back();
+            icode->Write("BF", getRval(sar), ifId + "_SIF");
+        }
+    } else if (kw == "else") {
+        std::string ifId = loop_stack.back();
+        icode->Write("JMP", ifId + "_SEL");
+        icode->Label(ifId + "_SIF");
     } else {
         throw std::runtime_error("Not implemented");
     }
