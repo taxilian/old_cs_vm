@@ -116,6 +116,7 @@ public:
     std::string findInScope( const std::string& id );
     std::string getRval(const SARPtr& rval);
     std::string getLval(const SARPtr& lval);
+    std::string resolveArgument(const SARPtr& arg);
 
 public:
     void setPass(int pass) { this->pass = pass; }

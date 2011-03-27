@@ -142,6 +142,7 @@ void CodeParser::compilation_unit()
                 icode->Label("START");
                 icode->Write("FRAME", "main", "0");
                 icode->Write("CALL", "main");
+                icode->Write("TRP", "0");
             }
             lastSeenName = "main";
             lastSeenFunction = "main";
@@ -529,8 +530,14 @@ void CodeParser::cmd_if()
 void CodeParser::cmd_while()
 {
     assert_type_value(TT_GROUPOPEN, "(");
-    if (pass2())
+    std::string whileId;
+    if (pass2()) {
         opPush("(");
+        icode->Comment("Begin while");
+        whileId = makeSymbolId("WH");
+        loop_stack.push_back(whileId);
+        icode->Label(whileId + "_ST");
+    }
     lexer->nextToken();
     expression();
     assert_type_value(TT_GROUPCLOSE, ")");
@@ -540,6 +547,12 @@ void CodeParser::cmd_while()
         keyword_sa("while");
     }
     statement();
+    if (pass2()) {
+        icode->Write("JMP", whileId + "_ST");
+        icode->Label(whileId + "_END");
+        icode->Write("NOOP");
+        loop_stack.pop_back();
+    }
 }
 
 void CodeParser::cmd_return()
@@ -612,29 +625,29 @@ void CodeParser::expression()
         if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
             expressionz();
     } else if (lexer->current().type == TT_NUMBER
-			   || (lexer->current().type == TT_OPERATOR && (curTxt == "-" || curTxt == "+")
-				   && lexer->peekToken().type == TT_NUMBER)) {
-				   numeric_literal();
-				   if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
-					   expressionz();
-			   } else if (lexer->current().type == TT_CHAR) {
-				   character_literal();
-				   if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
-					   expressionz();
-			   } else {
-				   identifier();
-				   if (lexer->current().type == TT_GROUPOPEN) {
-					   fn_arr_member();
-				   }
-				   if (pass2()) {
-					   idExist();
-				   }
-				   if (lexer->current().type == TT_OPERATOR && lexer->current().text == ".") {
-					   member_refz();
-				   }
-				   if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
-					   expressionz();
-			   }
+            || (lexer->current().type == TT_OPERATOR && (curTxt == "-" || curTxt == "+")
+                && lexer->peekToken().type == TT_NUMBER)) {
+        numeric_literal();
+        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
+            expressionz();
+    } else if (lexer->current().type == TT_CHAR) {
+        character_literal();
+        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
+            expressionz();
+    } else {
+        identifier();
+        if (lexer->current().type == TT_GROUPOPEN) {
+            fn_arr_member();
+        }
+        if (pass2()) {
+            idExist();
+        }
+        if (lexer->current().type == TT_OPERATOR && lexer->current().text == ".") {
+            member_refz();
+        }
+        if (lexer->current().type == TT_OPERATOR && lexer->current().text != ",")
+            expressionz();
+    }
 }
 
 void CodeParser::expressionz()
@@ -1155,7 +1168,15 @@ void CodeParser::func_sa()
     if (!findFunction(scope, funcnamesar->value, argList)) {
         throw SyntaxParserException("Cannot find a method matching " + type + " with these arguments");
     }
-    // TODO: Add code to call function
+    if (pass2()) {
+        std::string funcId(symbol_name_map[scope + "." + funcnamesar->value]->id);
+        icode->Write("FRAME", funcId, getRval(varsar));
+        for (std::vector<SARPtr>::iterator it = argList->argList.begin();
+             it != argList->argList.end(); ++it) {
+            icode->Write("PUSH", getRval(*it));
+        }
+        icode->Write("CALL", funcId);
+    }
     tempPush(getScopeType(scope + "." + funcnamesar->value));
     opPop();
 }
@@ -1173,7 +1194,8 @@ void CodeParser::keyword_sa( const std::string &kw )
             || (is_a<lit_SAR>(sar) && as<lit_SAR>(sar)->type != "bool")) {
             throw SyntaxParserException("Expecting bool and didn't find it!");
         } else {
-            // TODO: Whatever we should do with this while
+            std::string whileId = loop_stack.back();
+            icode->Write("BF", getRval(sar), whileId + "_END");
         }
     } else if (kw == "cout") {
         SARPtr sar(saPop());

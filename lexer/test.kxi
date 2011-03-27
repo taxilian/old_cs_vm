@@ -14,6 +14,11 @@ void main( )
     v = b.getTest().x;
     v = b.getTest().copy(3,4);
     cout << v; 
+    v = 0;
+    while (v < 10) {
+        cout << v;
+        v = v + 1;
+    }
 }
 
 class Test2 {
