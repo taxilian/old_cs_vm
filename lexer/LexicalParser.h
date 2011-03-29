@@ -5,6 +5,7 @@
 #include <sstream>
 #include <deque>
 #include <map>
+#include <boost/algorithm/string/find_iterator.hpp>
 #include "Token.h"
 
 struct LexicalParserException : std::exception

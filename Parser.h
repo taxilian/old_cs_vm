@@ -52,7 +52,12 @@ public:
         std::vector<std::string> args;
     };
 
+    struct Comment : public Line {
+        std::string line;
+    };
+
     typedef boost::shared_ptr<Line> LinePtr;
+    typedef boost::shared_ptr<Comment> CommentPtr;
     typedef boost::shared_ptr<Byte> BytePtr;
     typedef boost::shared_ptr<Int> IntPtr;
     typedef boost::shared_ptr<Instruction> InstructionPtr;

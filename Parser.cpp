@@ -12,23 +12,6 @@ Parser::~Parser(void)
 {
 }
 
-std::string Parser::sanitizeString(const std::string &str)
-{
-    std::string::size_type search, left, right;
-    std::string sub(str);
-    if ((search = str.find(";")) != std::string::npos) {
-        sub = str.substr(0, search);
-    }
-    left = sub.find_first_not_of(" \t");
-    right = sub.find_last_not_of(" \t");
-    if (left != std::string::npos)
-        return sub.substr(left, right-left+1);
-    else
-        return sub;
-}
-
-//
-//
 std::vector<std::string> Parser::split(const std::string &str, const char *tokens)
 {
     std::vector<std::string> outList;
@@ -57,7 +40,15 @@ void Parser::processFile()
         std::string line;
         m_lineNumber++;
 
-        line = std::string(buffer); //sanitizeString(std::string(buffer));
+        line = std::string(buffer);
+        size_t begPos(line.find_first_not_of("\t "));
+        if (begPos != std::string::npos && line[begPos] == ';') {
+            // This line is a comment!
+            CommentPtr c(boost::make_shared<Comment>());
+            c->line = line;
+            m_queue.push_back(c);
+            return;
+        }
         std::vector<std::string> tokens(split(line, ", \r\n()"));
         std::vector<std::string>::iterator it = tokens.begin();
         if (it != tokens.end() && it->empty())

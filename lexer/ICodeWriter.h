@@ -18,7 +18,7 @@ public:
     void Write(const std::string& instruction);
 
     void Blank();
-    void Comment(const std::string& comment);
+    void Comment(const std::string& comment, const bool indent = true);
     void DoMath( std::string op, std::string tempId, std::string op1, std::string op2 );
 
     void beginSection(const std::string& name);

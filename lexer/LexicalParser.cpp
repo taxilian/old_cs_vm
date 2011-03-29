@@ -16,6 +16,7 @@ LexicalParser::LexicalParser(const std::string& filename)
         data << c;
     }
     buffer = data.str();
+    boost::algorithm::erase_all(buffer, "\r");
 }
 
 LexicalParser::~LexicalParser(void)
@@ -63,15 +64,21 @@ bool LexicalParser::backTrack( int n /*= 1*/ )
 
 bool LexicalParser::nextChar(char& c)
 {
-    if (bufferpos >= buffer.size())
+    if (bufferpos >= buffer.size() || buffer[bufferpos] == '\0')
         return false;
-    if (buffer[bufferpos] == '\n' && bufferpos > startLinePos) {
+    if (buffer[bufferpos] == '\n') {
         m_lineNo++;
-        std::string line = buffer.substr(startLinePos, bufferpos-startLinePos);
-        boost::algorithm::erase_all(line, "\r");
-        boost::algorithm::erase_all(line, "\n");
+        char* beg = &buffer[bufferpos+1];
+        if (*beg) {
+            char* end = strchr(beg, '\n');
+            std::string line(beg, (end-beg));
+            m_lineCache[m_lineNo] = line;
+        }
+    } else if (bufferpos == 0) {
+        char* beg = &buffer[0];
+        char* end = strchr(beg, '\n');
+        std::string line(beg, (end-beg));
         m_lineCache[m_lineNo] = line;
-        startLinePos = bufferpos;
     }
     c = buffer[bufferpos++];
     return true;

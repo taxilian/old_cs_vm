@@ -3,7 +3,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
-#include "VMConfig.h"
+#include "AsmVMConfig.h"
 
 char Assembler::getRegister(std::string name)
 {
@@ -26,7 +26,7 @@ char Assembler::getRegister(std::string name)
     }
 }
 
-Assembler::Assembler(std::string filename) : m_config(boost::make_shared<VMConfig>()),
+Assembler::Assembler(std::string filename) : m_config(boost::make_shared<AsmVMConfig>()),
     m_parser(filename, m_config), m_block(new unsigned char[1024]), m_size(0)
 {
 }

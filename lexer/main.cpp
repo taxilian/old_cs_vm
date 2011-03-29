@@ -3,6 +3,7 @@
 #include "LexicalParser.h"
 #include "CodeParser.h"
 #include "ICodeWriter.h"
+#include "TCodeWriter.h"
 
 int main(int argc, char *argv[] )
 {
@@ -27,6 +28,9 @@ int main(int argc, char *argv[] )
     do {
         syntax.compilation_unit();   
     } while (lexer2.current().type != TT_ENDOFFILE);
+
+    TCodeWriter twriter("TEMP_FILE.icd", std::string(argv[1]) + ".out");
+    twriter.start();
 
     return 0;
 }

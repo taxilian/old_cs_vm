@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		79B37D5E1341702C00FF3454 /* TCodeWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 79B37D5C1341702C00FF3454 /* TCodeWriter.cpp */; };
 		79D7CB55133977D400F55DD8 /* Assembler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 79D7CB4B133977D400F55DD8 /* Assembler.cpp */; };
 		79D7CB56133977D400F55DD8 /* Parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 79D7CB4F133977D400F55DD8 /* Parser.cpp */; };
 		79D7CB57133977D400F55DD8 /* VirtualMachine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 79D7CB51133977D400F55DD8 /* VirtualMachine.cpp */; };
@@ -34,6 +35,8 @@
 
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		79B37D5C1341702C00FF3454 /* TCodeWriter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TCodeWriter.cpp; sourceTree = "<group>"; };
+		79B37D5D1341702C00FF3454 /* TCodeWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TCodeWriter.h; sourceTree = "<group>"; };
 		79D7CB4B133977D400F55DD8 /* Assembler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Assembler.cpp; sourceTree = "<group>"; };
 		79D7CB4C133977D400F55DD8 /* Assembler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Assembler.h; sourceTree = "<group>"; };
 		79D7CB4D133977D400F55DD8 /* escaped_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = escaped_list.h; sourceTree = "<group>"; };
@@ -129,6 +132,8 @@
 		79D7CB73133979C700F55DD8 /* lexer */ = {
 			isa = PBXGroup;
 			children = (
+				79B37D5C1341702C00FF3454 /* TCodeWriter.cpp */,
+				79B37D5D1341702C00FF3454 /* TCodeWriter.h */,
 				79D7CBAE133982DB00F55DD8 /* ICodeWriter.cpp */,
 				79D7CBAF133982DB00F55DD8 /* ICodeWriter.h */,
 				79D7CB74133979C700F55DD8 /* CodeParser.cpp */,
@@ -227,6 +232,7 @@
 				79D7CB84133979C700F55DD8 /* SyntaxParser.cpp in Sources */,
 				79D7CB85133979C700F55DD8 /* Token.cpp in Sources */,
 				79D7CBB0133982DB00F55DD8 /* ICodeWriter.cpp in Sources */,
+				79B37D5E1341702C00FF3454 /* TCodeWriter.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

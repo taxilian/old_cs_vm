@@ -65,8 +65,8 @@ class VMConfig
 {
 protected:
 public:
-    VMConfig(void);
-    virtual ~VMConfig(void);
+    VMConfig(void) {}
+    virtual ~VMConfig(void) {}
 
 protected:
     void registerInstruction(std::string name, unsigned char bin, ParamType type = PT_DEFAULT);

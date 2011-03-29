@@ -119,20 +119,28 @@ void CodeParser::LineComment()
         std::stringstream ss;
         ss << "Line " << lastLine << ": ";
         ss << lexer->getLine(lastLine);
-        icode->Comment(ss.str());
+        icode->Comment(ss.str(), false);
     }
 }
 
 // Start point
 void CodeParser::compilation_unit()
 {
-    LineComment();
     while (true) {
         if (lexer->current().type == TT_KEYWORD
             && lexer->current().text == "class") {
+            LineComment();
             class_declaration();
         } else if (lexer->current().type == TT_KEYWORD
             && lexer->current().text == "void") {
+            if (pass2()) {
+                icode->Comment("Calling function main");
+                icode->Label("START");
+                icode->Write("FRAME", "main", "0");
+                icode->Write("CALL", "main");
+                icode->Write("TRP", "0");
+            }
+            LineComment();
             assert_type_value(TT_KEYWORD, "void"); lexer->nextToken();
             assert_type_value(TT_KEYWORD, "main"); lexer->nextToken();
             assert_type_value(TT_GROUPOPEN, "("); lexer->nextToken();
@@ -149,12 +157,6 @@ void CodeParser::compilation_unit()
                 methoddata->returnType = "void";
                 symb->data = methoddata;
                 registerSymbol(symb);
-            } else if (pass2()) {
-                icode->Comment("Calling function main");
-                icode->Label("START");
-                icode->Write("FRAME", "main", "0");
-                icode->Write("CALL", "main");
-                icode->Write("TRP", "0");
             }
             lastSeenName = "main";
             lastSeenFunction = "main";
@@ -176,6 +178,7 @@ void CodeParser::method_body()
     if (pass2()) {
         icode->Blank();
         icode->Blank();
+        LineComment();
         icode->Comment("Begin function " + getScopeString());
         icode->Label("FN_" + symbol_name_map[getScopeString()]->id);
         icode->Write("FUNC", symbol_name_map[getScopeString()]->id);
@@ -189,7 +192,6 @@ void CodeParser::method_body()
     variable_declaration();
 	
     while (lexer->current().text != "}") {
-        LineComment();
         statement();
     }
 
@@ -486,6 +488,7 @@ void CodeParser::parameter_list()
 
 void CodeParser::statement()
 {
+    LineComment();
     std::string& curTxt(lexer->current().text);
     if (lexer->current().type == TT_GROUPOPEN
         && curTxt == "{") {
@@ -1200,16 +1203,25 @@ void CodeParser::func_sa()
     if (!findFunction(scope, funcnamesar->value, argList)) {
         throw SyntaxParserException("Cannot find a method matching " + type + " with these arguments");
     }
-    if (pass2()) {
-        std::string funcId(symbol_name_map[scope + "." + funcnamesar->value]->id);
-        icode->Write("FRAME", funcId, getRval(varsar));
-        for (std::vector<SARPtr>::iterator it = argList->argList.begin();
-             it != argList->argList.end(); ++it) {
-            icode->Write("PUSH", getRval(*it));
-        }
-        icode->Write("CALL", funcId);
+    
+    SymbolEntryPtr func(symbol_name_map[scope + "." + funcnamesar->value]);
+    MethodDataPtr md(as<MethodData>(func->data));
+    std::string funcId(func->id);
+
+    std::string tempId;
+    if (md->returnType != "void")
+        tempId = tempPush(getScopeType(scope + "." + funcnamesar->value));
+    
+    icode->Write("FRAME", funcId, getRval(varsar));
+    for (std::vector<SARPtr>::iterator it = argList->argList.begin();
+         it != argList->argList.end(); ++it) {
+        icode->Write("PUSH", getRval(*it));
     }
-    tempPush(getScopeType(scope + "." + funcnamesar->value));
+    icode->Write("CALL", funcId);
+    if (md->returnType != "void") {
+        icode->Write("POP", tempId);
+    }
+
     opPop();
 }
 
@@ -1361,8 +1373,8 @@ void CodeParser::processOperatorStack()
         || op == ">" || op == "<"
         || op == ">=" || op == "<="
         || op == "&&" || op == "||") {
-        SARPtr sar1(saPop());
         SARPtr sar2(saPop());
+        SARPtr sar1(saPop());
         // These all require the type to be the same
         if (getScopeType(sar1) != getScopeType(sar2))
             throw SyntaxParserException("Invalid rval type: expected " + getScopeType(sar1) + " but found " + getScopeType(sar2));
@@ -1372,8 +1384,8 @@ void CodeParser::processOperatorStack()
     } else if (op == "(" || op == ",") {
         return;
     } else if (op == "+" || op == "-" || op == "*" || op == "/") {
-        SARPtr sar1(saPop());
         SARPtr sar2(saPop());
+        SARPtr sar1(saPop());
         // These all require the type to be the same
         if (getScopeType(sar1) != getScopeType(sar2))
             throw SyntaxParserException("Invalid rval type: expected " + getScopeType(sar1) + " but found " + getScopeType(sar2));

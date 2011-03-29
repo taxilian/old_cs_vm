@@ -51,9 +51,12 @@ void ICodeWriter::Blank()
     getStream() << std::endl;
 }
 
-void ICodeWriter::Comment( const std::string& comment )
+void ICodeWriter::Comment( const std::string& comment, const bool indent/* = true*/ )
 {
-    getStream() << "                ; " << comment.c_str() << std::endl;
+    if (indent) {
+        getStream() << "                ";
+    }
+    getStream() << "; " << comment.c_str() << std::endl;
 }
 
 void ICodeWriter::DoMath( std::string op, std::string tempId, std::string op1, std::string op2 )
