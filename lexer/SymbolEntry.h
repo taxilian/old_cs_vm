@@ -15,13 +15,9 @@ struct SymbolData : boost::noncopyable {
 };
 typedef boost::shared_ptr<SymbolData> SymbolDataPtr;
 
-struct ParameterDef : boost::noncopyable {
-    std::string paramId;
-};
-typedef boost::shared_ptr<ParameterDef> ParameterDefPtr;
-
 struct MethodData : public SymbolData {
-    std::vector<ParameterDefPtr> Parameters;
+    std::vector<std::string> Parameters;
+    std::vector<std::string> vars;
     std::string returnType;
 };
 typedef boost::shared_ptr<MethodData> MethodDataPtr;

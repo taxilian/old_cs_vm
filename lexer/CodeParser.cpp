@@ -179,10 +179,22 @@ void CodeParser::method_body()
         icode->Blank();
         icode->Blank();
         LineComment();
-        icode->Comment("Begin function " + getScopeString());
-        icode->Label("FN_" + symbol_name_map[getScopeString()]->id);
-        icode->Write("FUNC", symbol_name_map[getScopeString()]->id);
+        std::string scope(getScopeString());
+        icode->Comment("Begin function " + scope);
+        icode->Label("FN_" + symbol_name_map[scope]->id);
+        icode->Write("FUNC", symbol_name_map[scope]->id);
         if (scope_type.size() && scope_type.back() == "constructor") {
+            std::string pscope = symbol_name_map[scope]->scope;
+            for(ScopeMap::iterator it(symbol_id_map.begin()); it != symbol_id_map.end(); ++it) {
+                if (it->second->scope == pscope && it->second->id[0] == 'T') {
+                    // Move all temporary variables from the class into the constructor,
+                    // since those will have been created to assist with initialization
+                    symbol_name_map.erase(symbol_name_map.find(it->second->scope + "." + it->second->id));
+                    it->second->scope = scope;
+                    registerSymbol(it->second);
+                    as<MethodData>(symbol_name_map[scope]->data)->vars.push_back(it->second->id);
+                }
+            }
             icode->Comment("initialize default class values");
             icode->writeSection("constructor");
             icode->Comment("end initialization");
@@ -244,6 +256,7 @@ void CodeParser::variable_declaration()
             tdata->accessMod = "private";
             tdata->type = lastSeenType;
             symb->data = tdata;
+            as<MethodData>(symbol_name_map[symb->scope]->data)->vars.push_back(symb->id);
             registerSymbol(symb);
         } else if (pass2()) {
             end_of_expr();
@@ -294,6 +307,21 @@ void CodeParser::class_declaration()
             methoddata->returnType = className;
             symb->data = methoddata;
             registerSymbol(symb);
+
+            current_scope.push_back(className);
+            std::string scope(getScopeString());
+            std::string pscope = symbol_name_map[scope]->scope;
+            for(ScopeMap::iterator it(symbol_id_map.begin()); it != symbol_id_map.end(); ++it) {
+                if (it->second->scope == pscope && it->second->id[0] == 'T') {
+                    // Move all temporary variables from the class into the constructor,
+                    // since those will have been created to assist with initialization
+                    symbol_name_map.erase(symbol_name_map.find(it->second->scope + "." + it->second->id));
+                    it->second->scope = scope;
+                    registerSymbol(it->second);
+                    as<MethodData>(symbol_name_map[scope]->data)->vars.push_back(it->second->id);
+                }
+            }
+            current_scope.pop_back();
         } else {
             current_scope.push_back(className);
             icode->Blank();
@@ -476,9 +504,7 @@ void CodeParser::parameter_list()
             symb->data = typedata;
             registerSymbol(symb);
 			
-            ParameterDefPtr param = boost::make_shared<ParameterDef>(); 
-            param->paramId = symb->id;
-            foundParams.push_back(param);
+            foundParams.push_back(symb->id);
         }
         if (lexer->current().text == ",") {
             lexer->nextToken();
@@ -1311,6 +1337,11 @@ std::string CodeParser::tempPush( const std::string& type )
     symb->data = tdata;
     registerSymbol(symb);
     saStack.push_back(boost::make_shared<var_SAR>(symb->value, type));
+
+    MethodDataPtr owner(as<MethodData>(symbol_name_map[symb->scope]->data));
+    if (owner) {
+        owner->vars.push_back(symb->id);
+    }
     return symb->id;
 }
 
@@ -1323,8 +1354,8 @@ bool CodeParser::findFunction( const std::string& scope, const std::string& name
         if (m->Parameters.size() != argList->argList.size())
             return false;
         int i = 0;
-        for (vector<ParameterDefPtr>::iterator it = m->Parameters.begin(); it != m->Parameters.end(); ++it) {
-            SymbolEntryPtr param(symbol_id_map[(*it)->paramId]);
+        for (vector<std::string>::iterator it = m->Parameters.begin(); it != m->Parameters.end(); ++it) {
+            SymbolEntryPtr param(symbol_id_map[*it]);
             TypeDataPtr t(as<TypeData>(param->data));
             if (t->type != getScopeType(argList->argList[i]))
                 return false;
@@ -1333,6 +1364,19 @@ bool CodeParser::findFunction( const std::string& scope, const std::string& name
         return true;
     } else {
         return false;
+    }
+}
+
+std::string getCharString(char c) {
+    switch(c) {
+        case '\n':
+            return "\\n";
+        case '\0':
+            return "\\0";
+        case '\r':
+            return "\\r";
+        default:
+            return std::string() + c;
     }
 }
 
@@ -1347,7 +1391,7 @@ std::string CodeParser::getRval(const SARPtr& rval) {
         } else if (is_a<null_SAR>(rval)) {
             return "0";
         } else if (is_a<char_SAR>(rval)) {
-            return boost::lexical_cast<std::string>((int)rval->value[0]);
+            return std::string("'") + getCharString(rval->value[0]) + "'";
         } else throw SyntaxParserException("WTF?");
     } else if (is_a<var_SAR>(rval)) {
         SymbolEntryPtr right = symbol_name_map[findInScope(rval->value)];

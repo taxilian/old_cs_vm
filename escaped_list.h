@@ -5,7 +5,7 @@ using boost::escaped_list_error;
 
 template <class Char,
     class Traits = BOOST_DEDUCED_TYPENAME std::basic_string<Char>::traits_type >
-class escaped_list_separator {
+class my_escaped_list_separator {
 
   private:
     typedef std::basic_string<Char,Traits> string_type;
@@ -68,14 +68,16 @@ class escaped_list_separator {
 
     public:
 
-    explicit escaped_list_separator(Char  e = '\\',
+    explicit my_escaped_list_separator(Char  e = '\\',
                                     Char c = ',',Char  q = '\"', Char  s = ';')
       : escape_(1,e), c_(1,c), quote_(1,q), comment_(1,s), last_(false) { }
 
-    escaped_list_separator(string_type e, string_type c, string_type q, string_type s)
+    my_escaped_list_separator(string_type e, string_type c, string_type q, string_type s)
       : escape_(e), c_(c), quote_(q), comment_(s), last_(false) { }
 
     void reset() {last_=false;}
+
+    Char qt;
 
     template <typename InputIterator, typename Token>
     bool operator()(InputIterator& next,InputIterator end,Token& tok) {
@@ -117,8 +119,13 @@ class escaped_list_separator {
           else tok+=*next;
         }
         else if (is_quote(*next)) {
-            tok += *next;
-          bInQuote=!bInQuote;
+          if (!bInQuote) {
+            qt = *next;
+            bInQuote=!bInQuote;
+          } else if (qt == *next) {
+            bInQuote=!bInQuote;
+          }
+          tok += *next;
         }
         else {
           tok += *next;

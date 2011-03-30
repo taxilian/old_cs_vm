@@ -16,7 +16,7 @@ std::vector<std::string> Parser::split(const std::string &str, const char *token
 {
     std::vector<std::string> outList;
     
-    boost::tokenizer<escaped_list_separator<char> > escTokenizer(str, escaped_list_separator<char>("\\", ", \t\r\n", "\"", ";"));
+    boost::tokenizer<my_escaped_list_separator<char> > escTokenizer(str, my_escaped_list_separator<char>("\\", ", \t\r\n", "\"'", ";"));
     BOOST_FOREACH(std::string s, escTokenizer)
         outList.push_back(s);
      

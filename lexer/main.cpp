@@ -30,6 +30,8 @@ int main(int argc, char *argv[] )
     } while (lexer2.current().type != TT_ENDOFFILE);
 
     TCodeWriter twriter("TEMP_FILE.icd", std::string(argv[1]) + ".out");
+    twriter.setSymbolNameMap(syntax.getSymbolNameMap());
+    twriter.setSymbolIdMap(syntax.getSymbolIdMap());
     twriter.start();
 
     return 0;

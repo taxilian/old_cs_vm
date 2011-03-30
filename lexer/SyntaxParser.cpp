@@ -417,9 +417,7 @@ void SyntaxParser::parameter_list()
             symb->data = typedata;
             registerSymbol(symb);
 
-            ParameterDefPtr param = boost::make_shared<ParameterDef>(); 
-            param->paramId = symb->id;
-            foundParams.push_back(param);
+            foundParams.push_back(symb->id);
         }
         if (lexer.current().text == ",") {
             lexer.nextToken();

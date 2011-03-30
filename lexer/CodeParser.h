@@ -19,6 +19,7 @@ struct SyntaxParserException : std::exception
     }
     std::string m_error;
 };
+typedef std::map<std::string, SymbolEntryPtr> ScopeMap;
 
 class ICodeWriter;
 
@@ -122,6 +123,8 @@ public:
     void setPass(int pass) { this->pass = pass; }
     bool pass1() { return pass == 1; }
     bool pass2() { return pass == 2; }
+    ScopeMap getSymbolNameMap() { return symbol_name_map; }
+    ScopeMap getSymbolIdMap() { return symbol_id_map; }
 
 protected:
     const std::string getScopeString();
@@ -181,8 +184,8 @@ private:
     std::deque<std::string> current_scope;
     std::deque<std::string> scope_type;
     std::deque<std::string> loop_stack;
-    std::map<std::string, SymbolEntryPtr> symbol_id_map;
-    std::map<std::string, SymbolEntryPtr> symbol_name_map;
+    ScopeMap symbol_id_map;
+    ScopeMap symbol_name_map;
     bool foundConstructor;
     bool foundReturn;
 
@@ -196,6 +199,6 @@ private:
     std::string lastSeenType;
     std::string lastSeenFieldType;
 
-    std::vector<ParameterDefPtr> foundParams;
+    std::vector<std::string> foundParams;
     int pass;
 };

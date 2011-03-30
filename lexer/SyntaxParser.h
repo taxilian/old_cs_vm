@@ -76,6 +76,9 @@ protected:
     void assert_is( bool param1 );
     std::string makeSymbolId( const std::string& prefix );
     void registerSymbol( const SymbolEntryPtr& symbol );
+
+    std::map<std::string, SymbolEntryPtr> getSymbolIdMap() { return symbol_id_map; }
+    std::map<std::string, SymbolEntryPtr> getSymbolNameMap() { return symbol_name_map; }
 private:
     LexicalParser& lexer;
     std::set<std::string> validKeywords;
@@ -96,6 +99,6 @@ private:
     std::string lastSeenType;
     std::string lastSeenFieldType;
 
-    std::vector<ParameterDefPtr> foundParams;
+    std::vector<std::string> foundParams;
 };
 
