@@ -1,13 +1,46 @@
 void main( )
 {
-    cout << 'i';
-    cout << 't';
+    TestClass test = new TestClass();
+    char n = '\n';
+    int i = -340;
+    cout << i;
     cout << ' ';
-    cout << 'w';
-    cout << 'o';
-    cout << 'r';
-    cout << 'k';
-    cout << 'e';
-    cout << 'd';
-    cout << '\n';
+
+    if (true && true) {
+        cout << 'y';
+    } else {
+        cout << 'n';
+    }
+    cout << n;
+
+    i = 0;
+    while (i <= 10) {
+        cout << i;
+        cout << n;
+        i = i + 1;
+    }
+
+    i = 0;
+    i = 1 + 2 * (4 + 6) / 2;
+    cout << test.getI();
+    cout << n;
+    test.setI(27);
+    cout << 'z';
+    cout << test.getI();
+    cout << n;
+}
+
+class TestClass
+{
+    private int i = 5;
+    public int getI() { return i; }
+    public void setI(int a) {
+        cout << 'a';
+        cout << ':';
+        cout << a;
+        this.i = a;
+        cout << '\n';
+        cout << i;
+        cout << '\n';
+    }
 }

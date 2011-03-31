@@ -49,7 +49,7 @@ protected:
     boost::shared_array<unsigned char> m_block;
     bool m_running;
     FunctionMap m_functionMap;
-    thread threadList[20];
+    thread threadList[2];
     int m_curThread;
     int threadCount;
     bool m_blocked;
@@ -57,14 +57,15 @@ protected:
     unsigned short BOUND_CODE;
 
 public:
-    static const int THREAD_NUM = 21;
+    static const int THREAD_NUM = 2;
+    static const int REGISTER_COUNT = 21;
 
     static const int FP = 16;
     static const int SL = 17;
     static const int SP = 18;
     static const int SB = 19;
     static const int HP = 20;
-    int reg[THREAD_NUM];
+    int reg[REGISTER_COUNT];
     int pc;
 
 protected:

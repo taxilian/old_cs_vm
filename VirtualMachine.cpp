@@ -10,7 +10,7 @@
 
 #ifdef TRACEON
 #define DOC(FUNC, PARAM1, PARAM2) std::cerr << FUNC << ": " << PARAM1 << ", " << PARAM2;
-#define LOG(MSG) std::cerr << MSG << std::endl;
+#define LOG(MSG) std::cerr << MSG << std::endl; std::cerr.flush();
 #else
 #define DOC(FUNC, PARAM1, PARAM2)
 #define LOG(MSG)
@@ -99,7 +99,7 @@ void VirtualMachine::reset()
     this->m_block = boost::shared_array<unsigned char>(new unsigned char[MEMORY_SIZE+3]);
 
     ADDRESS bottom = MEMORY_SIZE - 1;
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < REGISTER_COUNT; i++) {
         reg[i] = 0;
     }
     memset(threadList, 0, sizeof(thread) * THREAD_NUM);
@@ -110,6 +110,7 @@ void VirtualMachine::reset()
     reg[FP] = reg[SB];          // Frame Pointer (Bottom of current frame)
     reg[SP] = reg[SB];          // Stack Pointer (Top of stack)
     reg[SL] = 0;                // Stack Limit (Top of available stack memory)
+    reg[HP] = 0;
     m_curThread = -1;
 }
 
@@ -125,6 +126,7 @@ void VirtualMachine::initThread( int threadId, ADDRESS newPC )
         throw VMException("Thread already active!");
     reg[SB] = reg[FP] = reg[SP] = ct->SB;
     reg[SL] = ct->SL;
+    reg[HP] = ct->SL;
     writeThreadRegisters(threadId);
     set_int(ct->MEMB, newPC);
     ct->active = true;
@@ -173,7 +175,7 @@ void VirtualMachine::writeThreadRegisters(int threadId)
 {
     thread* ct(&this->threadList[threadId]);
     this->set_int(ct->MEMB, pc);
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < REGISTER_COUNT; i++) {
         this->set_int(ct->MEMB - (1 + i) * sizeof(REGISTER), reg[i]);
     }
 }
@@ -182,7 +184,7 @@ void VirtualMachine::loadThreadRegisters( int threadId )
 {
     thread* ct(&this->threadList[threadId]);
     pc = this->get_int(ct->MEMB);
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < REGISTER_COUNT; i++) {
         reg[i] = this->get_int(ct->MEMB - (1 + i) * sizeof(REGISTER));
     }
 }
@@ -193,11 +195,11 @@ void VirtualMachine::load(boost::shared_array<unsigned char> block, unsigned sho
 {
     memcpy(m_block.get(), block.get(), size);
     BOUND_CODE = size;
-    int regCount = 20 + 1; // 20 registers plus PC
+    int regCount = REGISTER_COUNT + 1; // REGISTER_COUNT registers plus PC
     int regBlockSize = sizeof(REGISTER) * regCount;
     int stacksize = (MEMORY_SIZE - BOUND_CODE - 1) / 2;
     int threadStackSize = stacksize / this->THREAD_NUM;
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < THREAD_NUM; i++) {
         threadList[i].MEMB = (MEMORY_SIZE - 1) - (threadStackSize * i);
         threadList[i].SB = this->threadList[i].MEMB - regBlockSize;
         threadList[i].SL = MEMORY_SIZE - (threadStackSize * (i+1));
@@ -284,7 +286,7 @@ void VirtualMachine::ADD(REGISTER &rd, REGISTER &rs)
 }
 void VirtualMachine::ADI(REGISTER &rd, IMMEDIATE val)
 {
-    DOC("ADI", rd, val); rd += val;
+    DOC("ADI", "R" << static_cast<int>(&rd - this->reg) << "(" << rd << ")", val); rd += val;
 }
 void VirtualMachine::SUB(REGISTER &rd, REGISTER &rs)
 {
@@ -306,12 +308,12 @@ void VirtualMachine::LDA(REGISTER &rd, ADDRESS addr)
 }
 void VirtualMachine::LDR(REGISTER &rd, ADDRESS addr)
 {
-    DOC("LDR", "R" << static_cast<int>(&rd - this->reg), addr << " -> " << get_int(addr));
+    DOC("LDR", "R" << static_cast<int>(&rd - this->reg), addr << " (" << get_int(addr) << "");
     rd = get_int(addr);
 }
 void VirtualMachine::LDR2(REGISTER &rd, REGISTER &rs)
 {
-    DOC("LDR2", "R" << static_cast<int>(&rd - this->reg), rs << " -> " << get_int(rs));
+    DOC("LDR2", "R" << static_cast<int>(&rd - this->reg), "was " << rd << " -> to " << get_int(rs) << " from address " << rs);
     rd = get_int(rs);
 }
 void VirtualMachine::LDB(REGISTER &rd, ADDRESS addr)
@@ -338,7 +340,8 @@ void VirtualMachine::STR(REGISTER &rs, ADDRESS addr)
 }
 void VirtualMachine::STR2(REGISTER &rs, REGISTER &rd)
 {
-    DOC("STR2", rs, rd); set_int(rd, rs);
+    DOC("STR2", "R" << static_cast<int>(&rs-reg), rs << " -> R" << static_cast<int>(&rd-reg) << " (was " << rd << ")");
+    set_int(rd, rs);
 }
 void VirtualMachine::MOV(REGISTER &rd, REGISTER &rs)
 {

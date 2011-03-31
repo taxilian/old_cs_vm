@@ -27,9 +27,8 @@ public:
 
     void LineNumber(const int lineNo) { nextLineNo = -1; }
     void Label(const std::string& label) { nextLabel = label; }
-    void Write(const std::string& instruction, const std::string& op1);
-    void Write(const std::string& instruction, const std::string& op1, const std::string& op2);
-    void Write(const std::string& instruction, const std::string& op1, const std::string& op2, const std::string& op3);
+    void Write(const std::string& instruction, const std::string& op1 );
+    void Write(const std::string& instruction, const std::string& op1, const std::string& op2, const std::string& comment = "");
     void Write(const std::string& instruction);
 
     void Blank();
@@ -56,16 +55,21 @@ public:
     void WRITE(const std::string& param1);
     void READ(const std::string& param1);
     void PUSH(const std::string& param1);
+    void PEEK(const std::string& param1);
     void POP(const std::string& param1);
     void RETURN(const std::string& param1);
     void RTN();
     void REF(const std::string& param1, const std::string& param2, const std::string& param3);
 
+    void AND(const std::string& param1, const std::string& param2, const std::string& param3);
+    void OR(const std::string& param1, const std::string& param2, const std::string& param3);
     void ADD(const std::string& param1, const std::string& param2, const std::string& param3);
     void SUB(const std::string& param1, const std::string& param2, const std::string& param3);
     void MULT(const std::string& param1, const std::string& param2, const std::string& param3);
     void DIV(const std::string& param1, const std::string& param2, const std::string& param3);
 
+    void LE(const std::string& param1, const std::string& param2, const std::string& param3);
+    void GE(const std::string& param1, const std::string& param2, const std::string& param3);
     void LT(const std::string& param1, const std::string& param2, const std::string& param3);
     void GT(const std::string& param1, const std::string& param2, const std::string& param3);
     void EQ(const std::string& param1, const std::string& param2, const std::string& param3);

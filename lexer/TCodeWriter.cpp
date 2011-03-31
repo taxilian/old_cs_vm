@@ -105,17 +105,22 @@ ICodeVMConfig::ICodeVMConfig()
     registerInstruction("WRITE",    0x07);
     registerInstruction("READ",     0x08);
     registerInstruction("PUSH",     0x09);
+    registerInstruction("PEEK",     0x09);
     registerInstruction("POP",      0x0A);
     registerInstruction("NOOP",     0x0B);
     registerInstruction("JMP",      0x0C);
     registerInstruction("RETURN",   0x0D);
     registerInstruction("RTN",      0x0E);
 
+    registerInstruction("AND",      0x0F);
+    registerInstruction("OR",       0x10);
     registerInstruction("ADD",      0x0F);
     registerInstruction("SUB",      0x10);
     registerInstruction("MULT",     0x11);
     registerInstruction("DIV",      0x12);
 
+    registerInstruction("LE",       0x13);
+    registerInstruction("GE",       0x14);
     registerInstruction("LT",       0x13);
     registerInstruction("GT",       0x14);
     registerInstruction("EQ",       0x15);
@@ -141,19 +146,24 @@ TCodeWriter::TCodeWriter(const string& icodeFile, const string& outFile)
     registerTWHandler("NEWI", make_method(this, &TCodeWriter::NEWI));
     registerTWHandler("WRITE", make_method(this, &TCodeWriter::WRITE));
     registerTWHandler("READ", make_method(this, &TCodeWriter::READ));
+    registerTWHandler("PEEK", make_method(this, &TCodeWriter::PEEK));
     registerTWHandler("PUSH", make_method(this, &TCodeWriter::PUSH));
     registerTWHandler("POP", make_method(this, &TCodeWriter::POP));
     registerTWHandler("RETURN", make_method(this, &TCodeWriter::RETURN));
     registerTWHandler("RTN", make_method(this, &TCodeWriter::RTN));
     registerTWHandler("REF", make_method(this, &TCodeWriter::REF));
 
+    registerTWHandler("AND", make_method(this, &TCodeWriter::AND));
+    registerTWHandler("OR",  make_method(this, &TCodeWriter::OR));
     registerTWHandler("ADD", make_method(this, &TCodeWriter::ADD));
     registerTWHandler("SUB", make_method(this, &TCodeWriter::SUB));
     registerTWHandler("MULT", make_method(this, &TCodeWriter::MULT));
     registerTWHandler("DIV", make_method(this, &TCodeWriter::DIV));
 
-    registerTWHandler("LT", make_method(this, &TCodeWriter::EQ));
-    registerTWHandler("GT", make_method(this, &TCodeWriter::NE));
+    registerTWHandler("LE", make_method(this, &TCodeWriter::LE));
+    registerTWHandler("GE", make_method(this, &TCodeWriter::GE));
+    registerTWHandler("LT", make_method(this, &TCodeWriter::LT));
+    registerTWHandler("GT", make_method(this, &TCodeWriter::GT));
     registerTWHandler("EQ", make_method(this, &TCodeWriter::EQ));
     registerTWHandler("NE", make_method(this, &TCodeWriter::NE));
     registerTWHandler("BF", make_method(this, &TCodeWriter::BF));
@@ -178,7 +188,7 @@ void TCodeWriter::start() {
     map<string, unsigned short> labelAddr;
     deque<Parser::LinePtr> lines;
 #ifdef DEBUG
-    cout << "Analyzing code..." << endl;
+    cout << "Compiling code..." << endl;
 #endif
     while (curLine = m_parser.getNextLine()) {
         lines.push_back(curLine);
@@ -254,12 +264,7 @@ void TCodeWriter::Write( const string& instruction, const string& op1 )
     Write(instruction, op1, string(), string());
 }
 
-void TCodeWriter::Write( const string& instruction, const string& op1, const string& op2 )
-{
-    Write(instruction, op1, op2, string());
-}
-
-void TCodeWriter::Write( const string& instruction, const string& op1, const string& op2, const string& op3 )
+void TCodeWriter::Write( const string& instruction, const string& op1, const string& op2, const string& comment )
 {
     string label(nextLabel);
     if (nextLineNo >= 0) {
@@ -272,7 +277,9 @@ void TCodeWriter::Write( const string& instruction, const string& op1, const str
     m_outFile << label.c_str() << instruction.c_str();
     if (!op1.empty()) m_outFile << " " << op1.c_str();
     if (!op2.empty()) m_outFile << ", " << op2.c_str();
-    if (!op3.empty()) m_outFile << ", " << op3.c_str();
+    if (!comment.empty()) {
+        m_outFile << "\t\t; " << comment.c_str();
+    }
     m_outFile << endl;
     nextLabel = "";
     nextLineNo = -1;
@@ -297,6 +304,7 @@ void TCodeWriter::handleInstruction(const Parser::InstructionPtr& inst)
     if (m_handlerMap.find(name) != m_handlerMap.end()) {
         m_handlerMap[name](inst);
     } else {
+        std::cout << "Warning: Could not find implementation for " << name << std::endl;
         Comment("TODO: Implement " + name + " target code generation");
     }
 }
@@ -364,7 +372,7 @@ void TCodeWriter::LoadToReg(const string& reg, const string& src)
 {
     if (src == "this") {
         Write("MOV", "R4", "FP");
-        Write("ADI", "R4", asString(3*INST_SIZE));
+        Write("ADI", "R4", asString(2*INST_SIZE*-1));
         Write("LDR", reg, "R4");
     } else if (src[0] == 'G') {
         if (global_id_map[src].type == GDT_Char) {
@@ -378,7 +386,15 @@ void TCodeWriter::LoadToReg(const string& reg, const string& src)
         offset += 3*INST_SIZE;
         Write("ADI", "R4", asString(offset*-1));
         Write("LDR", reg, "R4");
+    } else if (boost::algorithm::starts_with(src, "REF")) {
+        int offset = GetLocalOffset(src);
+        Write("MOV", "R4", "FP");
+        offset += 3*INST_SIZE;
+        Write("ADI", "R4", asString(offset*-1));
+        Write("LDR", "R5", "R4");
+        Write("LDR", reg, "R5");
     } else {
+        cout << "Warning: LoadToReg couldn't handle " << src << endl;
         Comment("TODO: LoadToReg " + src);
     }
 }
@@ -396,7 +412,15 @@ void TCodeWriter::StoreFromReg(const string& reg, const string& dest)
         offset += 3*INST_SIZE;
         Write("ADI", "R4", asString(offset*-1));
         Write("STR", reg, "R4");
+    } else if (boost::algorithm::starts_with(dest, "REF")) {
+        int offset = GetLocalOffset(dest);
+        Write("MOV", "R4", "FP");
+        offset += 3*INST_SIZE;
+        Write("ADI", "R4", asString(offset*-1));
+        Write("LDR", "R5", "R4");
+        Write("STR", reg, "R5");
     } else {
+        cout << "Warning: StoreFromReg couldn't handle " << dest << endl;
         Comment("TODO: StoreFromReg " + dest);
     }
 }
@@ -416,15 +440,17 @@ void TCodeWriter::FRAME(const string& param1, const string& param2)
     // (empty) <-- new SP
     // PFP
     // Return Address (new FP)
-    Write("MOV", "R2", "SP");                        // R2 = Stack top
-    Write("MOV", "R3", "SP");                        // R3 = Stack top
-    Write("ADI", "R2", asString(INST_SIZE*-1));      // R2 = PFP location
-    Write("STR", "FP", "R2");                        // Set PFP
-    Write("ADI", "R2", asString(INST_SIZE*-1));      // New top of stack
-    Write("MOV", "SP", "R2");                        // Stack PTR = R2
-    Write("MOV", "FP", "R3");                        // Frame PTR = old Stack PTR
+    LoadToReg("R9", param2);
+    Write("MOV", "R2", "SP", "R2 = Stack top");                        // R2 = Stack top
+    Write("MOV", "R3", "SP", "R3 = Stop top");                        // R3 = Stack top
+    Write("ADI", "R2", asString(INST_SIZE*-1), "R2 = PFP location");      // R2 = PFP location
+    Write("STR", "FP", "R2", "Store PFP @R2");                        // Set PFP
+    Write("ADI", "R2", asString(INST_SIZE*-1), "R2 to new top of stack");      // New top of stack
+    Write("MOV", "SP", "R2", "Stack PTR = R2");                        // Stack PTR = R2
+    Write("MOV", "FP", "R3", "Frame PTR = old Stack PTR");                        // Frame PTR = old Stack PTR
 
-    PUSH(param2);
+    Comment("Push R9 (this ptr) to the stack");
+    PUSH("R9");
 }
 void TCodeWriter::CALL(const string& param1)
 {
@@ -523,6 +549,13 @@ void TCodeWriter::POP(const string& param1)
         StoreFromReg("R1", param1);
     }
 }
+
+void TCodeWriter::PEEK( const std::string& param1 )
+{
+    Write("LDR", "R1", "SP");
+    StoreFromReg("R1", param1);
+}
+
 void TCodeWriter::RETURN(const string& param1)
 {
     Comment("Returning " + param1);
@@ -546,6 +579,20 @@ void TCodeWriter::RTN()
     Write("JMR", "R0");
 }
 
+void TCodeWriter::AND(const string& param1, const string& param2, const string& param3)
+{
+    LoadToReg("R1", param2);
+    LoadToReg("R2", param3);
+    Write("AND", "R1", "R2");
+    StoreFromReg("R1", param1);
+}
+void TCodeWriter::OR(const string& param1, const string& param2, const string& param3)
+{
+    LoadToReg("R1", param2);
+    LoadToReg("R2", param3);
+    Write("OR", "R1", "R2");
+    StoreFromReg("R1", param1);
+}
 void TCodeWriter::ADD(const string& param1, const string& param2, const string& param3)
 {
     LoadToReg("R1", param2);
@@ -564,7 +611,7 @@ void TCodeWriter::MULT(const string& param1, const string& param2, const string&
 {
     LoadToReg("R1", param2);
     LoadToReg("R2", param3);
-    Write("MULT", "R1", "R2");
+    Write("MUL", "R1", "R2");
     StoreFromReg("R1", param1);
 }
 void TCodeWriter::DIV(const string& param1, const string& param2, const string& param3)
@@ -575,16 +622,60 @@ void TCodeWriter::DIV(const string& param1, const string& param2, const string& 
     StoreFromReg("R1", param1);
 }
 
+void TCodeWriter::LE(const string& param1, const string& param2, const string& param3)
+{
+    LoadToReg("R1", param2);
+    LoadToReg("R2", param3);
+    Write("CMP", "R1", "R2");
+    int cur(lastId++);
+    std::string leTag("LE_" + asString(cur));
+    std::string nleTag("NLE_" + asString(cur));
+    std::string doneTag("D_" + asString(cur));
+    Write("BLT", "R1", leTag);
+    Write("BRZ", "R1", leTag);
+    Write("JMP", nleTag);
+    Label(leTag);
+    // Set R1 to 1 (TRUE) if LT
+    Write("SUB", "R1", "R1");
+    Write("ADI", "R1", "1");
+    Write("JMP", doneTag);
+    Label(nleTag);
+    Write("SUB", "R1", "R1");
+    Label(doneTag);
+    StoreFromReg("R1", param1);
+}
+void TCodeWriter::GE(const string& param1, const string& param2, const string& param3)
+{
+    LoadToReg("R1", param2);
+    LoadToReg("R2", param3);
+    Write("CMP", "R1", "R2");
+    int cur(lastId++);
+    std::string geTag("GE_" + asString(cur));
+    std::string ngeTag("NGE_" + asString(cur));
+    std::string doneTag("D_" + asString(cur));
+    Write("BGT", "R1", geTag);
+    Write("BRZ", "R1", geTag);
+    Write("JMP", ngeTag);
+    Label(geTag);
+    // Set R1 to 1 (TRUE) if LT
+    Write("SUB", "R1", "R1");
+    Write("ADI", "R1", "1");
+    Write("JMP", doneTag);
+    Label(ngeTag);
+    Write("SUB", "R1", "R1");
+    Label(doneTag);
+    StoreFromReg("R1", param1);
+}
 void TCodeWriter::LT(const string& param1, const string& param2, const string& param3)
 {
     LoadToReg("R1", param2);
-    LoadToReg("R2", param2);
+    LoadToReg("R2", param3);
     Write("CMP", "R1", "R2");
     int cur(lastId++);
     std::string ltTag("LT_" + asString(cur));
     std::string nltTag("NLT_" + asString(cur));
     std::string doneTag("D_" + asString(cur));
-    Write("BLT", ltTag);
+    Write("BLT", "R1", ltTag);
     Write("JMP", nltTag);
     Label(ltTag);
     // Set R1 to 1 (TRUE) if LT
@@ -600,13 +691,13 @@ void TCodeWriter::LT(const string& param1, const string& param2, const string& p
 void TCodeWriter::GT(const string& param1, const string& param2, const string& param3)
 {
     LoadToReg("R1", param2);
-    LoadToReg("R2", param2);
+    LoadToReg("R2", param3);
     Write("CMP", "R1", "R2");
     int cur(lastId++);
-    std::string gtTag("LT_" + asString(cur));
-    std::string ngtTag("NLT_" + asString(cur));
+    std::string gtTag("GT_" + asString(cur));
+    std::string ngtTag("NGT_" + asString(cur));
     std::string doneTag("D_" + asString(cur));
-    Write("BGT", gtTag);
+    Write("BGT", "R1", gtTag);
     Write("JMP", ngtTag);
     Label(gtTag);
     // Set R1 to 1 (TRUE) if LT
@@ -621,13 +712,13 @@ void TCodeWriter::GT(const string& param1, const string& param2, const string& p
 void TCodeWriter::EQ(const string& param1, const string& param2, const string& param3)
 {
     LoadToReg("R1", param2);
-    LoadToReg("R2", param2);
+    LoadToReg("R2", param3);
     Write("CMP", "R1", "R2");
     int cur(lastId++);
     std::string eqTag("LT_" + asString(cur));
     std::string neqTag("NLT_" + asString(cur));
     std::string doneTag("D_" + asString(cur));
-    Write("BRZ", eqTag);
+    Write("BRZ", "R1", eqTag);
     Write("JMP", neqTag);
     Label(eqTag);
     // Set R1 to 1 (TRUE) if LT
@@ -642,13 +733,13 @@ void TCodeWriter::EQ(const string& param1, const string& param2, const string& p
 void TCodeWriter::NE(const string& param1, const string& param2, const string& param3)
 {
     LoadToReg("R1", param2);
-    LoadToReg("R2", param2);
+    LoadToReg("R2", param3);
     Write("CMP", "R1", "R2");
     int cur(lastId++);
     std::string neTag("LT_" + asString(cur));
     std::string nneTag("NLT_" + asString(cur));
     std::string doneTag("D_" + asString(cur));
-    Write("BNZ", neTag);
+    Write("BNZ", "R1", neTag);
     Write("JMP", nneTag);
     Label(neTag);
     // Set R1 to 1 (TRUE) if LT
@@ -663,18 +754,25 @@ void TCodeWriter::NE(const string& param1, const string& param2, const string& p
 void TCodeWriter::BF(const string& param1, const string& param2)
 {
     LoadToReg("R1", param1);
-    Write("BRZ", param2);
+    Write("BRZ", "R1", param2);
 }
 void TCodeWriter::BT(const string& param1, const string& param2)
 {
     LoadToReg("R1", param1);
-    Write("BNZ", param2);
+    Write("BNZ", "R1", param2);
 }
 
 void TCodeWriter::REF( const std::string& param1, const std::string& param2, const std::string& param3 )
 {
+    Comment("First load \"" + param2 + "\" into R1");
     LoadToReg("R1", param2);
+    Comment("Now add the offset of " + param3);
     Write("ADI", "R1", asString(GetLocalOffset(param3)));
-    Write("LDR", "R2", "R1");
-    StoreFromReg("R2", param1);
+    Comment("Store that address into " + param1);
+    
+    int offset = GetLocalOffset(param1);
+    Write("MOV", "R4", "FP");
+    offset += 3*INST_SIZE;
+    Write("ADI", "R4", asString(offset*-1));
+    Write("STR", "R1", "R4");
 }

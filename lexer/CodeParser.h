@@ -85,7 +85,7 @@ public:
     void opPush(const std::string& op);
     void typePush(const std::string& type);
     void varPush(const std::string& name);
-    std::string tempPush(const std::string& type);
+    std::string tempPush(const std::string& type, const std::string& pref = "T");
     void begArgList();
     void endArgList();
     void func_sa();
@@ -199,6 +199,7 @@ private:
     std::string lastSeenFunction;
     std::string lastSeenModifier;
     std::string lastSeenType;
+    std::string lastSeenFuncType;
     std::string lastSeenFieldType;
 
     std::vector<std::string> foundParams;

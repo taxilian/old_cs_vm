@@ -73,7 +73,7 @@ void ICodeWriter::DoMath( std::string op, std::string tempId, std::string op1, s
     else if (op == ">=") inst = "GE";
     else if (op == "<=") inst = "LE";
     else if (op == "&&") inst = "AND";
-    else if (op == "||") inst = "AND";
+    else if (op == "||") inst = "OR";
     else {
         assert(false); //panic!
     }
