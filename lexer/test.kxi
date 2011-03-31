@@ -3,6 +3,7 @@ void main( )
     TestClass test = new TestClass();
     char n = '\n';
     int i = -340;
+    int list[] = new int[14];
     cout << i;
     cout << ' ';
 
@@ -23,11 +24,17 @@ void main( )
     i = 0;
     i = 1 + 2 * (4 + 6) / 2;
     cout << test.getI();
-    cout << n;
+    cout << z;
     test.setI(27);
     cout << 'z';
     cout << test.getI();
     cout << n;
+
+    i = 0;
+    while (i < 14) {
+        list[i] = i;
+        i = i + 1;
+    }
 }
 
 class TestClass
