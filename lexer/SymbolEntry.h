@@ -27,6 +27,11 @@ struct TypeData : public SymbolData {
 };
 typedef boost::shared_ptr<TypeData> TypeDataPtr;
 
+struct ClassData : public SymbolData {
+    std::vector<std::string> vars;
+};
+typedef boost::shared_ptr<ClassData> ClassDataPtr;
+
 struct SymbolEntry : boost::noncopyable {
     std::string scope;
     std::string id;

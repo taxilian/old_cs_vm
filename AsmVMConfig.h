@@ -6,8 +6,8 @@
  */
 
 #pragma once
-#ifndef H_VMCONFIG
-#define H_VMCONFIG
+#ifndef H_ASMVMCONFIG
+#define H_ASMVMCONFIG
 
 #include <string>
 #include <vector>
@@ -18,22 +18,12 @@
 
 #include "VMConfig.h"
 
-class AsmVMConfig
+class AsmVMConfig : public VMConfig
 {
 protected:
 public:
     AsmVMConfig(void);
     virtual ~AsmVMConfig(void);
-
-protected:
-    void registerInstruction(std::string name, unsigned char bin, ParamType type = PT_DEFAULT);
-
-public:
-    bool isValidInstruction(std::string name);
-    bool isValidInstruction(unsigned char bin);
-
-    unsigned char strToBinary(std::string, ParamType type = PT_DEFAULT);
-    std::string binToString(unsigned char bin);
 };
 
 #endif

@@ -1,4 +1,5 @@
 #include "VirtualMachine.h"
+#include "AsmVMConfig.h"
 #include <iostream>
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
@@ -17,7 +18,7 @@
 
 #define MEMORY_SIZE 16384
 
-VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), m_curThread(-1), threadCount(0), m_blocked(false)
+VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<AsmVMConfig>()), BOUND_CODE(0), m_curThread(-1), threadCount(0), m_blocked(false)
 {
     reset();
 

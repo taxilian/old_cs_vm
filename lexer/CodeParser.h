@@ -117,6 +117,8 @@ public:
     std::string findInScope( const std::string& id );
     std::string getRval(const SARPtr& rval);
     std::string getLval(const SARPtr& lval);
+    std::string getRefval(const SARPtr& context, const SARPtr& rval);
+    std::string getRefval(const std::string& ctxId, const SARPtr& rval);
     std::string resolveArgument(const SARPtr& arg);
 
 public:

@@ -8,9 +8,8 @@
  *        Version:  1.0
  *        Created:  28.03.2011 16:40:41
  *       Revision:  none
- *       Compiler:  gcc
  *
- *         Author:  YOUR NAME (), 
+ *         Author:  Richard Bateman 
  *        Company:  
  *
  * =====================================================================================
@@ -139,14 +138,14 @@ TCodeWriter::TCodeWriter(const string& icodeFile, const string& outFile)
     registerTWHandler("TRP", make_method(this, &TCodeWriter::TRP));
     registerTWHandler("FUNC", make_method(this, &TCodeWriter::FUNC));
     registerTWHandler("MOVE", make_method(this, &TCodeWriter::MOVE));
-    //registerTWHandler("NEWI", make_method(this, &TCodeWriter::NEWI));
+    registerTWHandler("NEWI", make_method(this, &TCodeWriter::NEWI));
     registerTWHandler("WRITE", make_method(this, &TCodeWriter::WRITE));
     registerTWHandler("READ", make_method(this, &TCodeWriter::READ));
     registerTWHandler("PUSH", make_method(this, &TCodeWriter::PUSH));
     registerTWHandler("POP", make_method(this, &TCodeWriter::POP));
     registerTWHandler("RETURN", make_method(this, &TCodeWriter::RETURN));
     registerTWHandler("RTN", make_method(this, &TCodeWriter::RTN));
-    //registerTWHandler("REF", make_method(this, &TCodeWriter::REF));
+    registerTWHandler("REF", make_method(this, &TCodeWriter::REF));
 
     registerTWHandler("ADD", make_method(this, &TCodeWriter::ADD));
     registerTWHandler("SUB", make_method(this, &TCodeWriter::SUB));
@@ -302,29 +301,72 @@ void TCodeWriter::handleInstruction(const Parser::InstructionPtr& inst)
     }
 }
 
+int TCodeWriter::getTypeSize( const std::string& type, bool nested/* = false*/ )
+{
+    if (type == "bool" || type == "char") return 1;
+    else if (type == "null") return 4;
+    else if (type == "int") return 4;
+    else if (nested) return 4; // If this type is inside another class, it's just a pointer
+    else {
+        int size(0);
+        std::string typeFQN("g." + type);
+        SymbolEntryPtr symb(symbol_name_map[typeFQN]);
+        assert(symb->kind == "class");
+        ClassDataPtr cdata(boost::dynamic_pointer_cast<ClassData>(symb->data));
+        for (std::vector<std::string>::iterator it(cdata->vars.begin());
+            it != cdata->vars.end(); ++it) {
+            SymbolEntryPtr child(symbol_id_map[*it]);
+            if (child->kind == "variable") {
+                TypeDataPtr childType(boost::dynamic_pointer_cast<TypeData>(child->data));
+                size += getTypeSize(childType->type, true);
+            } else { assert(false); }
+        }
+        return size;
+    }
+}
+
 int TCodeWriter::GetLocalOffset(const string& id)
 {
-    assert(id[0] == 'T' || id[0] == 'L' || id[0] == 'P');
     if (offsetMap.find(id) != offsetMap.end())
         return offsetMap[id];
-    
-    SymbolEntryPtr sym1(symbol_id_map[id]);
-    SymbolEntryPtr parent(symbol_name_map[sym1->scope]);
-    MethodDataPtr mdata(boost::dynamic_pointer_cast<MethodData>(parent->data));
-    assert(mdata);
-    int i(0);
-    for(vector<string>::iterator it(mdata->Parameters.begin()); it != mdata->Parameters.end(); ++it) {
-        offsetMap[*it] = i++;
-    }
-    for(vector<string>::iterator it(mdata->vars.begin()); it != mdata->vars.end(); ++it) {
-        offsetMap[*it] = i++;
+    if (id[0] == 'T' || id[0] == 'L' || id[0] == 'P') {
+        SymbolEntryPtr sym1(symbol_id_map[id]);
+        TypeDataPtr sym1type(boost::dynamic_pointer_cast<TypeData>(sym1->data));
+        SymbolEntryPtr parent(symbol_name_map[sym1->scope]);
+        MethodDataPtr mdata(boost::dynamic_pointer_cast<MethodData>(parent->data));
+        assert(mdata);
+        int i(0);
+        for(vector<string>::iterator it(mdata->Parameters.begin()); it != mdata->Parameters.end(); ++it) {
+            offsetMap[*it] = i;
+            i += getTypeSize(sym1type->type);
+        }
+        for(vector<string>::iterator it(mdata->vars.begin()); it != mdata->vars.end(); ++it) {
+            offsetMap[*it] = i;
+            i += getTypeSize(sym1type->type);
+        }
+    } else if (id[0] == 'V') {
+        SymbolEntryPtr sym1(symbol_id_map[id]);
+        TypeDataPtr sym1type(boost::dynamic_pointer_cast<TypeData>(sym1->data));
+        SymbolEntryPtr parent(symbol_name_map[sym1->scope]);
+        assert(parent->kind == "class");
+        ClassDataPtr cdata(boost::dynamic_pointer_cast<ClassData>(parent->data));
+
+        int i(0);
+        for(vector<string>::iterator it(cdata->vars.begin()); it != cdata->vars.end(); ++it) {
+            offsetMap[*it] = i;
+            i += getTypeSize(sym1type->type);
+        }
     }
     return offsetMap[id];
 }
 
 void TCodeWriter::LoadToReg(const string& reg, const string& src)
 {
-    if (src[0] == 'G') {
+    if (src == "this") {
+        Write("MOV", "R4", "FP");
+        Write("ADI", "R4", asString(3*INST_SIZE));
+        Write("LDR", reg, "R4");
+    } else if (src[0] == 'G') {
         if (global_id_map[src].type == GDT_Char) {
             Write("LDB", reg, src);
         } else {
@@ -333,8 +375,7 @@ void TCodeWriter::LoadToReg(const string& reg, const string& src)
     } else if (src[0] == 'T' || src[0] == 'L' || src[0] == 'P') {
         int offset = GetLocalOffset(src);
         Write("MOV", "R4", "FP");
-        offset += 3;
-        offset *= INST_SIZE;
+        offset += 3*INST_SIZE;
         Write("ADI", "R4", asString(offset*-1));
         Write("LDR", reg, "R4");
     } else {
@@ -352,8 +393,7 @@ void TCodeWriter::StoreFromReg(const string& reg, const string& dest)
     } else if (dest[0] == 'T' || dest[0] == 'L' || dest[0] == 'P') {
         int offset = GetLocalOffset(dest);
         Write("MOV", "R4", "FP");
-        offset += 3;
-        offset *= INST_SIZE;
+        offset += 3*INST_SIZE;
         Write("ADI", "R4", asString(offset*-1));
         Write("STR", reg, "R4");
     } else {
@@ -396,7 +436,7 @@ void TCodeWriter::CALL(const string& param1)
 }
 void TCodeWriter::TRP(const string& param1)
 {
-    Write("TRP", param1);
+    Write("TRP", global_id_map[param1].value);
 }
 void TCodeWriter::FUNC(const string& param1)
 {
@@ -424,6 +464,10 @@ void TCodeWriter::MOVE(const string& param1, const string& param2)
 }
 void TCodeWriter::NEWI(const string& param1, const string& param2)
 {
+    Write("MOV", "R1", "HP");
+    LoadToReg("R2", param1);
+    Write("ADD", "HP", "R2");
+    StoreFromReg("R1", param2);
 }
 void TCodeWriter::WRITE(const string& param1)
 {
@@ -460,7 +504,7 @@ void TCodeWriter::READ(const string& param1)
 void TCodeWriter::PUSH(const string& param1)
 {
     if (param1[0] == 'R') { // If it's a register
-        Write("STR", "SP", param1);
+        Write("STR", param1, "SP");
         Write("ADI", "SP", asString(INST_SIZE*-1));
     } else {
         Comment("Loading value to PUSH from " + param1);
@@ -472,7 +516,7 @@ void TCodeWriter::POP(const string& param1)
 {
     if (param1[0] == 'R') { // If it's a register
         Write("ADI", "SP", asString(INST_SIZE));
-        Write("LDR", param1, "SP");
+        Write("LDR", "SP", param1);
     } else {
         POP("R1");
         Comment("Storing POPed value to " + param1);
@@ -625,4 +669,12 @@ void TCodeWriter::BT(const string& param1, const string& param2)
 {
     LoadToReg("R1", param1);
     Write("BNZ", param2);
+}
+
+void TCodeWriter::REF( const std::string& param1, const std::string& param2, const std::string& param3 )
+{
+    LoadToReg("R1", param2);
+    Write("ADI", "R1", asString(GetLocalOffset(param3)));
+    Write("LDR", "R2", "R1");
+    StoreFromReg("R2", param1);
 }

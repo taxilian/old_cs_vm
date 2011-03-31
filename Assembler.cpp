@@ -17,6 +17,8 @@ char Assembler::getRegister(std::string name)
         return 18;
     } else if (name  == "SB") {
         return 19;
+    } else if (name  == "HP") {
+        return 20;
     } else if ((name[0] != 'R' && name[0] != 'r') || name.size() > 3)
         return -1;
     try {
@@ -42,6 +44,8 @@ unsigned short Assembler::start()
     std::cout << "Analyzing code..." << std::endl;
 #endif
     while (curLine = m_parser.getNextLine()) {
+        if (boost::dynamic_pointer_cast<Parser::Comment>(curLine))
+            continue; // ignore comments
         std::string lbl(curLine->label);
         if (!curLine->label.empty()) {
             if (labelAddr.find(curLine->label) != labelAddr.end()) {
@@ -139,7 +143,7 @@ unsigned short Assembler::start()
             *((int*)&m_block[curAddr]) = block.value;
             curAddr += sizeof(block.value);
         } else {
-            throw AssemblerException("Invalid LinePtr found at " + curAddr);
+            throw AssemblerException("Invalid LinePtr found at " + boost::lexical_cast<std::string>(curAddr));
         }
     }
 

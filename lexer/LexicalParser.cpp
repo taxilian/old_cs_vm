@@ -64,7 +64,7 @@ bool LexicalParser::backTrack( int n /*= 1*/ )
 
 bool LexicalParser::nextChar(char& c)
 {
-    if (bufferpos >= buffer.size() || buffer[bufferpos] == '\0')
+    if (bufferpos >= buffer.size()-1 || buffer[bufferpos] == '\0')
         return false;
     if (buffer[bufferpos] == '\n') {
         m_lineNo++;

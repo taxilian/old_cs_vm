@@ -78,6 +78,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AsmVMConfig.h" />
     <ClInclude Include="Assembler.h" />
     <ClInclude Include="escaped_list.h" />
     <ClInclude Include="helpers.h" />
@@ -86,6 +87,7 @@
     <ClInclude Include="VMConfig.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AsmVMConfig.cpp" />
     <ClCompile Include="Assembler.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Parser.cpp" />

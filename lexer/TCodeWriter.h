@@ -59,6 +59,7 @@ public:
     void POP(const std::string& param1);
     void RETURN(const std::string& param1);
     void RTN();
+    void REF(const std::string& param1, const std::string& param2, const std::string& param3);
 
     void ADD(const std::string& param1, const std::string& param2, const std::string& param3);
     void SUB(const std::string& param1, const std::string& param2, const std::string& param3);
@@ -80,6 +81,7 @@ protected:
     void registerTWHandler(const std::string& kw, const TWHandleFunctor& func) {
         m_handlerMap[kw] = func;
     }
+    int getTypeSize( const std::string& type, bool nested = false );
     
 private:
     std::string m_inFile;

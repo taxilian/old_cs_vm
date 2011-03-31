@@ -1,70 +1,13 @@
 void main( )
 {
-    int v = 0;
-    char n = 0;
-    Calculator b = new Calculator();
-    Calculator b0 = null;
-
-    cout << '>';
-    cin >> v;
-    v = b.add(v, 4);
-    v = b.mult(5, v);
-    v = b.mult(v, b.div(v, 6));
-    v = (4+3) * 3 + 2 / 3 + 12 / 143;
-    v = b.getTest().x;
-    v = b.getTest().copy(3,4);
-    cout << v; 
-    v = 0;
-    while (v < 10) {
-        cout << v;
-        v = v + 1;
-    }
-    if (v == 10) {
-        cout << 'i';
-        cout << 't';
-        cout << ' ';
-        cout << 'w';
-        cout << 'o';
-        cout << 'r';
-        cout << 'k';
-        cout << 'e';
-        cout << 'd';
-        cout << '\n';
-    }
-    if (v < 10) {
-        cout << '!';
-    } else {
-        cout << '@';
-    }
-}
-
-class Test2 {
-    public int i = 0;
-    public int x = 1;
-    private int z = -5;
-
-    public Test2(int x, int z) {
-        this.x = x;
-        this.z = z;
-    }
-    public int copy(int a, int b) { return a * b; }
-}
-
-class Calculator {
-    private Test2 test = new Test2(5, 9);
-
-    public Calculator() {}
-    public int add(int a, int b) { return a+b; }
-    public int sub(int a, int b) { return a-b; }
-    public int mult(int a, int b) { return a*b; }
-    public int div(int a, int b) { return a/b; }
-    public Test2 getTest() { return test; }
-}
-
-class SomeTestClass {
-    int a = 0;
-    int b = 0;
-
-    int getA() { return a; }
-    int getB() { return b; }
+    cout << 'i';
+    cout << 't';
+    cout << ' ';
+    cout << 'w';
+    cout << 'o';
+    cout << 'r';
+    cout << 'k';
+    cout << 'e';
+    cout << 'd';
+    cout << '\n';
 }

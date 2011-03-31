@@ -74,18 +74,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Parser.h" />
+    <ClInclude Include="..\VMConfig.h" />
     <ClInclude Include="ICodeWriter.h" />
     <ClInclude Include="LexicalParser.h" />
     <ClInclude Include="SemanticActions.h" />
     <ClInclude Include="SymbolEntry.h" />
     <ClInclude Include="CodeParser.h" />
+    <ClInclude Include="TCodeWriter.h" />
     <ClInclude Include="Token.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Parser.cpp" />
+    <ClCompile Include="..\VMConfig.cpp" />
     <ClCompile Include="ICodeWriter.cpp" />
     <ClCompile Include="LexicalParser.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="CodeParser.cpp" />
+    <ClCompile Include="TCodeWriter.cpp" />
     <ClCompile Include="Token.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -57,12 +57,13 @@ protected:
     unsigned short BOUND_CODE;
 
 public:
-    static const int THREAD_NUM = 20;
+    static const int THREAD_NUM = 21;
 
     static const int FP = 16;
     static const int SL = 17;
     static const int SP = 18;
     static const int SB = 19;
+    static const int HP = 20;
     int reg[THREAD_NUM];
     int pc;
 
