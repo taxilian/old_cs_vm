@@ -7,10 +7,11 @@
 
 #include <vector>
 #include <boost/lexical_cast.hpp>
+#include <iostream>
 
 using namespace std;
 
-CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(1), icode(NULL), lastLine(-1)
+CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(1), icode(NULL), lastLine(-1), failed(false)
 {
     current_scope.push_back("g");
 
@@ -538,36 +539,53 @@ void CodeParser::statement()
 {
     LineComment();
     std::string& curTxt(lexer->current().text);
-    if (lexer->current().type == TT_GROUPOPEN
-        && curTxt == "{") {
-        lexer->nextToken();
-        while (lexer->current().text != "}") { 
-            statement();
+    try {
+        if (lexer->current().type == TT_GROUPOPEN
+                && curTxt == "{") {
+            lexer->nextToken();
+            while (lexer->current().text != "}") { 
+                statement();
+            }
+            assert_type_value(TT_GROUPCLOSE, "}");
+            lexer->nextToken();
+            return;
+        } else if (curTxt == "if") {
+            lexer->nextToken();
+            cmd_if();
+        } else if (curTxt == "while") {
+            lexer->nextToken();
+            cmd_while();
+        } else if (curTxt == "return") {
+            lexer->nextToken();
+            cmd_return();
+        } else if (curTxt == "cout") {
+            lexer->nextToken();
+            cmd_cout();
+        } else if (curTxt == "cin") {
+            lexer->nextToken();
+            cmd_cin();
+        } else {
+            expression();
+            assert_type(TT_SEMICOLON);
+            if (pass2())
+                end_of_expr();
+            lexer->nextToken();
         }
-        assert_type_value(TT_GROUPCLOSE, "}");
-        lexer->nextToken();
-        return;
-    } else if (curTxt == "if") {
-        lexer->nextToken();
-        cmd_if();
-    } else if (curTxt == "while") {
-        lexer->nextToken();
-        cmd_while();
-    } else if (curTxt == "return") {
-        lexer->nextToken();
-        cmd_return();
-    } else if (curTxt == "cout") {
-        lexer->nextToken();
-        cmd_cout();
-    } else if (curTxt == "cin") {
-        lexer->nextToken();
-        cmd_cin();
-    } else {
-        expression();
-        assert_type(TT_SEMICOLON);
-        if (pass2())
-            end_of_expr();
-        lexer->nextToken();
+    } catch (const std::exception& ex) {
+        std::cerr << "Semantic error on line " << getLineNumber() << ":";
+        std::cerr << ex.what() << std::endl;
+        bool stop = false;
+        while (!stop) {
+            if (lexer->current().text == ";"
+                || lexer->current().text == "}"
+                )
+                stop = true;
+            if (lexer->current().type == TT_ENDOFFILE)
+                throw ex;
+            lexer->nextToken();
+
+        }
+        failed = true;
     }
 }
 

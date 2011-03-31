@@ -14,6 +14,7 @@ int main(int argc, char *argv[] )
     LexicalParser lexer1(argv[1]);
     CodeParser syntax(&lexer1);
 
+    std::cerr << "Analyzing KXI code syntax..." << std::endl;
     lexer1.nextToken();
     try {
         do {
@@ -30,6 +31,7 @@ int main(int argc, char *argv[] )
     syntax.setPass(2);
     syntax.setCodeWriter(&writer);
     lexer2.nextToken();
+    std::cerr << "Analyzing KXI code semantics..." << std::endl;
     try {
         do {
             syntax.compilation_unit();   
@@ -37,6 +39,7 @@ int main(int argc, char *argv[] )
     } catch (const std::exception& ex) {
         std::cerr << "Semantic error on line " << syntax.getLineNumber() << ":";
         std::cerr << ex.what() << std::endl;
+        return 1;
     }
 
     TCodeWriter twriter("TEMP_FILE.icd", std::string(argv[1]) + ".out");
@@ -44,5 +47,10 @@ int main(int argc, char *argv[] )
     twriter.setSymbolIdMap(syntax.getSymbolIdMap());
     twriter.start();
 
-    return 0;
+    if (syntax.Failed()) {
+        std::cerr << "Compilation failed; see errors above" << std::endl;
+        return 1;
+    } else {
+        return 0;
+    }
 }

@@ -128,6 +128,7 @@ public:
     ScopeMap getSymbolNameMap() { return symbol_name_map; }
     ScopeMap getSymbolIdMap() { return symbol_id_map; }
     int getLineNumber() { return lexer->getLineNumber(); }
+    bool Failed() { return failed; }
 
 protected:
     const std::string getScopeString();
@@ -205,4 +206,5 @@ private:
 
     std::vector<std::string> foundParams;
     int pass;
+    bool failed;
 };
