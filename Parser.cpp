@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
@@ -41,6 +42,7 @@ void Parser::processFile()
         m_lineNumber++;
 
         line = std::string(buffer);
+        boost::algorithm::erase_all(line, "\r");
         size_t begPos(line.find_first_not_of("\t "));
         if (begPos != std::string::npos && line[begPos] == ';') {
             // This line is a comment!

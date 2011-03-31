@@ -111,7 +111,7 @@ unsigned short Assembler::start()
                         block.uint16_param2 = boost::lexical_cast<unsigned short>(instruction->args[0]);
                         type = PT_IMMEDIATE;
                     } catch (...) { // boost::bad_lexical_cast
-                        std::string msg = "Invalid command; unrecognized argument 1 on command " + instruction->name;
+                        std::string msg = "Invalid command; unrecognized argument 1 (" + instruction->args[0] + ")on command " + instruction->name;
                         msg += " on line " + boost::lexical_cast<std::string>(byteToLineMap[curAddr]);
                         throw AssemblerException(msg);
                     }
@@ -127,10 +127,10 @@ unsigned short Assembler::start()
                     type = PT_REGADDR;
                 } else {
                     try {
-                        block.uint16_param2 = boost::lexical_cast<unsigned short>(instruction->args[1]);
+                        block.uint16_param2 = static_cast<int16_t>(boost::lexical_cast<short>(instruction->args[1]));
                         type = PT_REGIMMEDIATE;
                     } catch (...) { // boost::bad_lexical_cast
-                        std::string msg = "Invalid command; unrecognized argument 2 on command " + instruction->name;
+                        std::string msg = "Invalid command; unrecognized argument 2 (" + instruction->args[1] + ") on command " + instruction->name;
                         msg += " on line " + boost::lexical_cast<std::string>(byteToLineMap[curAddr]);
                         throw AssemblerException(msg);
                     }

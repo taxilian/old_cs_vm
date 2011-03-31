@@ -127,6 +127,7 @@ public:
     bool pass2() { return pass == 2; }
     ScopeMap getSymbolNameMap() { return symbol_name_map; }
     ScopeMap getSymbolIdMap() { return symbol_id_map; }
+    int getLineNumber() { return lexer->getLineNumber(); }
 
 protected:
     const std::string getScopeString();

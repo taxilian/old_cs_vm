@@ -1,0 +1,232 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		7994D53C1344E6C70035FF1D /* AsmVMConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7994D52F1344E6C70035FF1D /* AsmVMConfig.cpp */; };
+		7994D53D1344E6C70035FF1D /* Assembler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7994D5311344E6C70035FF1D /* Assembler.cpp */; };
+		7994D53E1344E6C70035FF1D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7994D5351344E6C70035FF1D /* main.cpp */; };
+		7994D53F1344E6C70035FF1D /* Parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7994D5361344E6C70035FF1D /* Parser.cpp */; };
+		7994D5401344E6C70035FF1D /* VirtualMachine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7994D5381344E6C70035FF1D /* VirtualMachine.cpp */; };
+		7994D5411344E6C70035FF1D /* VMConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7994D53A1344E6C70035FF1D /* VMConfig.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		7994D52F1344E6C70035FF1D /* AsmVMConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsmVMConfig.cpp; sourceTree = "<group>"; };
+		7994D5301344E6C70035FF1D /* AsmVMConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsmVMConfig.h; sourceTree = "<group>"; };
+		7994D5311344E6C70035FF1D /* Assembler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Assembler.cpp; sourceTree = "<group>"; };
+		7994D5321344E6C70035FF1D /* Assembler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Assembler.h; sourceTree = "<group>"; };
+		7994D5331344E6C70035FF1D /* escaped_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = escaped_list.h; sourceTree = "<group>"; };
+		7994D5341344E6C70035FF1D /* helpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = helpers.h; sourceTree = "<group>"; };
+		7994D5351344E6C70035FF1D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7994D5361344E6C70035FF1D /* Parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Parser.cpp; sourceTree = "<group>"; };
+		7994D5371344E6C70035FF1D /* Parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Parser.h; sourceTree = "<group>"; };
+		7994D5381344E6C70035FF1D /* VirtualMachine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VirtualMachine.cpp; sourceTree = "<group>"; };
+		7994D5391344E6C70035FF1D /* VirtualMachine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VirtualMachine.h; sourceTree = "<group>"; };
+		7994D53A1344E6C70035FF1D /* VMConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VMConfig.cpp; sourceTree = "<group>"; };
+		7994D53B1344E6C70035FF1D /* VMConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VMConfig.h; sourceTree = "<group>"; };
+		79D7CB6D1339798500F55DD8 /* vm */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = vm; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		79D7CB6B1339798500F55DD8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* compiler */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6859E8C029090F304C91782 /* Documentation */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = compiler;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				7994D52F1344E6C70035FF1D /* AsmVMConfig.cpp */,
+				7994D5301344E6C70035FF1D /* AsmVMConfig.h */,
+				7994D5311344E6C70035FF1D /* Assembler.cpp */,
+				7994D5321344E6C70035FF1D /* Assembler.h */,
+				7994D5331344E6C70035FF1D /* escaped_list.h */,
+				7994D5341344E6C70035FF1D /* helpers.h */,
+				7994D5351344E6C70035FF1D /* main.cpp */,
+				7994D5361344E6C70035FF1D /* Parser.cpp */,
+				7994D5371344E6C70035FF1D /* Parser.h */,
+				7994D5381344E6C70035FF1D /* VirtualMachine.cpp */,
+				7994D5391344E6C70035FF1D /* VirtualMachine.h */,
+				7994D53A1344E6C70035FF1D /* VMConfig.cpp */,
+				7994D53B1344E6C70035FF1D /* VMConfig.h */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				79D7CB6D1339798500F55DD8 /* vm */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6859E8C029090F304C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		79D7CB6C1339798500F55DD8 /* vm */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 79D7CB86133979C700F55DD8 /* Build configuration list for PBXNativeTarget "vm" */;
+			buildPhases = (
+				79D7CB6A1339798500F55DD8 /* Sources */,
+				79D7CB6B1339798500F55DD8 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = vm;
+			productName = Compiler;
+			productReference = 79D7CB6D1339798500F55DD8 /* vm */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "vm" */;
+			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = 08FB7794FE84155DC02AAC07 /* compiler */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				79D7CB6C1339798500F55DD8 /* vm */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		79D7CB6A1339798500F55DD8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7994D53C1344E6C70035FF1D /* AsmVMConfig.cpp in Sources */,
+				7994D53D1344E6C70035FF1D /* Assembler.cpp in Sources */,
+				7994D53E1344E6C70035FF1D /* main.cpp in Sources */,
+				7994D53F1344E6C70035FF1D /* Parser.cpp in Sources */,
+				7994D5401344E6C70035FF1D /* VirtualMachine.cpp in Sources */,
+				7994D5411344E6C70035FF1D /* VMConfig.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB923608733DC60010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = /opt/local/include;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+			};
+			name = Debug;
+		};
+		1DEB923708733DC60010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+			};
+			name = Release;
+		};
+		79D7CB6F1339798500F55DD8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = vm;
+			};
+			name = Debug;
+		};
+		79D7CB701339798500F55DD8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = vm;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "vm" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB923608733DC60010E9CD /* Debug */,
+				1DEB923708733DC60010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		79D7CB86133979C700F55DD8 /* Build configuration list for PBXNativeTarget "vm" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				79D7CB6F1339798500F55DD8 /* Debug */,
+				79D7CB701339798500F55DD8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

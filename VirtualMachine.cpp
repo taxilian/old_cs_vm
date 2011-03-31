@@ -98,7 +98,6 @@ void VirtualMachine::reset()
 {
     this->m_block = boost::shared_array<unsigned char>(new unsigned char[MEMORY_SIZE+3]);
 
-    ADDRESS bottom = MEMORY_SIZE - 1;
     for (int i = 0; i < REGISTER_COUNT; i++) {
         reg[i] = 0;
     }
