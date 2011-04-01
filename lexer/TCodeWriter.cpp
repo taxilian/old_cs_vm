@@ -22,6 +22,7 @@
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 
 using namespace std;
 
@@ -369,32 +370,39 @@ int TCodeWriter::GetLocalOffset(const string& id)
     return offsetMap[id];
 }
 
+string TCodeWriter::getTypeOf(const string& v) {
+    //cout << "Looking up type for " << v << endl;
+    if (v[0] == 'G')
+        return global_id_map[v].type == GDT_Int ? "int" : "char";
+    else if (v == "this")
+        return "int";
+    else
+        return boost::dynamic_pointer_cast<TypeData>(symbol_id_map[v]->data)->type;
+}
+
 void TCodeWriter::LoadToReg(const string& reg, const string& src)
 {
-    std::string fp = newAR ? "R10" : "FP";
+    string fp = newAR ? "R10" : "FP";
+    string load = getTypeSize(getTypeOf(src)) == INST_SIZE ? "LDR" : "LDB";
     if (src == "this") {
         Write("MOV", "R11", fp);
         Write("ADI", "R11", asString(2*INST_SIZE*-1));
-        Write("LDR", reg, "R11");
+        Write(load, reg, "R11");
     } else if (src[0] == 'G') {
-        if (global_id_map[src].type == GDT_Char) {
-            Write("LDB", reg, src);
-        } else {
-            Write("LDR", reg, src);
-        }
+        Write(load, reg, src);
     } else if (src[0] == 'T' || src[0] == 'L' || src[0] == 'P') {
         int offset = GetLocalOffset(src);
         Write("MOV", "R11", fp);
         offset += 3*INST_SIZE;
         Write("ADI", "R11", asString(offset*-1));
-        Write("LDR", reg, "R11");
+        Write(load, reg, "R11");
     } else if (boost::algorithm::starts_with(src, "REF")) {
         int offset = GetLocalOffset(src);
         Write("MOV", "R11", fp);
         offset += 3*INST_SIZE;
         Write("ADI", "R11", asString(offset*-1));
         Write("LDR", "R12", "R11");
-        Write("LDR", reg, "R12");
+        Write(load, reg, "R12");
     } else {
         cout << "Warning: LoadToReg couldn't handle " << src << endl;
         Comment("TODO: LoadToReg " + src);
@@ -403,25 +411,26 @@ void TCodeWriter::LoadToReg(const string& reg, const string& src)
 void TCodeWriter::StoreFromReg(const string& reg, const string& dest)
 {
     std::string fp = newAR ? "R10" : "FP";
+    string store = getTypeSize(getTypeOf(dest)) == INST_SIZE ? "STR" : "STB";
     if (dest[0] == 'G') {
         if (global_id_map[dest].type == GDT_Char) {
             Write("STB", reg, dest);
         } else {
-            Write("STR", reg, dest);
+            Write(store, reg, dest);
         }
     } else if (dest[0] == 'T' || dest[0] == 'L' || dest[0] == 'P') {
         int offset = GetLocalOffset(dest);
         Write("MOV", "R13", fp);
         offset += 3*INST_SIZE;
         Write("ADI", "R13", asString(offset*-1));
-        Write("STR", reg, "R13");
+        Write(store, reg, "R13");
     } else if (boost::algorithm::starts_with(dest, "REF")) {
         int offset = GetLocalOffset(dest);
         Write("MOV", "R13", fp);
         offset += 3*INST_SIZE;
         Write("ADI", "R13", asString(offset*-1));
         Write("LDR", "R14", "R13");
-        Write("STR", reg, "R14");
+        Write(store, reg, "R14");
     } else {
         cout << "Warning: StoreFromReg couldn't handle " << dest << endl;
         Comment("TODO: StoreFromReg " + dest);
@@ -545,15 +554,18 @@ void TCodeWriter::PUSH(const string& param1)
         Write("ADI", "SP", asString(INST_SIZE*-1));
     } else {
         Comment("Loading value to PUSH from " + param1);
+        string store = getTypeSize(getTypeOf(param1)) == INST_SIZE ? "STR" : "STB";
         LoadToReg("R7", param1);
-        PUSH("R7");
+        Write(store, "R7", "SP");
+        Write("ADI", "SP", asString(INST_SIZE*-1));
     }
 }
 void TCodeWriter::POP(const string& param1)
 {
+    string load = getTypeSize(getTypeOf(param1)) == INST_SIZE ? "LDR" : "LDB";
     if (param1[0] == 'R') { // If it's a register
         Write("ADI", "SP", asString(INST_SIZE));
-        Write("LDR", "SP", param1);
+        Write(load, "SP", param1);
     } else {
         POP("R1");
         Comment("Storing POPed value to " + param1);
@@ -563,16 +575,20 @@ void TCodeWriter::POP(const string& param1)
 
 void TCodeWriter::PEEK( const std::string& param1 )
 {
-    Write("LDR", "R1", "SP");
+    string load = getTypeSize(getTypeOf(param1)) == INST_SIZE ? "LDR" : "LDB";
+    Write(load, "R1", "SP");
     StoreFromReg("R1", param1);
 }
 
 void TCodeWriter::RETURN(const string& param1)
 {
+    string store = getTypeSize(getTypeOf(param1)) == INST_SIZE ? "STR" : "STB";
     Comment("Returning " + param1);
     LoadToReg("R1", param1);
     Write("LDR", "R0", "FP");
-    Write("STR", "R1", "FP");
+    Write("SUB", "R3", "R3");
+    Write("STR", "R3", "FP");
+    Write(store, "R1", "FP");
     Write("MOV", "R5", "FP");
     Write("ADI", "R5", asString(INST_SIZE * -1));
     Write("MOV", "SP", "FP");
