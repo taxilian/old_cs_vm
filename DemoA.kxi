@@ -4,9 +4,15 @@ class iNode {
     public iNode right;
 
     public iNode(int key) {
-	root = key;
-	left = null;
-	right = null;
+        cout << 'n';
+        cout << 'o';
+        cout << 'd';
+        cout << 'e';
+        cout << ':';
+        cout << key;
+        root = key;
+        left = null;
+        right = null;
     }
 }
 
@@ -15,16 +21,22 @@ class iTree {
     private bool first;
 
     public iTree() {
-	root = null;
+        root = null;
     }
 
     public bool add(int key) {
-	if (root == null) {
-	    root = new iNode(key);
-	    return true;
-	}
-	else
-	    return insert(key, root);
+        if (root == null) {
+            cout << 'k'; cout << ':';
+            cout << key;
+            cout << '\n';
+            root = new iNode(key);
+            return true;
+        }
+        else {
+            cout << 'Z';
+            cout << root;
+            return insert(key, root);
+        }
     }
 
     private bool insert(int key, iNode node) {
@@ -115,12 +127,6 @@ class Message {
     }
 
     private void print(int i, int end) {
-        cout << 'i';
-        cout << ':';
-        cout << i;
-        cout << 'e';
-        cout << ':';
-        cout << end;
 	while (i <= end) {
 	    cout << msg[i];
 	    i = i + 1;
@@ -159,10 +165,14 @@ void main() {
 
     msg.msg3();
     cin >> key;
+    cout << '(';
+    cout << key;
+    cout << ')';
     cout << '\n';
     while (key != 0) {
 	if (tree.add(6 + key * 1000 - 3)) {
 	    msg.msg1(key);
+        return;
 	    tree.print();
 	}
 	else 

@@ -134,7 +134,7 @@ ICodeVMConfig::ICodeVMConfig()
 TCodeWriter::TCodeWriter(const string& icodeFile, const string& outFile)
     : m_inFile(icodeFile), m_outFile(outFile.c_str()),
     m_config(boost::make_shared<ICodeVMConfig>()), m_parser(icodeFile, m_config),
-    lastId(5000) {
+    lastId(5000), newAR(false) {
 
     registerTWHandler("NOOP", make_method(this, &TCodeWriter::NOOP));
     registerTWHandler("JMP", make_method(this, &TCodeWriter::JMP));
@@ -371,8 +371,9 @@ int TCodeWriter::GetLocalOffset(const string& id)
 
 void TCodeWriter::LoadToReg(const string& reg, const string& src)
 {
+    std::string fp = newAR ? "R10" : "FP";
     if (src == "this") {
-        Write("MOV", "R11", "FP");
+        Write("MOV", "R11", fp);
         Write("ADI", "R11", asString(2*INST_SIZE*-1));
         Write("LDR", reg, "R11");
     } else if (src[0] == 'G') {
@@ -383,13 +384,13 @@ void TCodeWriter::LoadToReg(const string& reg, const string& src)
         }
     } else if (src[0] == 'T' || src[0] == 'L' || src[0] == 'P') {
         int offset = GetLocalOffset(src);
-        Write("MOV", "R11", "FP");
+        Write("MOV", "R11", fp);
         offset += 3*INST_SIZE;
         Write("ADI", "R11", asString(offset*-1));
         Write("LDR", reg, "R11");
     } else if (boost::algorithm::starts_with(src, "REF")) {
         int offset = GetLocalOffset(src);
-        Write("MOV", "R11", "FP");
+        Write("MOV", "R11", fp);
         offset += 3*INST_SIZE;
         Write("ADI", "R11", asString(offset*-1));
         Write("LDR", "R12", "R11");
@@ -401,6 +402,7 @@ void TCodeWriter::LoadToReg(const string& reg, const string& src)
 }
 void TCodeWriter::StoreFromReg(const string& reg, const string& dest)
 {
+    std::string fp = newAR ? "R10" : "FP";
     if (dest[0] == 'G') {
         if (global_id_map[dest].type == GDT_Char) {
             Write("STB", reg, dest);
@@ -409,13 +411,13 @@ void TCodeWriter::StoreFromReg(const string& reg, const string& dest)
         }
     } else if (dest[0] == 'T' || dest[0] == 'L' || dest[0] == 'P') {
         int offset = GetLocalOffset(dest);
-        Write("MOV", "R13", "FP");
+        Write("MOV", "R13", fp);
         offset += 3*INST_SIZE;
         Write("ADI", "R13", asString(offset*-1));
         Write("STR", reg, "R13");
     } else if (boost::algorithm::starts_with(dest, "REF")) {
         int offset = GetLocalOffset(dest);
-        Write("MOV", "R13", "FP");
+        Write("MOV", "R13", fp);
         offset += 3*INST_SIZE;
         Write("ADI", "R13", asString(offset*-1));
         Write("LDR", "R14", "R13");
@@ -441,7 +443,9 @@ void TCodeWriter::FRAME(const string& param1, const string& param2)
     // (empty) <-- new SP
     // PFP
     // Return Address (new FP)
+    assert(!newAR);
     LoadToReg("R9", param2);
+    Write("MOV", "R10", "FP", "Save a copy of the old FP for params");
     Write("MOV", "R2", "SP", "R2 = Stack top");                        // R2 = Stack top
     Write("MOV", "R3", "SP", "R3 = Stop top");                        // R3 = Stack top
     Write("ADI", "R2", asString(INST_SIZE*-1), "R2 = PFP location");      // R2 = PFP location
@@ -452,14 +456,17 @@ void TCodeWriter::FRAME(const string& param1, const string& param2)
 
     Comment("Push R9 (this ptr) to the stack");
     PUSH("R9");
+    newAR = true;
 }
 void TCodeWriter::CALL(const string& param1)
 {
+    assert(newAR);
     Comment("Calling function " + param1);
     Write("MOV", "R1", "PC");                        // Get addr of next instruction
     Write("ADI", "R1", asString(INST_SIZE*3));       // Add 3 instructions from this one
     Write("STR", "R1", "FP");                        // Set return address
     Write("JMP", param1);
+    newAR = false;
 }
 void TCodeWriter::TRP(const string& param1)
 {
@@ -524,11 +531,11 @@ void TCodeWriter::READ(const string& param1)
     if (type == "char") {
         Write("TRP", "4");
         Comment("Saving char to " + param1);
-        LoadToReg("R8", param1);
+        StoreFromReg("R8", param1);
     } else {
         Write("TRP", "2");
         Comment("Saving int to " + param1);
-        LoadToReg("R0", param1);
+        StoreFromReg("R0", param1);
     }
 }
 void TCodeWriter::PUSH(const string& param1)
@@ -719,8 +726,8 @@ void TCodeWriter::EQ(const string& param1, const string& param2, const string& p
     LoadToReg("R2", param3);
     Write("CMP", "R1", "R2");
     int cur(lastId++);
-    std::string eqTag("LT_" + asString(cur));
-    std::string neqTag("NLT_" + asString(cur));
+    std::string eqTag("EQ_" + asString(cur));
+    std::string neqTag("NEQ_" + asString(cur));
     std::string doneTag("D_" + asString(cur));
     Write("BRZ", "R1", eqTag);
     Write("JMP", neqTag);
@@ -740,8 +747,8 @@ void TCodeWriter::NE(const string& param1, const string& param2, const string& p
     LoadToReg("R2", param3);
     Write("CMP", "R1", "R2");
     int cur(lastId++);
-    std::string neTag("LT_" + asString(cur));
-    std::string nneTag("NLT_" + asString(cur));
+    std::string neTag("NE_" + asString(cur));
+    std::string nneTag("NNE_" + asString(cur));
     std::string doneTag("D_" + asString(cur));
     Write("BNZ", "R1", neTag);
     Write("JMP", nneTag);
@@ -780,7 +787,8 @@ void TCodeWriter::REF( const std::string& param1, const std::string& param2, con
     }
     Comment("Store that address into " + param1);
     int offset = GetLocalOffset(param1);
-    Write("MOV", "R4", "FP");
+    std::string fp = newAR ? "R10" : "FP";
+    Write("MOV", "R4", fp);
     offset += 3*INST_SIZE;
     Write("ADI", "R4", asString(offset*-1));
     Write("STR", "R1", "R4");

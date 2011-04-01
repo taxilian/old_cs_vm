@@ -1,7 +1,6 @@
 class Message {
     private char msg[];
     int i;
-    int n;
     int end;
 
     public Message() {
@@ -41,24 +40,23 @@ class Message {
     }
 
     public void print(int i, int end) {
-        cout << end;
-        cout << '\n';
-        cout << i;
-        cout << '\n';
-        cout << end;
-        cout << '\n';
-        cout << n;
-        cout << '\n';
         while (i <= end) {
             cout << msg[i];
             i = i + 1;
         }
-        cout << '\n';
     }	
+    public void printNum(int n) {
+        cout << 'N';
+        cout << 'u';
+        cout << 'm';
+        cout << ':';
+        cout << ' ';
+        cout << n;
+        cout << '\n';
+    }
     public void test() {
         i = 5;
-        n = 5;
-        print(5,n);
+        print(i,i);
     }
 }
 void main( )
@@ -66,7 +64,12 @@ void main( )
     int i;
     char msg[] = new char[20];
     Message m = new Message();
+    m.print(24, 28);
     i = 5;
-    m.test();
+    m.print(i,i);
+    m.print(6,13);
+    cin >> i;
+    cout << 6 + i * 1000 - 3;
+    m.printNum(6 + i * 1000 - 3);
     cout << '\n';
 }

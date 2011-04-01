@@ -107,6 +107,7 @@ private:
     std::map<std::string, SymbolEntryPtr> symbol_name_map;
 
     std::map<std::string, int> offsetMap;
+    bool newAR;
 };
 
 #endif
