@@ -22,7 +22,7 @@ struct SyntaxParserException : std::exception
 typedef std::map<std::string, SymbolEntryPtr> ScopeMap;
 
 class ICodeWriter;
-
+class scoped_PushScope;
 class CodeParser
 {
 public:
@@ -98,7 +98,6 @@ public:
 
     bool idExist();
 
-    bool refExist();
     bool typeExist(const std::string &type);
 
     ////////////////////////////////
@@ -207,4 +206,6 @@ private:
     std::vector<std::string> foundParams;
     int pass;
     bool failed;
+    bool mainWritten;
+    friend class scoped_PushScope;
 };

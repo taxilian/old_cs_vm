@@ -93,6 +93,11 @@ struct char_SAR : public lit_SAR
     char_SAR(const std::string& val) : lit_SAR(val, "char") {}
 };
 
+struct void_SAR : public lit_SAR
+{
+    void_SAR() : lit_SAR("void", "void") {}
+};
+
 struct new_SAR : public func_SAR
 {
     new_SAR(const std::string& val, const std::string& type) : func_SAR(val, type) {}

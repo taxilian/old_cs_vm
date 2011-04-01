@@ -82,8 +82,8 @@ void VirtualMachine::callHandler(unsigned int instruction)
         fnd->second.func(blk);
     } else {
         std::string str("Invalid instruction @ ");
-        str += (pc - 4);
-        str += " (line " + byteToLineMap[pc-4];
+        str += boost::lexical_cast<std::string>(pc - 4);
+        str += " (line " + boost::lexical_cast<std::string>(byteToLineMap[pc-4]) + ")";
         str += "!";
         throw VMException(str.c_str());
     }

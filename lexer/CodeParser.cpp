@@ -11,7 +11,34 @@
 
 using namespace std;
 
-CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(1), icode(NULL), lastLine(-1), failed(false)
+class scoped_PushScope
+{
+public:
+    scoped_PushScope(CodeParser* parser, const std::string scope) : parser(parser), scope(scope), valid(true) {
+        parser->current_scope.push_back(scope);
+    }
+    ~scoped_PushScope() {
+        if (valid)
+            reset();
+    }
+    void reset() {
+        parser->current_scope.pop_back();
+        assert(valid);
+        valid = false;
+    }
+    void reactivate() {
+        assert(!valid);
+        parser->current_scope.push_back(scope);
+        valid = true;
+    }
+
+private:
+    CodeParser* parser;
+    std::string scope;
+    bool valid;
+};
+
+CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(1), icode(NULL), lastLine(-1), failed(false), mainWritten(false)
 {
     current_scope.push_back("g");
 
@@ -69,6 +96,7 @@ CodeParser::CodeParser(LexicalParser* lexer) : lexer(lexer), nextId(1000), pass(
     operatorPrecedence["="] = 6;
     operatorPrecedence[","] = 7;
     operatorPrecedence["("] = 7;
+    operatorPrecedence["["] = 7;
 }
 
 
@@ -127,6 +155,15 @@ void CodeParser::LineComment()
 // Start point
 void CodeParser::compilation_unit()
 {
+    if (pass2() && !mainWritten) {
+        scoped_PushScope _s(this, "main");
+        std::string scope(getScopeString());
+        icode->Comment("Calling function main");
+        icode->Label("START");
+        icode->Write("FRAME", symbol_name_map[scope]->id, "0");
+        icode->Write("CALL", "FN_" + symbol_name_map[scope]->id);
+        icode->Write("TRP", "0");
+    }
     while (true) {
         if (lexer->current().type == TT_KEYWORD
             && lexer->current().text == "class") {
@@ -134,16 +171,6 @@ void CodeParser::compilation_unit()
             class_declaration();
         } else if (lexer->current().type == TT_KEYWORD
             && lexer->current().text == "void") {
-            if (pass2()) {
-                current_scope.push_back("main");
-                std::string scope(getScopeString());
-                icode->Comment("Calling function main");
-                icode->Label("START");
-                icode->Write("FRAME", symbol_name_map[scope]->id, "0");
-                icode->Write("CALL", "FN_" + symbol_name_map[scope]->id);
-                icode->Write("TRP", "0");
-                current_scope.pop_back();
-            }
             LineComment();
             assert_type_value(TT_KEYWORD, "void"); lexer->nextToken();
             assert_type_value(TT_KEYWORD, "main"); lexer->nextToken();
@@ -164,12 +191,11 @@ void CodeParser::compilation_unit()
             }
             lastSeenName = "main";
             lastSeenFunction = "main";
-            current_scope.push_back("main");
+            scoped_PushScope _s(this, "main");
             method_body();
-            current_scope.pop_back();
-        } else {
-            return;
-        }
+        } else if (lexer->current().type != TT_ENDOFFILE) {
+            throw SyntaxParserException("Expected void main or class; found " + lexer->current().toString());
+        } else return;
     }
 }
 
@@ -212,10 +238,8 @@ void CodeParser::method_body()
     }
 
     if (pass2()) {
-        if (!foundReturn) {
-            icode->Comment("No return value");
-            icode->Write("RTN");
-        }
+        icode->Comment("Return even if the code didn't tell us to earlier");
+        icode->Write("RTN");
     }
 	
     assert_type_value(TT_GROUPCLOSE, "}");
@@ -239,6 +263,13 @@ void CodeParser::variable_declaration()
             lexer->nextToken();
             assert_type_value(TT_GROUPCLOSE, "]");
             lexer->nextToken();
+            if (pass2()) {
+                SARPtr id(saPop());
+                SARPtr type(saPop());
+                type->value += "[]";
+                saStack.push_back(type);
+                saStack.push_back(id);
+            }
         }
         if (pass2())
             varPush(lastSeenName);
@@ -249,6 +280,8 @@ void CodeParser::variable_declaration()
                 opPush("=");
 			
             assignment_expression();
+        } else if (pass2()) {
+            saPop();
         }
         if (pass1()) {
             SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
@@ -293,7 +326,7 @@ void CodeParser::class_declaration()
 		icode->Blank();
 		icode->Comment("Begin class " + lastSeenName);
 	}
-    current_scope.push_back(lastSeenName);
+    scoped_PushScope _s(this, lastSeenName);
     assert_type_value(TT_GROUPOPEN, "{");
     lexer->nextToken();
 
@@ -313,7 +346,7 @@ void CodeParser::class_declaration()
             symb->data = methoddata;
             registerSymbol(symb);
 
-            current_scope.push_back(className);
+            scoped_PushScope _s(this, className);
             std::string scope(getScopeString());
             std::string pscope = symbol_name_map[scope]->scope;
             for(ScopeMap::iterator it(symbol_id_map.begin()); it != symbol_id_map.end(); ++it) {
@@ -326,9 +359,8 @@ void CodeParser::class_declaration()
                     as<MethodData>(symbol_name_map[scope]->data)->vars.push_back(it->second->id);
                 }
             }
-            current_scope.pop_back();
         } else {
-            current_scope.push_back(className);
+            scoped_PushScope _s(this, className);
             icode->Blank();
             icode->Blank();
             icode->Comment("Begin generated constructor " + getScopeString());
@@ -350,13 +382,11 @@ void CodeParser::class_declaration()
                     as<MethodData>(symbol_name_map[scope]->data)->vars.push_back(it->second->id);
                 }
             }
-            current_scope.pop_back();
         }
     }
 
     assert_type_value(TT_GROUPCLOSE, "}");
     scope_type.pop_back();
-    current_scope.pop_back();
     lexer->nextToken();
 }
 
@@ -373,6 +403,8 @@ void CodeParser::class_member_declaration()
         }
         if (lexer->peekToken(0).type == TT_KEYWORD) {
             type();
+            if (pass2())
+                typeExist(lastSeenType);
             identifier();
             field_declaration();
         } else {
@@ -385,14 +417,16 @@ void CodeParser::constructor_declaration()
 {
     foundConstructor = true;
     class_name();
-    if (pass2())
+    if (pass2()) {
+        typeExist(lastSeenName);
         ctordecl(lastSeenName);
+    }
     assert_type_value(TT_GROUPOPEN, "(");
     lexer->nextToken();
-    current_scope.push_back(lastSeenName); 
+    scoped_PushScope _s(this, lastSeenName);
     lastSeenFunction = lastSeenName;
     parameter_list();
-    current_scope.pop_back();
+    _s.reset();
     if (pass1()) {
         // Create symbol entry for the function
         SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
@@ -416,11 +450,10 @@ void CodeParser::constructor_declaration()
         }
     }
     lexer->nextToken();
-    current_scope.push_back(lastSeenFunction);
+    _s.reactivate();
     scope_type.push_back("constructor");
     method_body();
     scope_type.pop_back();
-    current_scope.pop_back();
 }
 
 void CodeParser::field_declaration()
@@ -431,6 +464,13 @@ void CodeParser::field_declaration()
         lexer->nextToken();
         assert_type_value(TT_GROUPCLOSE, "]");
         lexer->nextToken();
+        if (pass2()) {
+            SARPtr id(saPop());
+            SARPtr type(saPop());
+            type->value += "[]";
+            saStack.push_back(type);
+            saStack.push_back(id);
+        }
         lastSeenType += "[]";
         lastSeenFieldType = "array";
     }
@@ -445,7 +485,9 @@ void CodeParser::field_declaration()
         lexer->nextToken();
         assignment_expression();
         lastSeenFieldType += " assign";
-    }
+    } else if (pass2())
+        saPop();
+
     if (lexer->current().type == TT_SEMICOLON) {
         // it's a member variable
         lexer->nextToken();
@@ -477,10 +519,10 @@ void CodeParser::field_declaration()
     lexer->nextToken();
 
     // Add the function name to the scope
-    current_scope.push_back(lastSeenName); 
+    scoped_PushScope _s(this, lastSeenName);
     lastSeenFuncType = lastSeenType;
     parameter_list();
-    current_scope.pop_back();
+    _s.reset();
     if (pass1()) {
         // Create symbol entry for the function
         SymbolEntryPtr symb = boost::make_shared<SymbolEntry>();
@@ -505,9 +547,8 @@ void CodeParser::field_declaration()
     }
     assert_type_value(TT_GROUPCLOSE, ")");
     lexer->nextToken();
-    current_scope.push_back(lastSeenFunction);
+    _s.reactivate();
     method_body();
-    current_scope.pop_back();
 }
 
 void CodeParser::parameter_list()
@@ -572,7 +613,11 @@ void CodeParser::statement()
             lexer->nextToken();
         }
     } catch (const std::exception& ex) {
-        std::cerr << "Semantic error on line " << getLineNumber() << ":";
+        if (pass1()) {
+            std::cerr << "Syntax error on line " << getLineNumber() << ":";
+        } else {
+            std::cerr << "Semantic error on line " << getLineNumber() << ":";
+        }
         std::cerr << ex.what() << std::endl;
         bool stop = false;
         while (!stop) {
@@ -658,7 +703,12 @@ void CodeParser::cmd_while()
 
 void CodeParser::cmd_return()
 {
-    expression();
+    if (lexer->current().type != TT_SEMICOLON) {
+        expression();
+    } else {
+        if (pass2())
+            saStack.push_back(boost::make_shared<void_SAR>());
+    }
     assert_type(TT_SEMICOLON);
     if (pass2()) {
         end_of_expr();
@@ -737,11 +787,11 @@ void CodeParser::expression()
             expressionz();
     } else {
         identifier();
-        if (lexer->current().type == TT_GROUPOPEN) {
-            fn_arr_member();
-        }
         if (pass2()) {
             idExist();
+        }
+        if (lexer->current().type == TT_GROUPOPEN) {
+            fn_arr_member();
         }
         if (lexer->current().type == TT_OPERATOR && lexer->current().text == ".") {
             member_refz();
@@ -875,10 +925,12 @@ void CodeParser::new_declaration()
 			   && lexer->current().text == "[") {
         if (pass2()) {
             opPush("[");
+            saStack.back()->value += "[]";
         }
         lexer->nextToken();
         expression();
         assert_type_value(TT_GROUPCLOSE, "]");
+        lexer->nextToken();
         if (pass2()) {
             closeBracket();
             newArr();
@@ -1071,9 +1123,8 @@ std::string CodeParser::makeSymbolId( const std::string& prefix )
 void CodeParser::registerSymbol( const SymbolEntryPtr& symbol )
 {
     symbol_id_map[symbol->id] = symbol;
-    current_scope.push_back(symbol->value);
+    scoped_PushScope _s(this, symbol->value);
     symbol_name_map[getScopeString()] = symbol;
-    current_scope.pop_back();
 }
 
 
@@ -1160,12 +1211,16 @@ std::string CodeParser::getScopeType( const std::string& scopeStr )
 std::string CodeParser::getScopeType( const SARPtr& sar )
 {
     if (is_a<id_SAR>(sar)) {
-        std::string scopeStr = getScopeString() + "." + sar->value;
+        if (sar->value == "this") {
+            return findClass();
+        }
+        std::string scopeStr = findInScope(sar->value);
+        if (scopeStr.empty())
+            throw SyntaxParserException("Could not find '" + sar->value + "'");
         return getScopeType(scopeStr);
     } else if (is_a<typedSAR>(sar)) {
         return as<typedSAR>(sar)->getType();
     } else {
-        assert(false);
         return "";
     }
 }
@@ -1193,11 +1248,6 @@ bool CodeParser::idExist()
         }
     }
     return true;
-}
-
-bool CodeParser::refExist()
-{
-    throw std::runtime_error("Not implemented");
 }
 
 void CodeParser::closeParen()
@@ -1266,11 +1316,16 @@ void CodeParser::func_sa()
 {
     boost::shared_ptr<argList_SAR> argList(as<argList_SAR>(saPop()));
     SARPtr funcnamesar(saPop());
-    SARPtr varsar(saPop());
+    SARPtr varsar;
+    if (saStack.empty()) {
+        varsar = boost::make_shared<id_SAR>("this");
+    } else {
+        varsar = saPop();
+    }
     std::string type = getScopeType(varsar);
     std::string scope = "g." + type;
     if (!findFunction(scope, funcnamesar->value, argList)) {
-        throw SyntaxParserException("Cannot find a method matching " + type + " with these arguments");
+        throw SyntaxParserException("Cannot find a method matching " + type + "." + funcnamesar->value + " with these arguments");
     }
     
     SymbolEntryPtr func(symbol_name_map[scope + "." + funcnamesar->value]);
@@ -1282,8 +1337,8 @@ void CodeParser::func_sa()
         tempId = tempPush(getScopeType(scope + "." + funcnamesar->value));
     
     icode->Write("FRAME", funcId, getRval(varsar));
-    for (std::vector<SARPtr>::iterator it = argList->argList.begin();
-         it != argList->argList.end(); ++it) {
+    for (std::vector<SARPtr>::reverse_iterator it = argList->argList.rbegin();
+         it != argList->argList.rend(); ++it) {
         icode->Write("PUSH", getRval(*it));
     }
     icode->Write("CALL", "FN_" + funcId);
@@ -1291,12 +1346,21 @@ void CodeParser::func_sa()
         icode->Write("PEEK", tempId);
     }
 
-    opPop();
+    if (opStack.size())
+        opPop();
 }
 
 void CodeParser::arr_sa()
 {
-    throw std::runtime_error("Not implemented");
+    SARPtr idx(saPop());
+    SARPtr var(saPop());
+
+    std::string type(as<TypeData>(symbol_name_map[findInScope(var->value)]->data)->type);
+    if (boost::algorithm::ends_with(type, "[]")) {
+        type = type.substr(0, type.size()-2);
+    }
+    std::string tempVar(tempPush(type, "REF"));
+    icode->Write("REF", tempVar, getRval(var), getRval(idx));
 }
 
 void CodeParser::keyword_sa( const std::string &kw )
@@ -1318,7 +1382,14 @@ void CodeParser::keyword_sa( const std::string &kw )
         icode->Write("READ", getRval(sar));
     } else if (kw == "return") {
         SARPtr sar(saPop());
-        icode->Write("RETURN", getRval(sar));
+        if (sar->value == "void")
+            icode->Write("RTN");
+        else {
+            MethodDataPtr m(as<MethodData>(symbol_name_map[getScopeString()]->data));
+            if (m->returnType != getScopeType(sar))
+                throw SyntaxParserException("Attempting to return " + getScopeType(sar) + " from function returning " + m->returnType);
+            icode->Write("RETURN", getRval(sar));
+        }
         foundReturn = true;
         // Return whatever is on the stack
     } else if (kw == "if") {
@@ -1349,7 +1420,7 @@ void CodeParser::newObj()
     }
     std::string var = tempPush(type->getType());
     // Allocate memory and then call the constructor
-    icode->Write("NEWI", boost::lexical_cast<std::string>(getTypeSize(type->getType())), var);
+    icode->Write("NEW", boost::lexical_cast<std::string>(getTypeSize(type->getType())), var);
     if (symbol_name_map.find(scope + "." + type->value) != symbol_name_map.end()) {
         SymbolEntryPtr ctor(symbol_name_map[scope + "." + type->value]);
         icode->Write("FRAME", ctor->id, var);
@@ -1359,7 +1430,13 @@ void CodeParser::newObj()
 
 void CodeParser::newArr()
 {
-    throw std::runtime_error("Not implemented");
+    SARPtr lenSar(saPop());
+    SARPtr type(saPop());
+    if (getScopeType(lenSar) != "int") {
+        throw SyntaxParserException("Invalid array length; expected int, got " + getScopeType(lenSar));
+    }
+    std::string var = tempPush(type->value);
+    icode->Write("NEW", getRval(lenSar), var);
 }
 
 void CodeParser::builtin_sa( const std::string& func )
@@ -1390,17 +1467,29 @@ std::string CodeParser::tempPush( const std::string& type, const std::string& pr
 
 bool CodeParser::findFunction( const std::string& scope, const std::string& name, const boost::shared_ptr<argList_SAR>& argList )
 {
+    SymbolEntryPtr parent(symbol_name_map[getScopeString()]);
+    while (parent && parent->kind != "class") {
+        parent = symbol_name_map[parent->scope];
+    }
+
     std::string symName = scope + "." + name;
     if (symbol_name_map.find(symName) != symbol_name_map.end()) {
         SymbolEntryPtr s(symbol_name_map[symName]);
+        if (s->data->accessMod == "private" && (!parent || s->scope != parent->scope + "." + parent->value)) 
+            throw SyntaxParserException("Cannot access private method " + name + " of " + scope);
         MethodDataPtr m(as<MethodData>(s->data));
         if (m->Parameters.size() != argList->argList.size())
             return false;
         int i = 0;
-        for (vector<std::string>::iterator it = m->Parameters.begin(); it != m->Parameters.end(); ++it) {
+        for (vector<std::string>::reverse_iterator it = m->Parameters.rbegin(); it != m->Parameters.rend(); ++it) {
             SymbolEntryPtr param(symbol_id_map[*it]);
             TypeDataPtr t(as<TypeData>(param->data));
-            if (t->type != getScopeType(argList->argList[i]))
+            std::string type;
+            if (is_a<lit_SAR>(argList->argList[i])) {
+                type = getScopeType(argList->argList[i]);
+            } else 
+                type = getScopeType(findInScope(argList->argList[i]->value));
+            if (t->type != type)
                 return false;
             ++i;
         }
@@ -1509,7 +1598,7 @@ void CodeParser::processOperatorStack()
         SARPtr sar2(saPop());
         SARPtr sar1(saPop());
         // These all require the type to be the same
-        if (getScopeType(sar1) != getScopeType(sar2))
+        if (!compatibleTypes(sar1, sar2))
             throw SyntaxParserException("Invalid rval type: expected " + getScopeType(sar1) + " but found " + getScopeType(sar2));
         // Create a temporary variable and push it onto the stack
         std::string tempId = tempPush("bool");
@@ -1520,7 +1609,7 @@ void CodeParser::processOperatorStack()
         SARPtr sar2(saPop());
         SARPtr sar1(saPop());
         // These all require the type to be the same
-        if (getScopeType(sar1) != getScopeType(sar2))
+        if (!compatibleTypes(sar1, sar2))
             throw SyntaxParserException("Invalid rval type: expected " + getScopeType(sar1) + " but found " + getScopeType(sar2));
         // Create a temporary variable and push it onto the stack
         std::string tempId = tempPush(getScopeType(sar1));
@@ -1544,7 +1633,9 @@ void CodeParser::processOperatorStack()
 
         std::string type = getScopeType(lval);
         std::string scopeStr = "g." + type + "." + rval->value;
-        assert (symbol_name_map.find(scopeStr) != symbol_name_map.end());
+        if (symbol_name_map.find(scopeStr) == symbol_name_map.end()) {
+            throw SyntaxParserException(type + " does not have a member " + rval->value);
+        }
         std::string rvalType = getScopeType(scopeStr);
         std::string tempId = tempPush(rvalType, "REF");
         icode->Write("REF", tempId, getRval(lval), getRefval(lval, rval));
@@ -1596,6 +1687,7 @@ int CodeParser::getTypeSize( const std::string& type, bool nested/* = false*/ )
     else if (type == "null") return 4;
     else if (type == "int") return 4;
     else if (nested) return 4; // If this type is inside another class, it's just a pointer
+    else if (boost::algorithm::ends_with(type, "[]")) return 4; // arrays are pointers
     else {
         int size(0);
         std::string typeFQN("g." + type);

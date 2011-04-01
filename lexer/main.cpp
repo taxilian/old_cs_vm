@@ -23,6 +23,8 @@ int main(int argc, char *argv[] )
     } catch (const std::exception& ex) {
         std::cerr << "Syntax error on line " << syntax.getLineNumber() << ":";
         std::cerr << ex.what() << std::endl;
+        std::cerr << "Could not continue" << std::endl;
+        return 1;
     }
 
     LexicalParser lexer2(argv[1]);

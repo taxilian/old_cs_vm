@@ -101,7 +101,7 @@ ICodeVMConfig::ICodeVMConfig()
     registerInstruction("TRP",      0x03);
     registerInstruction("FUNC",     0x04);
     registerInstruction("MOVE",     0x05);
-    registerInstruction("NEWI",     0x06);
+    registerInstruction("NEW",      0x06);
     registerInstruction("WRITE",    0x07);
     registerInstruction("READ",     0x08);
     registerInstruction("PUSH",     0x09);
@@ -143,7 +143,7 @@ TCodeWriter::TCodeWriter(const string& icodeFile, const string& outFile)
     registerTWHandler("TRP", make_method(this, &TCodeWriter::TRP));
     registerTWHandler("FUNC", make_method(this, &TCodeWriter::FUNC));
     registerTWHandler("MOVE", make_method(this, &TCodeWriter::MOVE));
-    registerTWHandler("NEWI", make_method(this, &TCodeWriter::NEWI));
+    registerTWHandler("NEW", make_method(this, &TCodeWriter::NEW));
     registerTWHandler("WRITE", make_method(this, &TCodeWriter::WRITE));
     registerTWHandler("READ", make_method(this, &TCodeWriter::READ));
     registerTWHandler("PEEK", make_method(this, &TCodeWriter::PEEK));
@@ -315,6 +315,7 @@ int TCodeWriter::getTypeSize( const std::string& type, bool nested/* = false*/ )
     else if (type == "null") return 4;
     else if (type == "int") return 4;
     else if (nested) return 4; // If this type is inside another class, it's just a pointer
+    else if (boost::algorithm::ends_with(type, "[]")) return 4; // arrays are pointers
     else {
         int size(0);
         std::string typeFQN("g." + type);
@@ -371,9 +372,9 @@ int TCodeWriter::GetLocalOffset(const string& id)
 void TCodeWriter::LoadToReg(const string& reg, const string& src)
 {
     if (src == "this") {
-        Write("MOV", "R4", "FP");
-        Write("ADI", "R4", asString(2*INST_SIZE*-1));
-        Write("LDR", reg, "R4");
+        Write("MOV", "R11", "FP");
+        Write("ADI", "R11", asString(2*INST_SIZE*-1));
+        Write("LDR", reg, "R11");
     } else if (src[0] == 'G') {
         if (global_id_map[src].type == GDT_Char) {
             Write("LDB", reg, src);
@@ -382,17 +383,17 @@ void TCodeWriter::LoadToReg(const string& reg, const string& src)
         }
     } else if (src[0] == 'T' || src[0] == 'L' || src[0] == 'P') {
         int offset = GetLocalOffset(src);
-        Write("MOV", "R4", "FP");
+        Write("MOV", "R11", "FP");
         offset += 3*INST_SIZE;
-        Write("ADI", "R4", asString(offset*-1));
-        Write("LDR", reg, "R4");
+        Write("ADI", "R11", asString(offset*-1));
+        Write("LDR", reg, "R11");
     } else if (boost::algorithm::starts_with(src, "REF")) {
         int offset = GetLocalOffset(src);
-        Write("MOV", "R4", "FP");
+        Write("MOV", "R11", "FP");
         offset += 3*INST_SIZE;
-        Write("ADI", "R4", asString(offset*-1));
-        Write("LDR", "R5", "R4");
-        Write("LDR", reg, "R5");
+        Write("ADI", "R11", asString(offset*-1));
+        Write("LDR", "R12", "R11");
+        Write("LDR", reg, "R12");
     } else {
         cout << "Warning: LoadToReg couldn't handle " << src << endl;
         Comment("TODO: LoadToReg " + src);
@@ -408,17 +409,17 @@ void TCodeWriter::StoreFromReg(const string& reg, const string& dest)
         }
     } else if (dest[0] == 'T' || dest[0] == 'L' || dest[0] == 'P') {
         int offset = GetLocalOffset(dest);
-        Write("MOV", "R4", "FP");
+        Write("MOV", "R13", "FP");
         offset += 3*INST_SIZE;
-        Write("ADI", "R4", asString(offset*-1));
-        Write("STR", reg, "R4");
+        Write("ADI", "R13", asString(offset*-1));
+        Write("STR", reg, "R13");
     } else if (boost::algorithm::starts_with(dest, "REF")) {
         int offset = GetLocalOffset(dest);
-        Write("MOV", "R4", "FP");
+        Write("MOV", "R13", "FP");
         offset += 3*INST_SIZE;
-        Write("ADI", "R4", asString(offset*-1));
-        Write("LDR", "R5", "R4");
-        Write("STR", reg, "R5");
+        Write("ADI", "R13", asString(offset*-1));
+        Write("LDR", "R14", "R13");
+        Write("STR", reg, "R14");
     } else {
         cout << "Warning: StoreFromReg couldn't handle " << dest << endl;
         Comment("TODO: StoreFromReg " + dest);
@@ -471,12 +472,15 @@ void TCodeWriter::FUNC(const string& param1)
     assert(mdata);
     int i(0);
     for(vector<string>::iterator it(mdata->Parameters.begin()); it != mdata->Parameters.end(); ++it) {
-        i++;
+        SymbolEntryPtr symb(symbol_id_map[*it]);
+        TypeDataPtr tdata(boost::dynamic_pointer_cast<TypeData>(symb->data));
+        i+=getTypeSize(tdata->type);
     }
     for(vector<string>::iterator it(mdata->vars.begin()); it != mdata->vars.end(); ++it) {
-        i++;
+        SymbolEntryPtr symb(symbol_id_map[*it]);
+        TypeDataPtr tdata(boost::dynamic_pointer_cast<TypeData>(symb->data));
+        i+=getTypeSize(tdata->type);
     }
-    i *= INST_SIZE;
     Comment("Allocate space on the stack for local variables");
     Write("ADI", "SP", asString(i*-1));
 }
@@ -488,7 +492,7 @@ void TCodeWriter::MOVE(const string& param1, const string& param2)
     Comment("Store the value into the destination");
     StoreFromReg("R2", param1);
 }
-void TCodeWriter::NEWI(const string& param1, const string& param2)
+void TCodeWriter::NEW(const string& param1, const string& param2)
 {
     Write("MOV", "R1", "HP");
     LoadToReg("R2", param1);
@@ -529,13 +533,13 @@ void TCodeWriter::READ(const string& param1)
 }
 void TCodeWriter::PUSH(const string& param1)
 {
-    if (param1[0] == 'R') { // If it's a register
+    if (param1.size() > 0 && param1[0] == 'R' && param1[1] != 'E') { // If it's a register
         Write("STR", param1, "SP");
         Write("ADI", "SP", asString(INST_SIZE*-1));
     } else {
         Comment("Loading value to PUSH from " + param1);
-        LoadToReg("R1", param1);
-        PUSH("R1");
+        LoadToReg("R7", param1);
+        PUSH("R7");
     }
 }
 void TCodeWriter::POP(const string& param1)
@@ -766,10 +770,15 @@ void TCodeWriter::REF( const std::string& param1, const std::string& param2, con
 {
     Comment("First load \"" + param2 + "\" into R1");
     LoadToReg("R1", param2);
-    Comment("Now add the offset of " + param3);
-    Write("ADI", "R1", asString(GetLocalOffset(param3)));
+    if (param3[0] == 'V') {
+        Comment("Now add the offset of " + param3);
+        Write("ADI", "R1", asString(GetLocalOffset(param3)));
+    } else {
+        Comment("Now adding the array offset");
+        LoadToReg("R5", param3);
+        Write("ADD", "R1", "R5");
+    }
     Comment("Store that address into " + param1);
-    
     int offset = GetLocalOffset(param1);
     Write("MOV", "R4", "FP");
     offset += 3*INST_SIZE;

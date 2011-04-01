@@ -51,7 +51,7 @@ public:
     void TRP(const std::string& param1);
     void FUNC(const std::string& param1);
     void MOVE(const std::string& param1, const std::string& param2);
-    void NEWI(const std::string& param1, const std::string& param2);
+    void NEW(const std::string& param1, const std::string& param2);
     void WRITE(const std::string& param1);
     void READ(const std::string& param1);
     void PUSH(const std::string& param1);

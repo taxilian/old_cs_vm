@@ -197,6 +197,9 @@ Token LexicalParser::endToken(const TokenType type, const bool back_up)
 
     if (back_up) {
         --bufferpos;
+        if (buffer[bufferpos] == '\n') {
+            --m_lineNo;
+        }
     }
 
     Token out(type, ss.str());

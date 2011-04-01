@@ -52,7 +52,7 @@ unsigned short Assembler::start()
                 std::string msg("Duplicate label: ");
                 msg += curLine->label;
                 msg += " on line ";
-                msg += (int)m_parser.getLineNumber();
+                msg += boost::lexical_cast<std::string>(m_parser.getLineNumber());
                 throw AssemblerException(msg);
             }
             labelAddr[curLine->label] = curAddr;
