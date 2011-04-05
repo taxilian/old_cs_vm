@@ -1,0 +1,31 @@
+class Factorial {
+    int last;
+
+    public int factorial(int i) {
+        if (i == 1)
+            return 1;
+        else
+            return factorial(i-1)*i;
+    }
+}
+class Test {
+    Factorial n;
+    public void setFactorial(Factorial a) {
+        n = a;
+    }
+
+    public void go(int i) {
+        n.factorial(i);
+    }
+}
+void main( )
+{
+    Factorial n;
+    Test t = new Test();
+    n = new Factorial();
+    t.setFactorial(n);
+    cout << 'F';
+    cout << ':';
+    cout << ' ';
+    cout << t.go(8);
+}

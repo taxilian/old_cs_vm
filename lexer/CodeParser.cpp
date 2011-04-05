@@ -1526,6 +1526,9 @@ std::string CodeParser::getRval(const SARPtr& rval) {
             return std::string("'") + getCharString(rval->value[0]) + "'";
         } else throw SyntaxParserException("WTF?");
     } else if (is_a<var_SAR>(rval) || is_a<id_SAR>(rval)) {
+        if (symbol_id_map.find(rval->value) != symbol_id_map.end()) {
+            return rval->value;
+        }
         SymbolEntryPtr right = symbol_name_map[findInScope(rval->value)]; 
         if (right->id[0] == 'V') {
             std::string rvalType = getScopeType(findInScope(rval->value));
