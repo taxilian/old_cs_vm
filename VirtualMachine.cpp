@@ -334,7 +334,7 @@ void VirtualMachine::LDB2(REGISTER &rd, REGISTER &rs)
 {
     DOC("LDB2",
         "R" << static_cast<int>(&rd - this->reg) << "@" << rd,
-        "was " << rd << " -> to " << get_byte(rs) << " from address " << rs);
+        "was " << rd << " -> to " << static_cast<int>(get_byte(rs)) << "(" << get_byte(rs) << ")" << " from address " << rs);
     rd = get_byte(rs);
 }
 void VirtualMachine::STB(REGISTER &rs, ADDRESS addr)

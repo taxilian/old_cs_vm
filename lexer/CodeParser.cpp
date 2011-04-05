@@ -1702,7 +1702,7 @@ std::string getParentScope(const std::string& scope) {
 
 int CodeParser::getTypeSize( const std::string& type, bool nested/* = false*/ )
 {
-    if (type == "bool" || type == "char") return 1;
+    if (type == "bool" || type == "char") return 4;
     else if (type == "null") return 4;
     else if (type == "int") return 4;
     else if (nested) return 4; // If this type is inside another class, it's just a pointer

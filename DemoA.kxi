@@ -70,7 +70,6 @@ class iTree {
         else cout << ',';
 
         cout << node.root;
-        cout << '\n';
     }
 }
 

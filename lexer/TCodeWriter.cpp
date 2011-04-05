@@ -312,7 +312,7 @@ void TCodeWriter::handleInstruction(const Parser::InstructionPtr& inst)
 
 int TCodeWriter::getTypeSize( const std::string& type, bool nested/* = false*/ )
 {
-    if (type == "bool" || type == "char") return 1;
+    if (type == "bool" || type == "char") return 4;
     else if (type == "null") return 4;
     else if (type == "int") return 4;
     else if (nested) return 4; // If this type is inside another class, it's just a pointer
@@ -472,7 +472,7 @@ void TCodeWriter::FRAME(const string& param1, const string& param2)
 void TCodeWriter::CALL(const string& param1)
 {
     assert(newAR);
-    Comment("Calling function " + param1);
+    Comment("Calling function " + param1 + " (" + symbol_id_map[param1.substr(3, param1.size()-3)]->value + ")");
     Write("MOV", "R1", "PC");                        // Get addr of next instruction
     Write("ADI", "R1", asString(INST_SIZE*3));       // Add 3 instructions from this one
     Write("STR", "R1", "FP");                        // Set return address
