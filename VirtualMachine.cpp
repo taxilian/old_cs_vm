@@ -97,6 +97,7 @@ VirtualMachine::~VirtualMachine(void)
 void VirtualMachine::reset()
 {
     this->m_block = boost::shared_array<unsigned char>(new unsigned char[MEMORY_SIZE+3]);
+    memset(m_block.get(), 0, MEMORY_SIZE+3);
 
     for (int i = 0; i < REGISTER_COUNT; i++) {
         reg[i] = 0;
@@ -346,7 +347,7 @@ void VirtualMachine::STR(REGISTER &rs, ADDRESS addr)
 }
 void VirtualMachine::STR2(REGISTER &rs, REGISTER &rd)
 {
-    DOC("STR2", "R" << static_cast<int>(&rs-reg), rs << " -> R" << static_cast<int>(&rd-reg) << " (was " << rd << ")");
+    DOC("STR2", "R" << static_cast<int>(&rs-reg), rs << " -> R" << static_cast<int>(&rd-reg) << " (was " << get_int(rd) << ")");
     set_int(rd, rs);
 }
 void VirtualMachine::MOV(REGISTER &rd, REGISTER &rs)
