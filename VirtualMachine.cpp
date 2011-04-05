@@ -320,7 +320,9 @@ void VirtualMachine::LDR(REGISTER &rd, ADDRESS addr)
 }
 void VirtualMachine::LDR2(REGISTER &rd, REGISTER &rs)
 {
-    DOC("LDR2", "R" << static_cast<int>(&rd - this->reg), "was " << rd << " -> to " << get_int(rs) << " from address " << rs);
+    DOC("LDR2",
+        "R" << static_cast<int>(&rd - this->reg),
+        "was " << rd << " -> to " << get_int(rs) << " from address " << rs);
     rd = get_int(rs);
 }
 void VirtualMachine::LDB(REGISTER &rd, ADDRESS addr)
@@ -330,7 +332,9 @@ void VirtualMachine::LDB(REGISTER &rd, ADDRESS addr)
 }
 void VirtualMachine::LDB2(REGISTER &rd, REGISTER &rs)
 {
-    DOC("LDB2", "R" << static_cast<int>(&rd - this->reg), rs << " -> " << (int)get_byte(rs) << "(" << get_byte(rs) << ")");
+    DOC("LDB2",
+        "R" << static_cast<int>(&rd - this->reg) << "@" << rd,
+        "was " << rd << " -> to " << get_byte(rs) << " from address " << rs);
     rd = get_byte(rs);
 }
 void VirtualMachine::STB(REGISTER &rs, ADDRESS addr)
@@ -339,7 +343,10 @@ void VirtualMachine::STB(REGISTER &rs, ADDRESS addr)
 }
 void VirtualMachine::STB2(REGISTER &rs, REGISTER &rd)
 {
-    DOC("STB2", rs, rd); set_byte(rd, (char)rs);
+    DOC("STB2",
+        "R" << static_cast<int>(&rs-reg),
+        rs << " -> R" << static_cast<int>(&rd-reg) << "@" << rd << " (was " << get_byte(rd) << ")");
+    set_byte(rd, (char)rs);
 }
 void VirtualMachine::STR(REGISTER &rs, ADDRESS addr)
 {
@@ -347,12 +354,14 @@ void VirtualMachine::STR(REGISTER &rs, ADDRESS addr)
 }
 void VirtualMachine::STR2(REGISTER &rs, REGISTER &rd)
 {
-    DOC("STR2", "R" << static_cast<int>(&rs-reg), rs << " -> R" << static_cast<int>(&rd-reg) << " (was " << get_int(rd) << ")");
+    DOC("STR2",
+        "R" << static_cast<int>(&rs-reg),
+        rs << " -> R" << static_cast<int>(&rd-reg) << "@" << rd << " (was " << get_int(rd) << ")");
     set_int(rd, rs);
 }
 void VirtualMachine::MOV(REGISTER &rd, REGISTER &rs)
 {
-    DOC("MOV", "R" << static_cast<int>(&rd - this->reg), rs);
+    DOC("MOV", "R" << static_cast<int>(&rd - this->reg), "R" << static_cast<int>(&rs - this->reg) << " (" << rs << ")");
     rd = rs;
 }
 

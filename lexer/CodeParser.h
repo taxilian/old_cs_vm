@@ -154,6 +154,8 @@ protected:
     }
 
     SARPtr saPop() {
+        if (saStack.empty())
+            throw SyntaxParserException("Tried to pop an SA off the stack, but none was found");
         SARPtr tmp(saStack.back());
         saStack.pop_back();
         return tmp;

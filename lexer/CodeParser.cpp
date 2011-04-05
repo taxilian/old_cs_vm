@@ -235,6 +235,15 @@ void CodeParser::method_body()
 	
     while (lexer->current().text != "}") {
         statement();
+        if (!saStack.empty()) {
+            while (!saStack.empty() && is_a<void_SAR>(saStack.back()))
+                saPop();
+            if (saStack.empty()) continue;
+            std::cerr << "Warning: Stack not empty!" << std::endl;
+            while (!saStack.empty()) {
+                saPop();
+            }
+        }
     }
 
     if (pass2()) {
@@ -1333,8 +1342,11 @@ void CodeParser::func_sa()
     std::string funcId(func->id);
 
     std::string tempId;
-    if (md->returnType != "void")
+    if (md->returnType != "void") {
         tempId = tempPush(getScopeType(scope + "." + funcnamesar->value));
+    } else {
+        saStack.push_back(boost::make_shared<void_SAR>());
+    }
     
     icode->Write("FRAME", funcId, getRval(varsar));
     for (std::vector<SARPtr>::reverse_iterator it = argList->argList.rbegin();
@@ -1424,6 +1436,10 @@ void CodeParser::newObj()
     if (symbol_name_map.find(scope + "." + type->value) != symbol_name_map.end()) {
         SymbolEntryPtr ctor(symbol_name_map[scope + "." + type->value]);
         icode->Write("FRAME", ctor->id, var);
+        for (std::vector<SARPtr>::reverse_iterator it = argList->argList.rbegin();
+             it != argList->argList.rend(); ++it) {
+            icode->Write("PUSH", getRval(*it));
+        }
         icode->Write("CALL", "FN_" + ctor->id);
     }
 }
@@ -1524,7 +1540,7 @@ std::string CodeParser::getRval(const SARPtr& rval) {
             return "0";
         } else if (is_a<char_SAR>(rval)) {
             return std::string("'") + getCharString(rval->value[0]) + "'";
-        } else throw SyntaxParserException("WTF?");
+        } else throw SyntaxParserException("Trying to use void as an rval");
     } else if (is_a<var_SAR>(rval) || is_a<id_SAR>(rval)) {
         if (symbol_id_map.find(rval->value) != symbol_id_map.end()) {
             return rval->value;

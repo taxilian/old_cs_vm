@@ -14,8 +14,8 @@ class Test {
         n = a;
     }
 
-    public void go(int i) {
-        n.factorial(i);
+    public int go(int i) {
+        return n.factorial(i);
     }
 }
 void main( )
@@ -28,4 +28,5 @@ void main( )
     cout << ':';
     cout << ' ';
     cout << t.go(8);
+    cout << '\n';
 }
