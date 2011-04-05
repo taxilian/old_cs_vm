@@ -249,6 +249,13 @@ void VirtualMachine::run(unsigned short start)
 #ifdef TRACEON
         std::cerr << this->getLabelForAddress(addr) << std::endl;
 #endif
+        if (reg[SP] <= reg[SL]) {
+            std::cout << "Stack Pointer: " << reg[SP] << ", Stack Limit: " << reg[SL] << std::endl;
+            throw VMException("Stack overflow!");
+        } else if (reg[SP] > reg[SB]) {
+            std::cout << "Stack Pointer: " << reg[SP] << ", Stack Base: " << reg[SB] << std::endl;
+            throw VMException("Stack underflow!");
+        }
     };
 }
 

@@ -86,7 +86,8 @@ protected:
         m_handlerMap[kw] = func;
     }
     int getTypeSize( const std::string& type, bool nested = false );
-    
+    std::string getTypeOf(const std::string& v);
+
 private:
     std::string m_inFile;
     std::ofstream m_outFile;
