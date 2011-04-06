@@ -1,0 +1,22 @@
+md fillDir
+cd fillDir
+!loadToFile bigFile.txt bFile1.txt
+!loadToFile bigFile.txt bFile2.txt
+!loadToFile bigFile.txt bFile3.txt
+!loadToFile bigFile.txt bFile4.txt
+!loadToFile bigFile.txt bFile5.txt
+!loadToFile bigFile.txt bFile6.txt
+!loadToFile bigFile.txt bFile7.txt
+!loadToFile bigFile.txt bFile8.txt
+!loadToFile bigFile.txt bFile9.txt
+!loadToFile bigFile.txt bFile10.txt
+!loadToFile bigFile.txt bFile11.txt
+!loadToFile bigFile.txt bFile12.txt
+!loadToFile bigFile.txt bFile13.txt
+!loadToFile bigFile.txt bFile14.txt
+!loadToFile bigFile.txt bFile15.txt
+!loadToFile bigFile.txt bFile16.txt
+!loadToFile bigFile.txt bFile17.txt
+!loadToFile bigFile.txt bFile18.txt
+!loadToFile bigFile.txt bFile19.txt
+!loadToFile bigFile.txt bFile20.txt

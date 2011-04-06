@@ -21,9 +21,9 @@ namespace OS {
         FileNotFoundError(const std::string& msg) : FileSystemError(msg) {}
     };
 
-    const size_t fileDataBlks = 20;//every block is 512 bytes which gives a maximum of 10KB file size.
+    const size_t fileDataBlks = 70;//every block is 512 bytes which gives a maximum of 35KB file size.
     const size_t lengthPath = 20;
-    const size_t linkPath = 80;
+    const size_t linkPath = 280;
     const size_t blkSize = VM::VirtualDisk::BLOCK_SIZE;
 
     enum iNType{TYPE_empty = 0, TYPE_directory,TYPE_file,TYPE_link};
