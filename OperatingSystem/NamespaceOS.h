@@ -235,7 +235,7 @@ namespace OS {
                 cout <<"command not defined" << endl;
         }
 
-        void help(){
+        void help() {
             cout <<"help: prints a listing of commands and their descriptions.\n";
             cout <<"exit: exit the shell.\n";
             cout <<"ls: list the contents of a directory.\n";

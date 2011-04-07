@@ -220,23 +220,29 @@ std::string OS::FileSystem::GetDirectoryPath( int cwd )
 void OS::FileSystem::listDirectory( int cwd )
 {
     Directory dir = getDirectory(cwd);
-	iNFile temp;
     for (int i = 0; i < maxEntriesPerBlock; i++) {
         switch(dir.entries[i].type) {
         case TYPE_directory:
             cout << dir.entries[i].name << "/" << endl;
             break;
-        case TYPE_file:
+        case TYPE_file: {
+        	iNFile temp;
 			temp = getFileNode(dir.entries[i].ptr);
-			cout << dir.entries[i].name << " size: " << temp.fileSize <<"\tCreation date: " << timeToString(temp.creationDate) << 
-				"\tModified date: " <<timeToString(temp.modifyDate)<<endl;
-            break;
-		case TYPE_link:
+			cout << left << setw(30) << dir.entries[i].name << "  ";
+            cout << left << setw(10) << temp.fileSize << "  ";
+            cout << left << setw(20) << timeToString(temp.creationDate) << "  ";
+            cout << left << setw(20) << timeToString(temp.modifyDate);
+            cout << endl;
+            } break;
+		case TYPE_link: {
 			iNLink temp;
 			temp = getLinkNode(dir.entries[i].ptr);
-			cout << dir.entries[i].name << " size: " << temp.fileSize << "\tCreation date: " << timeToString(temp.creationDate) << 
-				"\tModified date: " <<timeToString(temp.modifyDate)<<endl;
-            break;
+			cout << left << setw(30) << dir.entries[i].name + string(" -> ") + temp.pathName << "  ";
+            cout << left << setw(10) << temp.fileSize << "  ";
+            cout << left << setw(20) << timeToString(temp.creationDate) << "  ";
+            cout << left << setw(20) << timeToString(temp.modifyDate) << "  ";
+            cout << left << endl;
+            } break;
         default:
             break;
         }
@@ -324,7 +330,8 @@ void OS::FileSystem::touchFile(int cwd, std::string& file, std::string& date)
 
 void OS::FileSystem::lnFile(int cwd, std::string& file, std::string& lname, std::string& sym)
 {
-	
+    if (lname.empty() || file.empty())
+        throw FileSystemError("Invalid file or path");
 	if(sym=="-s")
 	{
 		int iNodeIdx = findFreeINode();
@@ -334,6 +341,7 @@ void OS::FileSystem::lnFile(int cwd, std::string& file, std::string& lname, std:
 		linkEntry.type = TYPE_link;
 		iNLink inode;
 		memset(&inode, 0, sizeof(inode));
+        inode.refCount = 1;
 		inode.creationDate = getCurrentTime();
 		inode.modifyDate = getCurrentTime();
 		inode.fileSize = file.size();
