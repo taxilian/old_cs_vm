@@ -4,6 +4,7 @@
 
 #include <string>
 #include <list>
+#include <vector>
 #include <boost/noncopyable.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -12,6 +13,7 @@
 #include "HeapMgr.h"
 #include "VirtualDisk.h"
 #include "FileSystem.h"
+#include "VMemMngr.h"
 namespace OS {
     class ProcScheduler;
     class OpSystem : boost::noncopyable 
@@ -100,6 +102,9 @@ namespace OS {
         int cwd;
         int lastFH;
         std::map<int, FileHandlePtr> fileTable;
+		VMemMngr vmemMngr;
+		
     };
+	
 }
 #endif // OpSystem_h__

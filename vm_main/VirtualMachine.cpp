@@ -27,7 +27,14 @@ VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()),
     sched_baseTicks(30), sched_variance(0.2), pid(-1)
 {
     reset();
-
+	//initialize page table.
+	for(int i = 0; i < PTSize; i++)
+	{
+		PageTable[i].pageNum = -1;
+		PageTable[i].pid = -1;
+		PageTable[i].valid = false;
+	}
+	//other stuff
     registerHandler("ADD", make_method(this, &VirtualMachine::ADD));
     registerHandler("ADI", make_method(this, &VirtualMachine::ADI));
     registerHandler("SUB", make_method(this, &VirtualMachine::SUB));
@@ -94,7 +101,6 @@ void VirtualMachine::reset()
     ADDRESS bottom = MEMORY_SIZE - 1;
     memset(reg, 0, sizeof(reg[0])*20);
     m_running = false;
-
     reg[SB] = MEMORY_SIZE - 1;  // Stack Base
     reg[FP] = reg[SB];          // Frame Pointer (Bottom of current frame)
     reg[SP] = reg[SB];          // Stack Pointer (Top of stack)

@@ -47,7 +47,11 @@ namespace VM {
 		//process currently running
 		int32_t pid; 
     };
-
+	struct PTEntry{
+		int pid;//process id.
+		int pageNum;//page number for a given process id.
+		bool valid;//true page is in physical memory. false page is in disk.
+	};
     class VMCore : boost::noncopyable
     {
     public:
@@ -55,6 +59,8 @@ namespace VM {
         static const int SL = 17;
         static const int SP = 18;
         static const int SB = 19;
+		static const int PTSize = 24;
+		PTEntry PageTable[PTSize];
     public:
         virtual Status run() = 0;
 

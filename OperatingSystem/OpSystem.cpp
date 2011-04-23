@@ -18,8 +18,9 @@ using VM::VMCore;
 
 OpSystem::OpSystem(VM::VMCore* vm, VM::VirtualDisk* vd) :
     m_lastLoadAddr(0), m_vm(vm), fileSystem(vd), m_lastPid(1),sysMemMgr(m_vm->getMemorySize(), 0),
-    m_scheduler(new ProcScheduler(this, vm)), cwd(0), lastFH(0)
+    m_scheduler(new ProcScheduler(this, vm)), cwd(0), lastFH(0), vmemMngr(vm,&fileSystem)
 {
+	
     // Register any special traps here
     vm->registerInterrupt(0, boost::bind(&OpSystem::processEnd, this, _1));
     vm->registerInterrupt(5, boost::bind(&OpSystem::processNew, this, _1));
@@ -344,6 +345,7 @@ void OS::OpSystem::formatDisk()
     if (r == 'Y' || r == 'y') {
         std::cout << "Formatting ..." << std::endl;
     	fileSystem.format();
+		mkdir("SwapFile");
     }
     cwd = 0;
 }
