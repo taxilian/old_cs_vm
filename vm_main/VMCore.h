@@ -51,6 +51,7 @@ namespace VM {
 		int pid;//process id.
 		int pageNum;//page number for a given process id.
 		bool valid;//true page is in physical memory. false page is in disk.
+		PTEntry(){pid = -1;pageNum = -1; valid = false;};
 	};
     class VMCore : boost::noncopyable
     {
@@ -59,8 +60,13 @@ namespace VM {
         static const int SL = 17;
         static const int SP = 18;
         static const int SB = 19;
-		static const int PTSize = 24;
-		PTEntry PageTable[PTSize];
+		static const int PTSize = 24;//only 24 pages of virtual memory.
+		static const int FMSize = 8;//number of frames in physical memory.
+		std::list<PTEntry> PageTable;//available to VM but managed by OS.
+		std::list<PTEntry> fifo;//Implementing FIFO queue page replacement algorithm. 
+		//fifo contains the pages information about pages currently in physical memory.
+		//8 pages of 512 bytes. need to populate this container when first loading into physical memory.
+		PTEntry pageNeeded;//When calling OpSystem.getPage(VM::VMCore* vm) need to set this field.
     public:
         virtual Status run() = 0;
 
@@ -81,6 +87,7 @@ namespace VM {
         virtual bool isRunning() = 0;
         virtual void setRunning( bool isRunning ) = 0;
         virtual void configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt) = 0;
+		virtual void pageFault(const InterruptHandler& interrupt) = 0;//assumes that pageNeeded has been set by VM.
 
         virtual void resetRunningTime() = 0;
         virtual boost::posix_time::time_duration getRunningTime() = 0;

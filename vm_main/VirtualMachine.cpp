@@ -27,13 +27,9 @@ VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()),
     sched_baseTicks(30), sched_variance(0.2), pid(-1)
 {
     reset();
-	//initialize page table.
-	for(int i = 0; i < PTSize; i++)
-	{
-		PageTable[i].pageNum = -1;
-		PageTable[i].pid = -1;
-		PageTable[i].valid = false;
-	}
+	//Initialize page table and queue.
+	PageTable.resize(PTSize,pageNeeded);
+	fifo.resize(FMSize,pageNeeded);
 	//other stuff
     registerHandler("ADD", make_method(this, &VirtualMachine::ADD));
     registerHandler("ADI", make_method(this, &VirtualMachine::ADI));
@@ -170,6 +166,10 @@ void VM::VirtualMachine::configureScheduler( const int baseTicks, const double v
     sched_interrupt = interrupt;
 }
 
+void VM::VirtualMachine::pageFault(const InterruptHandler& interrupt)
+{//assumes that pageNeeded has been set.
+	page_fault = interrupt;
+}
 void VM::VirtualMachine::readMemory( const uint32_t addr, MemoryBlock& memory, size_t size )
 {
     if (!memory) {

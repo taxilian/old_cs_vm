@@ -51,7 +51,7 @@ namespace VM {
 
         virtual void registerInterrupt(int trap, const VM::InterruptHandler& handler);
         virtual void configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt);
-
+		virtual void pageFault(const InterruptHandler& interrupt);//assumes that pageNeeded has been set by VM.
         virtual void resetRunningTime() { runningTime *= 0; }
         virtual boost::posix_time::time_duration getRunningTime() { return runningTime; }
         virtual void readMemory(const uint32_t addr, MemoryBlock& memory, size_t size);
@@ -74,6 +74,7 @@ namespace VM {
         int sched_baseTicks;
         double sched_variance;
         InterruptHandler sched_interrupt;
+		InterruptHandler page_fault;//when a page fault occurs just call this handler, assumes that pageNeeded has been set by VM.
 
     public:
         // Registers
