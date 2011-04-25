@@ -508,5 +508,5 @@ void OS::OpSystem::ln(std::string fname, std::string lname, std::string sym)
 
 void OS::OpSystem::getPage(VM::VMCore* vm)
 {
-
+	vmemMngr.getPage();
 }

@@ -29,7 +29,8 @@ VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()),
     reset();
 	//Initialize page table and queue.
 	PageTable.resize(PTSize,pageNeeded);
-	fifo.resize(FMSize,pageNeeded);
+	framesInfo.resize(FMSize,pageNeeded);
+	currentFrame = 0;//we are replacing the frame after currentFrame. if currentFrame=7 we replace frame 0.
 	//other stuff
     registerHandler("ADD", make_method(this, &VirtualMachine::ADD));
     registerHandler("ADI", make_method(this, &VirtualMachine::ADI));
@@ -177,7 +178,17 @@ void VM::VirtualMachine::readMemory( const uint32_t addr, MemoryBlock& memory, s
     }
     memcpy(memory.get(), m_block.get() + offset + addr, size);
 }
-
+void VM::VirtualMachine::readFrame(const uint32_t addr, MemoryBlock& memory, size_t size)
+{
+	if (!memory) {
+        memory = MemoryBlock(new uint8_t[size]);
+    }
+    memcpy(memory.get(), m_block.get() + addr, size);
+}
+void VM::VirtualMachine::writeFrame( const uint32_t addr, const char* memory, size_t size )
+{
+	 memcpy(m_block.get() + addr, memory, size);
+}
 void VM::VirtualMachine::writeMemory( const uint32_t addr, const char* memory, size_t size )
 {
     memcpy(m_block.get() + offset + addr, memory, size);

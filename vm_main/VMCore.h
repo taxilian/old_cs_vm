@@ -60,11 +60,13 @@ namespace VM {
         static const int SL = 17;
         static const int SP = 18;
         static const int SB = 19;
-		static const int PTSize = 24;//only 24 pages of virtual memory.
+		static const int PTSize = 32;//32 pages - 8 frames = 24 pages of virtual memory.
 		static const int FMSize = 8;//number of frames in physical memory.
+		int currentFrame;//we are replacing the frame after currentFrame. if currentFrame=7 we replace frame 0.
 		std::list<PTEntry> PageTable;//available to VM but managed by OS.
-		std::list<PTEntry> fifo;//Implementing FIFO queue page replacement algorithm. 
-		//fifo contains the pages information about pages currently in physical memory.
+		std::list<PTEntry> framesInfo;//We are replacing the frame after the current frame being executed.
+		//if current frame is 7 then we go back to raplacing frame 0. 
+		//framesInfo contains the pages information about pages currently in physical memory.
 		//8 pages of 512 bytes. need to populate this container when first loading into physical memory.
 		PTEntry pageNeeded;//When calling OpSystem.getPage(VM::VMCore* vm) need to set this field.
     public:
@@ -87,10 +89,12 @@ namespace VM {
         virtual bool isRunning() = 0;
         virtual void setRunning( bool isRunning ) = 0;
         virtual void configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt) = 0;
-		virtual void pageFault(const InterruptHandler& interrupt) = 0;//assumes that pageNeeded has been set by VM.
-
-        virtual void resetRunningTime() = 0;
+		virtual void resetRunningTime() = 0;
         virtual boost::posix_time::time_duration getRunningTime() = 0;
+		//virtual memory
+		virtual void pageFault(const InterruptHandler& interrupt) = 0;//assumes that pageNeeded has been set by VM.
+		virtual void readFrame(const uint32_t addr, MemoryBlock& memory, size_t size) = 0;
+        virtual void writeFrame(const uint32_t addr, const char* memory, size_t size) = 0;
     };
 
 };

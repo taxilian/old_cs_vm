@@ -56,6 +56,8 @@ namespace VM {
         virtual boost::posix_time::time_duration getRunningTime() { return runningTime; }
         virtual void readMemory(const uint32_t addr, MemoryBlock& memory, size_t size);
         virtual void writeMemory(const uint32_t addr, const char* memory, size_t size);
+		virtual void readFrame(const uint32_t addr, MemoryBlock& memory, size_t size);
+		virtual void writeFrame(const uint32_t addr, const char* memory, size_t size);
         // End VMCore methods
 
     protected:
