@@ -48,10 +48,9 @@ namespace VM {
 		int32_t pid; 
     };
 	struct PTEntry{
-		int pid;//process id.
 		int pageNum;//page number for a given process id.
 		bool valid;//true page is in physical memory. false page is in disk.
-		PTEntry(){pid = -1;pageNum = -1; valid = false;};
+		PTEntry(){pageNum = -1; valid = false;};
 	};
     class VMCore : boost::noncopyable
     {
@@ -60,7 +59,7 @@ namespace VM {
         static const int SL = 17;
         static const int SP = 18;
         static const int SB = 19;
-		static const int PTSize = 32;//32 pages - 8 frames = 24 pages of virtual memory.
+		static const int PTSize = 32;//32 pages of virtual memory.
 		static const int FMSize = 8;//number of frames in physical memory.
 		int currentFrame;//we are replacing the frame after currentFrame. if currentFrame=7 we replace frame 0.
 		std::list<PTEntry> PageTable;//available to VM but managed by OS.

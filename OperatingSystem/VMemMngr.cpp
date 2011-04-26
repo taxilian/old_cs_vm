@@ -10,25 +10,13 @@ void VMemMngr::swapIn()
 {
 	VM::MemoryBlock memory;
 	size_t memorySize = 0;
-	std::string pageFile = boost::lexical_cast<std::string>(vm_core->pageNeeded.pid);
-	pageFile += "_";
-	pageFile += boost::lexical_cast<std::string>(vm_core->pageNeeded.pageNum);
-	pageFile += ".hexe";
-	/*char processID[32];
-	char pageNumber[32];
-	_itoa_s(vm_core->pageNeeded.pid,processID,32,10);
-	_itoa_s(vm_core->pageNeeded.pageNum,pageNumber,32,10);
-	pageFile = processID;
-	pageFile += "_";
-	pageFile += pageNumber;
-	pageFile += ".hexe";*/
+	std::string pageFile = boost::lexical_cast<std::string>(vm_core->pageNeeded.pageNum);
 	fSystem->readFile(swapDirectory,pageFile,memory,memorySize);
 	iter->pageNum = vm_core->pageNeeded.pageNum;
-	iter->pid = vm_core->pageNeeded.pid;
 	iter->valid = true;
 	for(std::list<VM::PTEntry>::iterator i = vm_core->PageTable.begin(); i != vm_core->PageTable.end(); i++)
 	{
-		if((iter->pid == i->pid) && (iter->pageNum == i->pageNum))
+		if(iter->pageNum == i->pageNum)
 		{
 			i->valid = true;
 			break;
@@ -52,16 +40,13 @@ void VMemMngr::swapOut()
 		address = vm_core->currentFrame * pageSize;
 		iter++;
 	}
-	std::string pageFile = boost::lexical_cast<std::string>(iter->pid);
-	pageFile += "_";
-	pageFile += boost::lexical_cast<std::string>(iter->pageNum);
-	pageFile += ".hexe";
+	std::string pageFile =boost::lexical_cast<std::string>(iter->pageNum);
 	VM::MemoryBlock memory;
 	vm_core->readFrame(address,memory,pageSize);
 	fSystem->WriteFile(swapDirectory,pageFile,(char*)memory.get(),pageSize);
 	for(std::list<VM::PTEntry>::iterator i = vm_core->PageTable.begin(); i != vm_core->PageTable.end(); i++)
 	{
-		if((iter->pid == i->pid) && (iter->pageNum == i->pageNum))
+		if(iter->pageNum == i->pageNum)
 		{
 			i->valid = false;
 			break;
@@ -76,11 +61,8 @@ void VMemMngr::getPage()
 }
 void VMemMngr::saveToVMem(VM::PTEntry* ptEntry,  VM::MemoryBlock& memory)
 {
-	assert((ptEntry->pageNum >= 0) && (ptEntry->pid >= 0));
-	std::string pageFile = boost::lexical_cast<std::string>(ptEntry->pid);
-	pageFile += "_";
-	pageFile += boost::lexical_cast<std::string>(ptEntry->pageNum);
-	pageFile += ".hexe";
+	assert(ptEntry->pageNum >= 0);
+	std::string pageFile = boost::lexical_cast<std::string>(ptEntry->pageNum);
 	fSystem->WriteFile(swapDirectory,pageFile,(char*)memory.get(),pageSize);
 	vm_core->PageTable.push_back(*ptEntry);
 }
