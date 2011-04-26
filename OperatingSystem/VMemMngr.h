@@ -3,6 +3,7 @@
 #define H_VMEMMANAGEMENT
 #include "VMCore.h"
 #include "FileSystem.h"
+#include <boost\lexical_cast.hpp>
 namespace OS {
 class VMemMngr
 {
@@ -17,6 +18,10 @@ public:
 	void swapIn();
 	void swapOut();
 	void getPage();
+	//preconditions: ptEntry contains information about page being save to virtual memory.
+	//memory contains a block of size 512.
+	//postconditions: a page is save into virtual memory. 
+	void saveToVMem(VM::PTEntry* ptEntry,  VM::MemoryBlock& memory);
 };
 }
 #endif
