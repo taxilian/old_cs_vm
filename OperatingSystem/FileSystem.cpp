@@ -192,6 +192,9 @@ OS::Entry OS::FileSystem::getDirectoryEntry( int cwd, const std::string& fileNam
 void OS::FileSystem::clearDirectoryEntry( int cwd, const std::string& fileName )
 {
 	Entry nullEntry = {TYPE_empty, {0}, 0};
+    if (fileName == "." || fileName == "..") {
+        throw FileSystemError("Cannot delete " + fileName);
+    }
     Directory dir = getDirectory(cwd);
     for (int i = 0; i < maxEntriesPerBlock; i++) {
         if (dir.entries[i].name == fileName) {
@@ -321,8 +324,12 @@ void OS::FileSystem::touchFile(int cwd, std::string& file, std::string& date)
 	Entry entry = getDirectoryEntry(cwd,file);
 	iNFile infile = getFileNode(entry.ptr);
 	using namespace boost::posix_time;
-	ptime t(time_from_string(date));
-	ptime epoch(boost::gregorian::date(1970,3,25));
+    ptime t;
+    if (date.empty())
+        t = boost::posix_time::second_clock::local_time();
+    else 
+        t = time_from_string(date);
+	ptime epoch(boost::gregorian::date(1970,1,1));
 	time_duration::sec_type x = (t - epoch).total_seconds();
 	infile.modifyDate = x;
 	saveFileNode(entry.ptr,infile);
@@ -366,6 +373,9 @@ bool OS::FileSystem::WriteFile( int cwd, const std::string& file, const char* da
 {
     static char gData[blkSize] = {0}; // We'll use this for partial blocks
     
+    if (size > totalFreeBlocks()*blkSize)
+        throw FileSystemError("Unsufficient disk space");
+
     Entry fileEntry;
     int iNodeIdx = findFreeINode();
     iNFile inode;
@@ -500,7 +510,7 @@ void OS::FileSystem::cpFile(int cwd, const std::string& file, const std::string&
     VM::MemoryBlock blk;
     size_t size;
     readFileContents(entry, blk, size);
-	WriteFile(boost::get<0>(resolvedDirectory), file, (char*)blk.get(), size);
+	WriteFile(boost::get<0>(resolvedDirectory), dest, (char*)blk.get(), size);
 }
 
 void OS::FileSystem::mvFile(int cwd, const std::string& file, const std::string& dest)
@@ -672,6 +682,8 @@ void OS::FileSystem::readFile( int cwd, const std::string& file, VM::MemoryBlock
     Entry entry = getFileEntry(cwd, file);
     if (entry.type != TYPE_empty) {
         this->readFileContents(entry, block, size);
+    } else {
+        throw FileNotFoundError(file + "not found");
     }
 }
 

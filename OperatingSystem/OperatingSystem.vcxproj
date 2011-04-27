@@ -85,6 +85,7 @@
     <ClCompile Include="OpSystem.cpp" />
     <ClCompile Include="ProcScheduler.cpp" />
     <ClCompile Include="VirtualFileHandle.cpp" />
+    <ClCompile Include="VMemMngr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileHandle.h" />
@@ -95,6 +96,7 @@
     <ClInclude Include="ProcessControlBlock.h" />
     <ClInclude Include="ProcScheduler.h" />
     <ClInclude Include="VirtualFileHandle.h" />
+    <ClInclude Include="VMemMngr.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

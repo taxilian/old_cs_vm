@@ -271,12 +271,22 @@ std::string VirtualMachine::getDebugFor(boost::uint32_t addr)
 
 boost::uint64_t VirtualMachine::get_int(boost::uint32_t addr)
 {
-    return *((boost::uint64_t*)(&m_block[addr+offset]));
+    intsplit is;
+    boost::uint64_t val = *((boost::uint64_t*)(&m_block[addr+offset]));
+    for (int i = 0; i < 8; ++i) {
+        is.cVal.cb1[i] = get_byte(addr+i);
+    }
+    return is.iVal;
 }
 
 void VirtualMachine::set_int(boost::uint32_t addr, boost::uint64_t value)
 {
-    *((boost::uint64_t*)(&m_block[addr+offset])) = value;
+    intsplit is;
+    is.iVal = value;
+    for (int i = 0; i < 8; ++i) {
+        set_byte(addr+i, is.cVal.cb1[i]);
+    }
+    boost::uint64_t val = *((boost::uint64_t*)(&m_block[addr+offset]));
 }
 
 char VirtualMachine::get_byte(boost::uint32_t addr)

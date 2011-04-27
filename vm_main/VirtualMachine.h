@@ -22,6 +22,12 @@ namespace VM {
 
     typedef std::map<boost::uint16_t, instructionDef> FunctionMap;
 	
+    union intsplit {
+        uint64_t iVal;
+        struct {
+            uint8_t cb1[8];
+        } cVal;
+    };
 	
     class VirtualMachine : public VMCore
     {
