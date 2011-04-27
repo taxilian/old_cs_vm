@@ -28,7 +28,7 @@ OpSystem::OpSystem(VM::VMCore* vm, VM::VirtualDisk* vd) :
     vm->registerInterrupt(7, boost::bind(&OpSystem::processYield, this, _1));
 
     vm->configureScheduler(50, 0.5, boost::bind(&OpSystem::runScheduler, this, _1));
-	vm->pageFault(boost::bind(&OpSystem::getPage, this,_1));
+	vm->setPageFault(boost::bind(&OpSystem::getPage, this,_1));
     vm->registerInterrupt(11, boost::bind(&OpSystem::fsOpen, this, _1));
     vm->registerInterrupt(12, boost::bind(&OpSystem::fsClose, this, _1));
     vm->registerInterrupt(13, boost::bind(&OpSystem::fsSeek, this, _1));
@@ -506,7 +506,7 @@ void OS::OpSystem::ln(std::string fname, std::string lname, std::string sym)
 	fileSystem.lnFile(cwd, fname, lname, sym);
 }
 
-void OS::OpSystem::getPage(VM::VMCore* vm)
+void OS::OpSystem::getPage(int page)
 {
-	vmemMngr.getPage();
+	vmemMngr.getPage(page);
 }

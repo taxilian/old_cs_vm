@@ -57,14 +57,17 @@ namespace VM {
 
         virtual void registerInterrupt(int trap, const VM::InterruptHandler& handler);
         virtual void configureScheduler( const int baseTicks, const double variance, const InterruptHandler& interrupt);
-		virtual void pageFault(const InterruptHandler& interrupt);//assumes that pageNeeded has been set by VM.
+		virtual void setPageFault(const boost::function<void (int)>& interrupt);//assumes that pageNeeded has been set by VM.
         virtual void resetRunningTime() { runningTime *= 0; }
         virtual boost::posix_time::time_duration getRunningTime() { return runningTime; }
         virtual void readMemory(const uint32_t addr, MemoryBlock& memory, size_t size);
         virtual void writeMemory(const uint32_t addr, const char* memory, size_t size);
-		virtual void readFrame(const uint32_t addr, MemoryBlock& memory, size_t size);
-		virtual void writeFrame(const uint32_t addr, const char* memory, size_t size);
+		virtual void readFrame(const int frame, MemoryBlock& memory);
+		virtual void writeFrame(const int frame, const int page, const char* memory);
+        virtual int whichPage(int frame);
         // End VMCore methods
+
+        void mapVirtualMemory(uint64_t vaddr, uint64_t& physaddr);
 
     protected:
         VMConfigPtr m_config;
@@ -82,12 +85,13 @@ namespace VM {
         int sched_baseTicks;
         double sched_variance;
         InterruptHandler sched_interrupt;
-		InterruptHandler page_fault;//when a page fault occurs just call this handler, assumes that pageNeeded has been set by VM.
+		boost::function<void (int)> page_fault;//when a page fault occurs just call this handler, assumes that pageNeeded has been set by VM.
 
     public:
         // Registers
         static const int REGISTER_COUNT = 20;
-        static const int MEMORY_SIZE = 1024*1024; // 1MB of memory
+
+        int pageTable[FRAME_COUNT];
 
         boost::int64_t reg[REGISTER_COUNT];
         boost::int64_t pc;

@@ -56,7 +56,7 @@ namespace OS {
                 s >> directory;
                 cd(directory);
             }
-            else if(temp == "md")
+            else if(temp == "md" || temp == "mkdir")
             {
                 string directory;
                 s >> directory;

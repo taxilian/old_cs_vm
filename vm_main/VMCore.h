@@ -47,11 +47,6 @@ namespace VM {
 		// process currently running
 		int32_t pid; 
     };
-	struct PTEntry  {
-		int pageNum;    //page number for a given process id.
-		bool valid;     //true page is in physical memory. false page is in disk.
-		PTEntry(){pageNum = -1; valid = false;};
-	};
     class VMCore : boost::noncopyable
     {
     public:
@@ -61,13 +56,11 @@ namespace VM {
         static const int SB = 19;
 		static const int PTSize = 32;   // 32 pages of virtual memory.
 		static const int FMSize = 8;    // number of frames in physical memory.
-		int currentFrame;               // we are replacing the frame after currentFrame. if currentFrame=7 we replace frame 0.
-		std::list<PTEntry> PageTable;   // available to VM but managed by OS.
-		std::list<PTEntry> framesInfo;  // We are replacing the frame after the current frame being executed.
-		// if current frame is 7 then we go back to raplacing frame 0. 
-		// framesInfo contains the pages information about pages currently in physical memory.
-		// 8 pages of 512 bytes. need to populate this container when first loading into physical memory.
-		PTEntry pageNeeded;             // When calling OpSystem.getPage(VM::VMCore* vm) need to set this field.
+        static const int FRAME_SIZE = 512;
+        static const int FRAME_COUNT = 8;
+        static const int MEMORY_SIZE = FRAME_SIZE * FRAME_COUNT;
+
+        static const int VIRTUAL_MEM_SIZE = 1024*1024;
     public:
         virtual Status run() = 0;
 
@@ -91,9 +84,10 @@ namespace VM {
 		virtual void resetRunningTime() = 0;
         virtual boost::posix_time::time_duration getRunningTime() = 0;
 		// virtual memory
-		virtual void pageFault(const InterruptHandler& interrupt) = 0; // assumes that pageNeeded has been set by VM.
-		virtual void readFrame(const uint32_t addr, MemoryBlock& memory, size_t size) = 0;
-        virtual void writeFrame(const uint32_t addr, const char* memory, size_t size) = 0;
+		virtual void setPageFault(const boost::function<void (int)>& interrupt) = 0; // assumes that pageNeeded has been set by VM.
+		virtual void readFrame(const int frame, MemoryBlock& memory) = 0;
+		virtual void writeFrame(const int frame, const int page, const char* memory) = 0;
+        virtual int whichPage(int frame) = 0;
     };
 
 };

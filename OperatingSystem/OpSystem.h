@@ -73,7 +73,7 @@ namespace OS {
         void runScheduler(VM::VMCore* vm);
 		
 		//virtual memory
-		void getPage(VM::VMCore* vm);//assumes that pageNeeded has been set by VM.
+		void getPage(int page); // assumes that pageNeeded has been set by VM.
 
     protected:
         // General utilites, used mainly by the scheduler

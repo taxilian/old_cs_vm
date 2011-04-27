@@ -27,10 +27,6 @@ VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()),
     sched_baseTicks(30), sched_variance(0.2), pid(-1)
 {
     reset();
-	//Initialize page table and queue.
-	PageTable.resize(PTSize,pageNeeded);
-	framesInfo.resize(FMSize,pageNeeded);
-	currentFrame = 0;//we are replacing the frame after currentFrame. if currentFrame=7 we replace frame 0.
 	//other stuff
     registerHandler("ADD", make_method(this, &VirtualMachine::ADD));
     registerHandler("ADI", make_method(this, &VirtualMachine::ADI));
@@ -102,6 +98,11 @@ void VirtualMachine::reset()
     reg[FP] = reg[SB];          // Frame Pointer (Bottom of current frame)
     reg[SP] = reg[SB];          // Stack Pointer (Top of stack)
     reg[SL] = 0;                // Stack Limit (Top of available stack memory)
+
+    // Initialize the page table
+    for (int i = 0; i < FRAME_COUNT; ++i) {
+        pageTable[i] = -1;
+    }
 }
 
 VM::VMState VM::VirtualMachine::getRegisterState()
@@ -124,10 +125,10 @@ void VM::VirtualMachine::setRegisterState( const VMState& state )
 
 void VM::VirtualMachine::loadProgram( const MemoryBlock& memory, const size_t size, const uint32_t offset /*= 0*/ )
 {
-    assert((offset + size) < MEMORY_SIZE);
+    assert((offset + size) < VIRTUAL_MEM_SIZE);
 
     // Copy the memory in
-    std::copy(memory.get(), memory.get() + size, m_block.get() + offset);
+    this->writeMemory(offset, (const char*)memory.get(), size);
 
     // Allocate stack
     //reg[SL] = offset + size;
@@ -143,7 +144,7 @@ void VM::VirtualMachine::setMemoryOffset( const uint32_t offset )
 
 uint32_t VM::VirtualMachine::getMemorySize()
 {
-    return MEMORY_SIZE;
+    return VIRTUAL_MEM_SIZE;
 }
 
 void VM::VirtualMachine::registerInterrupt( int trap, const VM::InterruptHandler& handler )
@@ -167,31 +168,61 @@ void VM::VirtualMachine::configureScheduler( const int baseTicks, const double v
     sched_interrupt = interrupt;
 }
 
-void VM::VirtualMachine::pageFault(const InterruptHandler& interrupt)
-{//assumes that pageNeeded has been set.
+void VM::VirtualMachine::setPageFault(const boost::function<void (int)>& interrupt)
+{
 	page_fault = interrupt;
 }
+
 void VM::VirtualMachine::readMemory( const uint32_t addr, MemoryBlock& memory, size_t size )
 {
     if (!memory) {
         memory = MemoryBlock(new uint8_t[size]);
     }
-    memcpy(memory.get(), m_block.get() + offset + addr, size);
+    for (int i = 0; i < size; ++i) {
+        memory[i] = get_byte(addr+i);
+    }
 }
-void VM::VirtualMachine::readFrame(const uint32_t addr, MemoryBlock& memory, size_t size)
+void VM::VirtualMachine::readFrame(const int frame, MemoryBlock& memory)
 {
 	if (!memory) {
-        memory = MemoryBlock(new uint8_t[size]);
+        memory = MemoryBlock(new uint8_t[FRAME_SIZE]);
     }
-    memcpy(memory.get(), m_block.get() + addr, size);
+    memcpy(memory.get(), m_block.get() + frame * FRAME_SIZE, FRAME_SIZE);
 }
-void VM::VirtualMachine::writeFrame( const uint32_t addr, const char* memory, size_t size )
+void VM::VirtualMachine::writeFrame( const int frame, const int page, const char* memory )
 {
-	 memcpy(m_block.get() + addr, memory, size);
+    pageTable[frame] = page;
+	memcpy(m_block.get() + frame*FRAME_SIZE, memory, FRAME_SIZE);
 }
 void VM::VirtualMachine::writeMemory( const uint32_t addr, const char* memory, size_t size )
 {
-    memcpy(m_block.get() + offset + addr, memory, size);
+    for (int i = 0; i < size; ++i) {
+        set_byte(addr+i, memory[i]);
+    }
+}
+
+int VM::VirtualMachine::whichPage( int frame )
+{
+    return this->pageTable[frame];
+}
+
+void VM::VirtualMachine::mapVirtualMemory( uint64_t vaddr, uint64_t& physaddr )
+{
+    int page = vaddr / FRAME_SIZE;
+    int offset = vaddr % FRAME_SIZE;
+    int frame = -1;
+    for (int i = 0; i < FRAME_COUNT; ++i) {
+        if (pageTable[i] == page) {
+            frame = i;
+            break;
+        }
+    }
+    if (frame == -1) {
+        page_fault(page);
+        mapVirtualMemory(vaddr, physaddr);
+    } else {
+        physaddr = frame * FRAME_SIZE + offset;
+    }
 }
 
 std::string VirtualMachine::getLabelForAddress(ADDRESS addr) {
@@ -291,12 +322,16 @@ void VirtualMachine::set_int(boost::uint32_t addr, boost::uint64_t value)
 
 char VirtualMachine::get_byte(boost::uint32_t addr)
 {
-    return *((char*)(&m_block[addr+offset]));
+    uint64_t physaddr;
+    mapVirtualMemory(addr+offset, physaddr);
+    return *((char*)(&m_block[physaddr]));
 }
 
 void VirtualMachine::set_byte(boost::uint32_t addr, char value)
 {
-    *((char*)(&m_block[addr+offset])) = value;
+    uint64_t physaddr;
+    mapVirtualMemory(addr+offset, physaddr);
+    *((char*)(&m_block[physaddr])) = value;
 }
 
 void VirtualMachine::ADD(REGISTER &rd, REGISTER &rs) 
