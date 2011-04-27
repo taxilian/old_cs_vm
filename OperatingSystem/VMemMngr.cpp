@@ -33,6 +33,8 @@ void VMemMngr::swapOut(int page)
 }
 void VMemMngr::getPage(int page)
 {
+    std::cout << "Page fault! Swapping " << vm_core->whichPage(nextFrame) << " out of frame ";
+    std::cout << nextFrame << " and replacing it with page " << page << std::endl;
 	swapDirectory = fSystem->GetDirectoryId(0,"SwapFile");
 	swapOut(vm_core->whichPage(nextFrame));
 	swapIn(page);
