@@ -88,6 +88,8 @@ namespace VM {
 		virtual void readFrame(const int frame, MemoryBlock& memory) = 0;
 		virtual void writeFrame(const int frame, const int page, const char* memory) = 0;
         virtual int whichPage(int frame) = 0;
+        virtual uint64_t getAvgMemTimeHit() = 0;
+        virtual uint64_t getAvgMemTimeMiss() = 0;
     };
 
 };

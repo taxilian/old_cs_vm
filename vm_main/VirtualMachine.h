@@ -60,6 +60,8 @@ namespace VM {
 		virtual void setPageFault(const boost::function<void (int)>& interrupt);//assumes that pageNeeded has been set by VM.
         virtual void resetRunningTime() { runningTime *= 0; }
         virtual boost::posix_time::time_duration getRunningTime() { return runningTime; }
+        virtual uint64_t getAvgMemTimeHit() { return memTime_hit.total_microseconds() / memHitCount; }
+        virtual uint64_t getAvgMemTimeMiss() { return memTime_miss.total_microseconds() / memMissCount; }
         virtual void readMemory(const uint32_t addr, MemoryBlock& memory, size_t size);
         virtual void writeMemory(const uint32_t addr, const char* memory, size_t size);
 		virtual void readFrame(const int frame, MemoryBlock& memory);
@@ -67,15 +69,21 @@ namespace VM {
         virtual int whichPage(int frame);
         // End VMCore methods
 
-        void mapVirtualMemory(uint64_t vaddr, uint64_t& physaddr);
+        // returns true if a page fault was needed
+        bool mapVirtualMemory(uint64_t vaddr, uint64_t& physaddr);
 
     protected:
         VMConfigPtr m_config;
         MemoryBlock m_block;
         bool m_running;
         FunctionMap m_functionMap;
-		//For CPU Utitilization stats.`
+		//For CPU Utitilization stats.
 		boost::posix_time::time_duration runningTime;
+
+        uint64_t memHitCount;
+        uint64_t memMissCount;
+        boost::posix_time::time_duration memTime_hit;
+        boost::posix_time::time_duration memTime_miss;
 		//For interrupts
 		//VM::Interrupts* osInterrupts;
         VM::InterruptTable osInterrupts;

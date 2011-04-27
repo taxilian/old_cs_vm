@@ -213,10 +213,15 @@ void OS::OpSystem::runall()
     double utilization(static_cast<double>(m_vm->getRunningTime().ticks()) / static_cast<double>(len.ticks()));
     double pps(static_cast<double>(m_processCount) / (static_cast<double>(len.total_microseconds()) / 1000000));
 
+    double memhit(m_vm->getAvgMemTimeHit());
+    double memmiss(m_vm->getAvgMemTimeMiss());
+
     std::cout << std::endl;
     std::cout << "Process Scheduling Statistics:" << std::endl;
     std::cout << "CPU utilization:\t" << utilization*100 << "%" << std::endl;
     std::cout << "Processes / Sec:\t" << pps << std::endl;
+    std::cout << "Avg Memory access (no page fault):\t" << memhit << "us" << std::endl;
+    std::cout << "Avg Memory access (page fault):\t\t" << memmiss << "us" << std::endl;
     m_scheduler->printStats();
 }
 

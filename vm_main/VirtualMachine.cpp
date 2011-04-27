@@ -24,7 +24,7 @@ using namespace VM;
 using namespace boost::posix_time;
 
 VirtualMachine::VirtualMachine(void) : m_config(boost::make_shared<VMConfig>()), BOUND_CODE(0), offset(0),
-    sched_baseTicks(30), sched_variance(0.2), pid(-1)
+    sched_baseTicks(30), sched_variance(0.2), pid(-1), memHitCount(0), memMissCount(0)
 {
     reset();
 	//other stuff
@@ -206,7 +206,7 @@ int VM::VirtualMachine::whichPage( int frame )
     return this->pageTable[frame];
 }
 
-void VM::VirtualMachine::mapVirtualMemory( uint64_t vaddr, uint64_t& physaddr )
+bool VM::VirtualMachine::mapVirtualMemory( uint64_t vaddr, uint64_t& physaddr )
 {
     int page = vaddr / FRAME_SIZE;
     int offset = vaddr % FRAME_SIZE;
@@ -220,8 +220,10 @@ void VM::VirtualMachine::mapVirtualMemory( uint64_t vaddr, uint64_t& physaddr )
     if (frame == -1) {
         page_fault(page);
         mapVirtualMemory(vaddr, physaddr);
+        return true;
     } else {
         physaddr = frame * FRAME_SIZE + offset;
+        return false;
     }
 }
 
@@ -303,6 +305,7 @@ std::string VirtualMachine::getDebugFor(boost::uint32_t addr)
 boost::uint64_t VirtualMachine::get_int(boost::uint32_t addr)
 {
     intsplit is;
+    
     for (int i = 0; i < 8; ++i) {
         is.cVal.cb1[i] = get_byte(addr+i);
     }
@@ -321,14 +324,32 @@ void VirtualMachine::set_int(boost::uint32_t addr, boost::uint64_t value)
 char VirtualMachine::get_byte(boost::uint32_t addr)
 {
     uint64_t physaddr;
-    mapVirtualMemory(addr+offset, physaddr);
+	ptime t1(microsec_clock::local_time());
+    bool miss = mapVirtualMemory(addr+offset, physaddr);
+	ptime t2(microsec_clock::local_time());
+    if (miss) {
+        memTime_miss += t2-t1;
+        ++memMissCount;
+    } else {
+        memTime_hit += t2-t1;
+        ++memHitCount;
+    }
     return *((char*)(&m_block[physaddr]));
 }
 
 void VirtualMachine::set_byte(boost::uint32_t addr, char value)
 {
     uint64_t physaddr;
-    mapVirtualMemory(addr+offset, physaddr);
+	ptime t1(microsec_clock::local_time());
+    bool miss = mapVirtualMemory(addr+offset, physaddr);
+	ptime t2(microsec_clock::local_time());
+    if (miss) {
+        memTime_miss += t2-t1;
+        ++memMissCount;
+    } else {
+        memTime_hit += t2-t1;
+        ++memHitCount;
+    }
     *((char*)(&m_block[physaddr])) = value;
 }
 
